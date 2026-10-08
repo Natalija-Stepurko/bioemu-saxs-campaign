@@ -44,7 +44,7 @@ def fig_error_map(d: pd.DataFrame, A: dict) -> None:
     ax.set_xticks(range(3))
     ax.set_xticklabels(CLASS_ORDER)
     ax.set_ylabel("raw reduced χ² (log10)")
-    ax.set_title("Unweighted BioEmu-1 ensemble against each SAXS profile", fontsize=10, loc="left")
+    ax.set_title("Unweighted ensemble against each profile", fontsize=10, loc="left")
     ax.set_ylim(-0.6, 3.7)
     ax = axes[1]
     for cls in CLASS_ORDER:
@@ -57,7 +57,7 @@ def fig_error_map(d: pd.DataFrame, A: dict) -> None:
     ax.set_ylim(-0.6, 3.7)
     ax.legend(frameon=False, fontsize=9, loc="upper left")
     e2 = A["expectations"]["E2"]
-    ax.set_title(f"Folded proteins: Spearman ρ = {e2['spearman_rho']:+.2f}, p = {e2['p']:.2g}", fontsize=10,
+    ax.set_title(f"By chain length (folded: ρ = {e2['spearman_rho']:+.2f}, p = {e2['p']:.2g})", fontsize=10,
                  loc="left")
     fig.tight_layout()
     fig.savefig(OUT / "fig_error_map.png")

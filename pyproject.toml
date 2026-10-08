@@ -43,3 +43,4 @@ ignore = ["E741"]
 [tool.ruff.lint.per-file-ignores]
 # the campaign proposal is a Markdown template with table rows that must stay on one line
 "src/bsc/report.py" = ["E501"]
+"docs/site/build.py" = ["E501"]
