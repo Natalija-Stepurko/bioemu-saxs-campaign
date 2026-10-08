@@ -113,3 +113,28 @@ def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
     assert cand["priority"].is_monotonic_decreasing
     assert "S000" not in set(cand["label"])          # the flagged entry is excluded
     assert (cand["resolvability"].iloc[0] in {"population", "calibration"})
+
+
+def test_report_builds_from_analysis(tmp_path, monkeypatch):
+    """Figures and the campaign proposal build from the synthetic analysis output."""
+    from bsc import analyse, report
+    from bsc import config as C
+    test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch)
+    results = tmp_path / "results"
+    (results / "paths").mkdir()
+    sc = pd.read_csv(results / "scores.csv")
+    paths = [{"label": lab, "theta": th, "chi2": max(1.0, c2 / (1 + 10 / th)), "phi": min(1.0, th / 100)}
+             for lab, c2 in zip(sc["label"], sc["chi2_raw"], strict=True) for th in (1000, 100, 10, 1, 0.1)]
+    json.dump(paths, open(results / "paths" / "bioemu.json", "w"))
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    monkeypatch.setattr(C, "REPO", tmp_path)
+    monkeypatch.setattr(report, "OUT", results / "figures")
+    analyse.main()
+    report.main()
+    for f in ("fig_error_map", "fig_rg", "fig_resolvability", "fig_models", "fig_candidates"):
+        assert (results / "figures" / f"{f}.png").stat().st_size > 10_000
+    text = (docs / "CAMPAIGN.md").read_text()
+    assert "## 3. Candidate systems" in text and "| SASDB |" not in text
+    A = json.load(open(results / "analysis.json"))
+    assert f"{A['bioemu']['chi2_raw_median']:.1f}" in text
