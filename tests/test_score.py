@@ -64,3 +64,52 @@ def test_score_stage_end_to_end(synthetic_root):
     # the ensemble Rg tracks the model radius, and the experimental Rg the true one
     assert abs(s.loc["SASDX02", "rg_model"] - 22 * np.sqrt(3 / 5)) < 1.5
     assert abs(ent.set_index("label").loc["SASDX02", "rg_exp"] - 30 * np.sqrt(3 / 5)) < 1.5
+
+
+def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
+    """The analysis stage on a hand-made scores table with a known structure."""
+    from bsc import analyse
+    from bsc import config as C
+    rng = np.random.default_rng(3)
+    results = tmp_path / "results"
+    results.mkdir()
+    monkeypatch.setattr(C, "RESULTS", results)
+    n = 90
+    cls = np.repeat(["folded", "partly disordered", "disordered"], n // 3)
+    length = rng.integers(60, 400, n)
+    ent = pd.DataFrame({"label": [f"S{i:03d}" for i in range(n)], "length": length, "ph": 7.0,
+                        "disorder_mean": np.select([cls == "folded", cls == "disordered"], [0.1, 0.8], 0.4),
+                        "disorder_class": cls, "length_bin": "x", "n_q": 200, "q_min": 0.01, "q_max": 0.3,
+                        "rg_exp": 20.0, "rg_exp_err": 0.3, "guinier_points": 30, "guinier_valid": True,
+                        "upturn": 0.0, "flag_aggregation": False, "flag_negative_I": False, "sequence": "A"})
+    ent.loc[0, "flag_aggregation"] = True
+    ent.to_csv(results / "entries.csv", index=False)
+    # disordered worse, folded chi2 rising with length, model too compact for disordered
+    base = np.where(cls == "disordered", 8.0, np.where(cls == "folded", 1.5, 3.0))
+    chi2_raw = base * np.exp(rng.normal(0, 0.3, n)) * np.where(cls == "folded", length / 150, 1.0)
+    rows = []
+    for model, factor in (("bioemu", 1.0), ("alphafold2", 1.6)):
+        c2 = chi2_raw * factor
+        phi2 = np.where(c2 <= 2, 1.0, np.clip(1.5 / c2, 0.02, 0.9))
+        phi2[(cls == "disordered") & (np.arange(n) % 7 == 0)] = np.nan
+        rows.append(pd.DataFrame({"model": model, "label": ent["label"], "n_conformers": 100, "n_dropped": 0,
+                                  "chi2_raw": c2, "chi2_raw_noback": c2 * 1.1,
+                                  "rg_model": np.where(cls == "disordered", 16.0, 20.0),
+                                  "rg_conformer_median": 20.0, "rg_conformer_iqr": 1.0,
+                                  "chi2_best": np.minimum(c2, 1.1), "phi_at_best": phi2 * 0.5,
+                                  "phi_at_chi2_1": phi2 * 0.8, "phi_at_chi2_2": phi2,
+                                  "chi2_at_phi_0.5": np.maximum(c2 / 2, 1.0), "chi2_at_phi_0.1": 1.2,
+                                  "chi2_at_phi_bench": 1.05}))
+    pd.concat(rows).to_csv(results / "scores.csv", index=False)
+    analyse.main()
+    A = json.load(open(results / "analysis.json"))
+    assert A["n_clean"] == n - 1
+    E = A["expectations"]
+    assert E["E1"]["met"] and E["E2"]["met"] and E["E4"]["met"]
+    assert set(A["bioemu"]["resolvability_counts"]) <= {"fits", "calibration", "population", "unresolved"}
+    assert A["model_comparison"][0]["model"] == "alphafold2"
+    assert A["model_comparison"][0]["median_log10_chi2_ratio_vs_bioemu"] > 0
+    cand = pd.read_csv(results / "candidates.csv")
+    assert cand["priority"].is_monotonic_decreasing
+    assert "S000" not in set(cand["label"])          # the flagged entry is excluded
+    assert (cand["resolvability"].iloc[0] in {"population", "calibration"})
