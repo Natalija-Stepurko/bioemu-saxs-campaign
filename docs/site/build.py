@@ -27,8 +27,9 @@ CAND = pd.read_csv(RESULTS / "candidates.csv")
 B, E = A["bioemu"], A["expectations"]
 CLS = {r["disorder_class"]: r for r in A["by_class"] if r["model"] == "bioemu"}
 RES = B["resolvability_counts"]
-MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold2": "AlphaFold2", "boltz2": "Boltz-2", "idpfold2": "IDPFold2",
-              "peptron": "PepTron", "boltz1x": "Boltz-1x", "esmflow": "ESMFlow", "idpsam": "idpSAM"}
+MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold": "AlphaFold2", "esmfold": "ESMFold", "boltz2": "Boltz-2",
+              "idpfold": "IDPFold", "peptron": "PepTron", "boltz1x": "Boltz-1x", "esmflow": "ESMFlow",
+              "idpsam": "idpSAM", "idpgan": "idpGAN", "idp-o": "IDP-o"}
 
 
 def check(cond, msg):
@@ -188,20 +189,37 @@ def build():
 
     worst = max(CLS, key=lambda k: CLS[k]["chi2_raw_median"])
     best_cls = min(CLS, key=lambda k: CLS[k]["chi2_raw_median"])
-    headline = (f"BioEmu-1 ensembles fit {pct(share_fit)} of {n_clean} solution-scattering profiles as they are, "
-                f"and the misses concentrate in {worst} proteins")
+    rg_dis = E["E4"]["median_rg_ratio_disordered"]
+    ord_rg = A["rg_ratio_disordered_by_model"]
+    others = {m: v for m, v in ord_rg.items() if m != "bioemu" and m in MODEL_NAME}
+    check(rg_dis > 1 and all(v < rg_dis for v in others.values()), "BioEmu is the most extended on disordered proteins")
+    near = sorted(m for m, v in others.items() if abs(v - 1) < 0.05)
+    compact = sorted(m for m, v in others.items() if v < 0.95)
+    others_rg = (", ".join(f"{MODEL_NAME[m]} {others[m]:.2f}" for m in near)
+                 + " sit near 1 on the same entries, and "
+                 + ", ".join(f"{MODEL_NAME[m]} {others[m]:.2f}" for m in compact)
+                 + " err the other way")
+    too = "extended" if rg_dis > 1 else "compact"
+    n_better = sum(1 for c in comps if c["median_chi2_raw"] < c["bioemu_median_chi2_raw_same_entries"])
+    check(n_better == 0, "BioEmu has the lowest median raw chi2 of the models compared")
+    headline = (f"BioEmu-1 fits {pct(share_fit)} of {sum(RES.values())} solution-scattering profiles without reweighting, "
+                f"the best of {len(comps) + 1} ensemble models, and its disordered ensembles are too {too}")
     abstract = (
         f"BioEmu-1 {cite('lewis')} emulates a protein's conformational ensemble from its sequence. The next model "
         f"will be trained with new measurements, and that campaign should start where the current model is wrong "
         f"and where a measurement can tell. I scored the raw BioEmu-1 ensemble, with no reweighting, against "
         f"{A['n_entries']} small-angle X-ray scattering (SAXS) profiles from SASBDB {cite('kikhney')}, using the "
         f"public ensembles and back-calculated curves of PeptoneBench {cite('invernizzi')}; {n_clean} profiles pass "
-        f"data-quality checks. The ensemble fits {pct(share_fit)} of them at reduced χ² ≤ 2 (median χ² "
+        f"data-quality checks and {sum(RES.values())} of those have a BioEmu-1 ensemble. The ensemble fits {pct(share_fit)} of them at reduced χ² ≤ 2 (median χ² "
         f"{f1(B['chi2_raw_median'])}); the median is {f1(CLS[best_cls]['chi2_raw_median'])} for {best_cls} and "
         f"{f1(CLS[worst]['chi2_raw_median'])} for {worst} proteins. Reweighting each ensemble towards its profile "
         f"sorts the misses: {cal} need a modest correction, {pop} need their populations moved, and {unres} cannot "
-        f"be fitted from the conformers the model proposes. The campaign proposal built from this map names "
-        f"the systems, the assay, scripted quality criteria and the work packages for an external provider.")
+        f"be fitted from the conformers the model proposes. On the same profiles, {len(comps)} other generators "
+        f"fit worse before reweighting. One expectation came out reversed: for disordered proteins the "
+        f"ensemble radius of gyration is {rg_dis:.2f} times the measured value at the median, so the model's "
+        f"disordered ensembles are too {too}, a direction no other model in the comparison shares. The campaign proposal built "
+        f"from this map names the systems, the assay, scripted quality criteria and the work packages for an "
+        f"external provider.")
 
     comp_rows = "".join(
         f'<tr><td>{MODEL_NAME.get(c["model"], c["model"])}</td><td class="num">{c["n"]}</td>'
@@ -259,7 +277,7 @@ def build():
 <header>
 <p class="eyebrow">Biomolecular emulators · solution scattering · experimental design</p>
 <h1>{headline}</h1>
-<p class="scope">Raw BioEmu-1 ensembles against {n_clean} SASBDB profiles · reweighting to measure what the data can resolve · a measurement campaign built from the map</p>
+<p class="scope">Raw BioEmu-1 ensembles against {sum(RES.values())} SASBDB profiles · reweighting to measure what the data can resolve · a measurement campaign built from the map</p>
 <p class="byline">Natalija Stepurko · {today:%B %Y} · <a href="{SITE}">natalija-stepurko.com</a></p>
 <p class="abstract">{abstract}</p>
 <a class="repo" href="{REPO}">{GH}<span><b>All the code is public.</b> Every number and figure on this page comes from the pipeline in this repository, which downloads the public inputs, scores them and writes the campaign proposal.</span><span class="repo-path">Natalija-Stepurko/bioemu-saxs-campaign</span></a>
@@ -276,7 +294,7 @@ def build():
 <div class="findings">
 <p><strong>The raw ensemble fits {pct(share_fit)} of profiles.</strong> Median reduced χ² is {f1(B['chi2_raw_median'])} (quartiles {f1(B['chi2_raw_q25'])}–{f1(B['chi2_raw_q75'])}). Expectation E1, that disordered proteins fit worse than folded ones, is {met('E1')} (p = {pv(E['E1']['p_one_sided'])}).</p>
 <p><strong>Error and chain length.</strong> Among folded proteins the raw χ² {'rises' if E['E2']['spearman_rho'] > 0 else 'does not rise'} with length (Spearman ρ = {E['E2']['spearman_rho']:+.2f}, p = {pv(E['E2']['p'])}); expectation E2 is {met('E2')}.</p>
-<p><strong>Size.</strong> For disordered proteins the ensemble radius of gyration is {E['E4']['median_rg_ratio_disordered']:.2f} times the experimental value at the median, below 1 in {pct(E['E4']['share_below_1'])} of cases; expectation E4 (over-compaction) is {met('E4')}.</p>
+<p><strong>Size, in the direction not expected.</strong> Expectation E4 predicted over-compaction of disordered proteins, the usual failure of models trained on folded structures. The data show the reverse: the ensemble radius of gyration is {rg_dis:.2f} times the measured value at the median for disordered proteins, above 1 in {pct(1 - E['E4']['share_below_1'])} of them, against {CLS['folded']['rg_ratio_median']:.2f} for folded proteins. Of the other models, {others_rg}: BioEmu-1 is the only one whose disordered ensembles are too extended, which makes them a direct target for new data.</p>
 </div>
 {fig("fig_rg", "Figure 2 · ensemble size against measured size",
      "Radius of gyration of the BioEmu-1 ensemble curve against the Guinier radius of gyration of the experimental profile, both on the experimental q grid, one point per profile.",
@@ -288,11 +306,11 @@ def build():
 <p>A poor raw fit has three possible meanings, and the reweighting path tells them apart. The ensemble's conformer weights are moved towards the data by maximum-entropy reweighting {cite('bottaro')}, with decreasing strength of the prior, and χ² is tracked against the effective sample fraction φ that survives. An entry that reaches χ² ≤ 2 while keeping half its effective sample needs a <em>calibration</em>; one that reaches it only after φ falls below 0.5 needs its <em>populations</em> moved; one that never reaches it is <em>unresolved</em> by SAXS from the conformers the model proposes.</p>
 {fig("fig_resolvability", "Figure 3 · reweighting paths and the resolvability of each class",
      "Left: for every profile, reduced χ² against the effective sample fraction kept as the prior is relaxed (left to right is more reweighting), coloured by disorder class. Right: the share of each class in the four kinds.",
-     f"Of {sum(RES.values())} profiles, {fits} fit as they are, {cal} are calibration cases, {pop} are population cases and {unres} are unresolved. Population cases are where a new SAXS profile carries the most training signal: the right conformers are in the ensemble, and the measurement says how to weight them.")}
+     f"Of the {sum(RES.values())} clean profiles with a BioEmu-1 ensemble, {fits} fit as they are, {cal} are calibration cases, {pop} are population cases and {unres} are unresolved. Population cases are where a new SAXS profile carries the most training signal: the right conformers are in the ensemble, and the measurement says how to weight them.")}
 <div class="call"><p><strong>For the campaign.</strong> New SAXS data moves the model most on population cases, and least on calibration cases, which a consistent correction handles. Unresolved cases need a measurement that reports local structure, because SAXS says the ensemble is wrong without saying how. Expectation E3 is {met('E3')}: {pct(E['E3']['share_phi_above_0.3'])} of profiles reach χ² ≈ 1 while keeping more than 30% of the effective sample.</p></div>
 
 <h2 id="models">Other models on the same profiles</h2>
-<p>The same archive carries ensembles from other generators for the same entries, scored here identically and without reweighting.</p>
+<p>The same archive carries ensembles from other generators for the same entries, scored here identically and without reweighting. BioEmu-1 has the lowest median raw χ² of the {len(comps) + 1}; the single-structure predictors (AlphaFold2, ESMFold) cannot be reweighted, so their best fit is their raw fit.</p>
 {fig("fig_models", "Figure 4 · raw fit of each model by class", "Median raw reduced χ² (bars: quartiles) of the unweighted ensemble of each model, by disorder class, on the profiles that pass quality checks.", "Lower is better. Differences within a class smaller than the quartile ranges are not read.") if comps else ""}
 {comp_html}
 

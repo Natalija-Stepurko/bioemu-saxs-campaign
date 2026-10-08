@@ -24,7 +24,8 @@ def load() -> tuple[pd.DataFrame, pd.DataFrame]:
     df = sc.merge(ent.drop(columns=["sequence"]), on="label", how="left")
     df["log_chi2_raw"] = np.log10(df["chi2_raw"])
     df["rg_ratio"] = df["rg_model"] / df["rg_exp"]
-    df["clean"] = ~(df["flag_aggregation"] | df["flag_negative_I"]) & df["guinier_valid"]
+    flagged = df["flag_aggregation"] | df["flag_negative_I"] | df["flag_bad_errors"]
+    df["clean"] = ~flagged & df["guinier_valid"]
     return ent, df
 
 
@@ -145,6 +146,7 @@ def main() -> None:
         "n_entries": int(len(ent)), "n_clean": int(ent.shape[0] - (~m["clean"]).sum()),
         "n_flag_aggregation": int(ent["flag_aggregation"].sum()),
         "n_flag_negative": int(ent["flag_negative_I"].sum()),
+        "n_flag_bad_errors": int(ent["flag_bad_errors"].sum()),
         "n_guinier_invalid": int((~ent["guinier_valid"]).sum()),
         "class_counts": ent["disorder_class"].value_counts().to_dict(),
         "bioemu": {
@@ -160,6 +162,9 @@ def main() -> None:
             "rg_ratio_median_by_class": mc.groupby("disorder_class")["rg_ratio"].median().to_dict(),
         },
         "expectations": expectations(d),
+        "rg_ratio_disordered_by_model": {
+            m: float(g["rg_ratio"].median())
+            for m, g in d[d["clean"] & (d["disorder_class"] == "disordered")].groupby("model")},
         "model_comparison": model_comparison(d),
         "by_class": json.loads(bc.to_json(orient="records")),
         "top_candidates": json.loads(cand.head(25).to_json(orient="records")),

@@ -16,8 +16,9 @@ from bsc import config as C  # noqa: E402
 
 INK, MUTED, RULE = "#16191D", "#5B646E", "#DDE1E4"
 CLS_COL = {"folded": "#2F5D8A", "partly disordered": "#8A6FA8", "disordered": "#C2681A"}
-MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold2": "AlphaFold2", "boltz2": "Boltz-2", "idpfold2": "IDPFold2",
-              "peptron": "PepTron", "boltz1x": "Boltz-1x", "esmflow": "ESMFlow", "idpsam": "idpSAM"}
+MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold": "AlphaFold2", "esmfold": "ESMFold", "boltz2": "Boltz-2",
+              "idpfold": "IDPFold", "peptron": "PepTron", "boltz1x": "Boltz-1x", "esmflow": "ESMFlow",
+              "idpsam": "idpSAM", "idpgan": "idpGAN", "idp-o": "IDP-o"}
 CLASS_ORDER = [c[0] for c in C.DISORDER_CLASSES]
 OUT = C.RESULTS / "figures"
 
@@ -101,6 +102,7 @@ def fig_resolvability(d: pd.DataFrame, paths: list[dict]) -> None:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(1.05, 0.005)
+    ax.set_ylim(0.5, 300)
     ax.set_xlabel("effective sample fraction φ kept  (← more reweighting)")
     ax.set_ylabel("reduced χ²")
     ax.set_title("How far each ensemble must be reweighted to fit", fontsize=10, loc="left")
@@ -199,8 +201,10 @@ quartiles {b['chi2_raw_q25']:.1f}–{b['chi2_raw_q75']:.1f}). By class, the medi
 Expectation E1 (disordered worse than folded) is {'met' if E['E1']['met'] else 'not met'}
 (one-sided p = {E['E1']['p_one_sided']:.2g}); E2 (error rising with length among folded proteins) is
 {'met' if E['E2']['met'] else 'not met'} (ρ = {E['E2']['spearman_rho']:+.2f}); E4 (over-compaction of
-disordered proteins) is {'met' if E['E4']['met'] else 'not met'} (median Rg ratio
-{E['E4']['median_rg_ratio_disordered']:.2f}, {pct(E['E4']['share_below_1'])} below 1).
+disordered proteins) is {'met' if E['E4']['met'] else 'not met'}: the median ensemble Rg is
+{E['E4']['median_rg_ratio_disordered']:.2f} times the measured value, and only {pct(E['E4']['share_below_1'])} of disordered
+entries are below 1, so the model's disordered ensembles are too {'compact' if E['E4']['median_rg_ratio_disordered'] < 1 else 'extended'},
+which is the direction a measurement campaign on disordered proteins would correct.
 
 ## 2. What SAXS can and cannot resolve
 

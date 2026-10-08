@@ -55,6 +55,7 @@ def download(name: str, dest: Path, remote: dict) -> Path:
 
 def record_checksums(paths: dict[str, Path]) -> None:
     rec = C.DATA / "checksums.json"
+    C.DATA.mkdir(parents=True, exist_ok=True)
     old = json.load(open(rec)) if rec.exists() else {}
     new = {k: _sha256(p) for k, p in paths.items()}
     for k, v in new.items():
@@ -67,13 +68,13 @@ def record_checksums(paths: dict[str, Path]) -> None:
 def extract_saxs(archive: Path) -> None:
     """Unpack the SAXS table and curves only."""
     with tarfile.open(archive) as t:
-        members = [m for m in t.getmembers() if m.name.startswith("PeptoneDB-SAXS/")]
+        members = [m for m in t.getmembers() if m.name.lstrip("./").startswith("PeptoneDB-SAXS/")]
         t.extractall(C.DATA, members=members, filter="data")
 
 
 def extract_predictions(archive: Path, models: list[str]) -> None:
-    """Unpack the back-calculated SAXS curves (and ensembles) for the named models only."""
-    want = tuple(f"Predictions/PeptoneDB-SAXS/{m}/" for m in models)
+    """Unpack the back-calculated SAXS curves for the named models only (the conformers are not needed)."""
+    want = tuple(f"Predictions/PeptoneDB-SAXS-expt/{m}/" for m in models)
     with tarfile.open(archive) as t:
         members = [m for m in t.getmembers() if m.name.startswith(want)]
         t.extractall(C.DATA, members=members, filter="data")

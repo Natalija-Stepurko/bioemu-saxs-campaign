@@ -20,7 +20,7 @@ def read_experiment(label: str) -> pd.DataFrame:
     """q, I(q), sigma of a cleaned SASBDB curve (PeptoneDB format: a comment line, then three columns)."""
     df = pd.read_csv(C.SAXS_DIR / f"{label}-bift.dat", sep=r"\s+", comment="#", header=None,
                      names=["q", "I", "sigma"])
-    return df[df["sigma"] > 0].reset_index(drop=True)
+    return df
 
 
 def read_prediction(model: str, label: str) -> np.ndarray | None:
@@ -42,7 +42,10 @@ def entry_metadata(table: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for _, r in table.iterrows():
         exp = read_experiment(r["label"])
-        g = saxs.guinier(exp["q"].to_numpy(), exp["I"].to_numpy(), exp["sigma"].to_numpy(), C.GUINIER_QRG_MAX)
+        usable = exp[exp["sigma"] > 0]
+        g = (saxs.guinier(usable["q"].to_numpy(), usable["I"].to_numpy(), usable["sigma"].to_numpy(),
+                          C.GUINIER_QRG_MAX) if (usable["I"] > 0).sum() >= 12
+             else {"rg": np.nan, "rg_err": np.nan, "n_points": 0, "upturn": np.nan, "valid": False})
         rows.append({"label": r["label"], "length": int(r["length"]), "ph": r.get("pH", np.nan),
                      "disorder_mean": float(r["mean_gscore_adopt2"]),
                      "disorder_class": disorder_class(float(r["mean_gscore_adopt2"])),
@@ -52,7 +55,8 @@ def entry_metadata(table: pd.DataFrame) -> pd.DataFrame:
                      "guinier_valid": g["valid"], "upturn": g["upturn"],
                      "flag_aggregation": bool(np.isfinite(g["upturn"])
                                               and g["upturn"] > C.AGGREGATION_UPTURN),
-                     "flag_negative_I": bool((exp["I"] < 0).any()),
+                     "flag_negative_I": bool(((usable["I"] / usable["sigma"]) < -C.NEGATIVE_SIGMA).any()),
+                     "flag_bad_errors": bool((exp["sigma"] <= 0).any()),
                      "sequence": r["sequence"]})
     return pd.DataFrame(rows)
 
@@ -61,12 +65,17 @@ def score_entry(model: str, label: str, exp: pd.DataFrame) -> tuple[dict, list[d
     curves = read_prediction(model, label)
     if curves is None:
         return None
+    if (exp["sigma"] <= 0).all():
+        return None
     q, I, s = exp["q"].to_numpy(), exp["I"].to_numpy(), exp["sigma"].to_numpy()
+    s = np.where(s > 0, s, np.nan)
+    keep = np.isfinite(s)
     if curves.shape[1] != len(q):
         raise ValueError(f"{model} {label}: {curves.shape[1]} q points in the prediction, "
                          f"{len(q)} in the data")
     ok = np.isfinite(curves).all(axis=1)
-    curves = curves[ok]
+    curves = curves[ok][:, keep]
+    q, I, s = q[keep], I[keep], s[keep]
     raw = saxs.ensemble_curve(curves)
     rec = {"model": model, "label": label, "n_conformers": int(ok.sum()), "n_dropped": int((~ok).sum()),
            "chi2_raw": saxs.chi2(raw, I, s),

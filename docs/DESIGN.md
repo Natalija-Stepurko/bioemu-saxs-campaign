@@ -76,8 +76,9 @@ For each entry, with the back-calculated curve of each conformer and the experim
   (> 0.6), by the per-residue disorder scores supplied; chain length bins; multi-domain flag where
   obtainable.
 - **Data quality flags.** Guinier range validity, signs of aggregation (upturn at low q) and of
-  radiation damage or mismatch (negative values, implausible background), so that model error is not
-  confused with data error. Entries that fail a flag are kept but marked.
+  over-subtraction (an intensity more than three standard errors below zero; points within noise of
+  zero at high angle are normal), so that model error is not confused with data error. Entries that
+  fail a flag are kept but marked.
 
 ## 5. Pre-specified expectations
 
