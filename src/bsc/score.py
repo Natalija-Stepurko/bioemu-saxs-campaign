@@ -50,7 +50,8 @@ def entry_metadata(table: pd.DataFrame) -> pd.DataFrame:
                      "n_q": len(exp), "q_min": float(exp["q"].min()), "q_max": float(exp["q"].max()),
                      "rg_exp": g["rg"], "rg_exp_err": g["rg_err"], "guinier_points": g["n_points"],
                      "guinier_valid": g["valid"], "upturn": g["upturn"],
-                     "flag_aggregation": bool(np.isfinite(g["upturn"]) and g["upturn"] > C.AGGREGATION_UPTURN),
+                     "flag_aggregation": bool(np.isfinite(g["upturn"])
+                                              and g["upturn"] > C.AGGREGATION_UPTURN),
                      "flag_negative_I": bool((exp["I"] < 0).any()),
                      "sequence": r["sequence"]})
     return pd.DataFrame(rows)
@@ -62,7 +63,8 @@ def score_entry(model: str, label: str, exp: pd.DataFrame) -> tuple[dict, list[d
         return None
     q, I, s = exp["q"].to_numpy(), exp["I"].to_numpy(), exp["sigma"].to_numpy()
     if curves.shape[1] != len(q):
-        raise ValueError(f"{model} {label}: {curves.shape[1]} q points in the prediction, {len(q)} in the data")
+        raise ValueError(f"{model} {label}: {curves.shape[1]} q points in the prediction, "
+                         f"{len(q)} in the data")
     ok = np.isfinite(curves).all(axis=1)
     curves = curves[ok]
     raw = saxs.ensemble_curve(curves)

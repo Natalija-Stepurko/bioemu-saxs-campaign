@@ -17,7 +17,8 @@ def synthetic_root(tmp_path, monkeypatch):
     data, results = tmp_path / "data", tmp_path / "results"
     saxs_dir = data / "PeptoneDB-SAXS" / "sasbdb-clean_data"
     pred = data / "Predictions" / "PeptoneDB-SAXS" / "bioemu"
-    saxs_dir.mkdir(parents=True); pred.mkdir(parents=True)
+    saxs_dir.mkdir(parents=True)
+    pred.mkdir(parents=True)
     rng = np.random.default_rng(0)
     q = np.linspace(0.01, 0.3, 120)
     rows = []
@@ -35,10 +36,13 @@ def synthetic_root(tmp_path, monkeypatch):
         rows.append({"label": label, "sequence": "A" * (50 + 30 * i), "length": 50 + 30 * i, "pH": 7.0,
                      "mean_gscore_adopt2": dis, "gscores_adopt2": "[]"})
     pd.DataFrame(rows).to_csv(data / "PeptoneDB-SAXS" / "PeptoneDB-SAXS.csv", index=False)
-    monkeypatch.setattr(C, "DATA", data); monkeypatch.setattr(C, "RESULTS", results)
+    monkeypatch.setattr(C, "DATA", data)
+    monkeypatch.setattr(C, "RESULTS", results)
     monkeypatch.setattr(C, "SAXS_TABLE", data / "PeptoneDB-SAXS" / "PeptoneDB-SAXS.csv")
-    monkeypatch.setattr(C, "SAXS_DIR", saxs_dir); monkeypatch.setattr(C, "PRED_DIR", pred.parent)
-    monkeypatch.setattr(C, "N_JOBS", 1); monkeypatch.setattr(C, "THETA_GRID", 10.0 ** np.linspace(-1, 5, 9))
+    monkeypatch.setattr(C, "SAXS_DIR", saxs_dir)
+    monkeypatch.setattr(C, "PRED_DIR", pred.parent)
+    monkeypatch.setattr(C, "N_JOBS", 1)
+    monkeypatch.setattr(C, "THETA_GRID", 10.0 ** np.linspace(-1, 5, 9))
     return tmp_path
 
 
