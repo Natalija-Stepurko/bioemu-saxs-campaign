@@ -7,11 +7,11 @@ campaign proposal: [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md)
 
 ## Result
 
-Scored without reweighting against 417 quality-filtered small-angle X-ray scattering (SAXS) profiles from
-SASBDB, the BioEmu-1 ensemble reaches reduced χ² ≤ 2 for 36% of them (median χ² 3.4): 2.4 for folded
+Scored without reweighting against 399 quality-filtered small-angle X-ray scattering (SAXS) profiles from
+SASBDB, the BioEmu-1 ensemble reaches reduced χ² ≤ 2 for 37% of them (median χ² 3.3): 2.3 for folded
 proteins, 4.3 for partly disordered and 8.9 for disordered. That is the best raw fit of the seven ensemble
 generators in the PeptoneBench archive. Reweighting each ensemble towards its profile sorts the misses into
-66 that need a modest correction, 93 that need their populations moved and 107 that cannot be fitted from
+65 that need a modest correction, 91 that need their populations moved and 97 that cannot be fitted from
 the conformers the model proposes. One expectation came out reversed: BioEmu-1's disordered ensembles are
 too extended (median radius of gyration 1.21 times the measured value), a direction no other model in the
 comparison shares. The campaign proposal ranks candidate systems by model error, resolvability and
@@ -28,8 +28,8 @@ PeptoneBench authors (Zenodo 17306061, CC-BY 4.0). This study does not re-sample
 that output. Each raw fit scales the ensemble average to the data with one factor and one constant
 background. A Guinier fit gives the experimental radius of gyration and flags aggregation. Maximum-entropy
 reweighting along a path of prior strengths gives, per entry, the effective sample fraction that must be
-spent to reach a given fit. Four expectations were written down before scoring (DESIGN §5); one was met,
-one reversed, two not met.
+spent to reach a given fit. Entries whose measured molecular weight exceeds 1.6 times the sequence mass are excluded as oligomers.
+Four expectations were written down before scoring (DESIGN §5); one was met, one reversed, two not met.
 
 ## Pipeline
 

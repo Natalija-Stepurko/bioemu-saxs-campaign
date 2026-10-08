@@ -20,6 +20,9 @@ ZENODO_FILES = {
 ZENODO_API = f"https://zenodo.org/api/records/{ZENODO_RECORD}"
 
 SAXS_TABLE = DATA / "PeptoneDB-SAXS" / "PeptoneDB-SAXS.csv"
+SASBDB_SUMMARY = DATA / "sasbdb_summary.json"      # entry summaries from the SASBDB REST API (bsc fetch)
+SASBDB_API = "https://www.sasbdb.org/rest-api/entry/summary/{label}/?format=json"
+OLIGOMER_MW_RATIO = 1.6          # measured mass over sequence mass above this: not a monomer in solution
 SAXS_DIR = DATA / "PeptoneDB-SAXS" / "sasbdb-clean_data"
 PRED_DIR = DATA / "Predictions" / "PeptoneDB-SAXS-expt"   # back-calculated curves per model
 

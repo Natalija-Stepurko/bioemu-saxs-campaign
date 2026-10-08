@@ -142,6 +142,7 @@ table{border-collapse:collapse;width:100%;font-size:13.5px}
 th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule)}
 td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
 td.num{font-family:var(--mono);font-size:12.5px;text-align:right;white-space:nowrap}
+td.dim{color:var(--muted);font-size:12.5px}
 .note{color:var(--muted);font-size:13px}
 ol.refs{padding-left:22px;font-size:13.5px;color:var(--muted)}ol.refs li{margin:0 0 6px}ol.refs a{color:var(--ink);word-break:break-all}
 footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.8}
@@ -181,6 +182,7 @@ def build():
     check(pop + cal + unres + fits == sum(RES.values()), "resolvability counts sum")
     comps = A["model_comparison"]
     top = CAND.head(12)
+    check((top["mw_ratio"] < 1.6).all() and (top["mw_ratio"] > 0.6).all(), "top candidates are monomers by measured mass")
 
     def class_sentence():
         parts = [f"{f1(CLS[k]['chi2_raw_median'])} for {k} proteins (n = {cls_n[k]})"
@@ -234,7 +236,8 @@ def build():
     cand_rows = "".join(
         f'<tr><td><a href="https://www.sasbdb.org/data/{r.label}/">{r.label}</a></td><td class="num">{int(r.length)}</td>'
         f'<td>{r.disorder_class}</td><td class="num">{f1(r.chi2_raw)}</td><td class="num">{r.chi2_best:.2f}</td>'
-        f'<td>{r.resolvability}</td><td>{r.rg_direction}</td></tr>' for r in top.itertuples())
+        f'<td>{r.resolvability}</td><td>{r.rg_direction}</td><td class="dim">{(r.sasbdb_title or "")[:60]}</td></tr>'
+        for r in top.itertuples())
 
     class_rows = "".join(
         f'<tr><td>{k}</td><td class="num">{CLS[k]["n"]}</td><td class="num">{f1(CLS[k]["chi2_raw_median"])}</td>'
@@ -316,12 +319,13 @@ def build():
 
 <h2 id="campaign">The measurement campaign</h2>
 <p>The <a href="{REPO}/blob/main/docs/CAMPAIGN.md">proposal</a> ranks candidate systems by the model's error, by whether SAXS can resolve it and by tractability (chain length, disorder class), then sets out the assay, the quality criteria that a script applies to every dataset, the success criteria, the contingencies and the work packages for an external provider. The top of the ranking:</p>
-<div class="scroll"><table><thead><tr><th>SASBDB</th><th>length</th><th>class</th><th>raw χ²</th><th>best χ²</th><th>kind</th><th>Rg</th></tr></thead><tbody>{cand_rows}</tbody></table></div>
+<div class="scroll"><table><thead><tr><th>SASBDB</th><th>length</th><th>class</th><th>raw χ²</th><th>best χ²</th><th>kind</th><th>Rg</th><th>deposited study</th></tr></thead><tbody>{cand_rows}</tbody></table></div>
+<p class="note">Every candidate's measured molecular weight matches its sequence mass within the monomer range, so the model's error is not an oligomer the sequence cannot reveal.</p>
 {fig("fig_candidates", "Figure 5 · the ranked candidates", "Measurement priority of the top twenty entries: log₁₀ raw χ² × resolvability weight (population 1.0, calibration 0.6, unresolved 0.3) × tractability weight (chain ≤ 350 residues; folded or partly disordered).", "Each bar is a protein whose SAXS profile the model currently misses and whose measurement under one standard condition would constrain it.")}
 <p>The assay is size-exclusion-coupled SAXS at three concentrations with a protein standard in every session, tags removed, one standard buffer recorded with each dataset, and a repeat of one deposited entry per batch as a cross-site control. Six quality criteria (Guinier linearity, no low-angle upturn, no radiation damage across frames, molecular weight from I(0) within 20% of the sequence mass, no negative intensities, control reproduced at χ² &lt; 2) decide pass or fail from recorded values. Unresolved cases get hydrogen–deuterium exchange mass spectrometry on the same batch of protein. Every batch of twelve constructs re-runs this pipeline on its new profiles, so the error map is updated before the next batch is chosen.</p>
 
 <h2 id="approach">Approach</h2>
-<p>The {A['n_entries']} profiles, with sequences, pH and per-residue disorder scores, are PeptoneDB-SAXS {cite('invernizzi')}, curated from SASBDB {cite('kikhney')}. The BioEmu-1 ensembles and their back-calculated curves (Pepsi-SAXS {cite('grudinin')}) are the PeptoneBench predictions; this study re-analyses them and does not re-sample. Each raw fit scales the ensemble average to the data with one factor {cite('svergun')} and one constant background and reports reduced χ² against the experimental errors. The Guinier radius of gyration is fitted on the low-angle region (q·Rg ≤ 1.3), iterated, with the fit taken from the upper part of the window, so a low-angle upturn registers as an aggregation flag and does not inflate Rg. Profiles with an upturn above {int(100 * A['thresholds']['aggregation_upturn'])}%, negative intensities or no valid Guinier region are reported but kept out of every statistic ({A['n_flag_aggregation']}, {A['n_flag_negative']} and {A['n_guinier_invalid']} profiles). Disorder classes use the mean per-residue score: folded below 0.2, disordered above 0.6.</p>
+<p>The {A['n_entries']} profiles, with sequences, pH and per-residue disorder scores, are PeptoneDB-SAXS {cite('invernizzi')}, curated from SASBDB {cite('kikhney')}. The BioEmu-1 ensembles and their back-calculated curves (Pepsi-SAXS {cite('grudinin')}) are the PeptoneBench predictions; this study re-analyses them and does not re-sample. Each raw fit scales the ensemble average to the data with one factor {cite('svergun')} and one constant background and reports reduced χ² against the experimental errors. The Guinier radius of gyration is fitted on the low-angle region (q·Rg ≤ 1.3), iterated, with the fit taken from the upper part of the window, so a low-angle upturn registers as an aggregation flag and does not inflate Rg. Profiles with an upturn above {int(100 * A['thresholds']['aggregation_upturn'])}%, an intensity more than three standard errors below zero, or no valid Guinier region are reported but kept out of every statistic ({A['n_flag_aggregation']}, {A['n_flag_negative']} and {A['n_guinier_invalid']} profiles). BioEmu-1 models monomers, so each entry's measured molecular weight from the SASBDB record is compared with its sequence mass; {A['n_flag_oligomer']} entries measure more than 1.6 times their sequence mass and are treated as oligomers and excluded (their median raw χ² is {f1(A['oligomer_median_chi2_raw'])}). Disorder classes use the mean per-residue score: folded below 0.2, disordered above 0.6.</p>
 
 <h2 id="expectations">Expectations set before scoring</h2>
 <div class="scroll"><table><thead><tr><th></th><th>expectation</th><th>result</th><th></th></tr></thead><tbody>{exp_rows}</tbody></table></div>

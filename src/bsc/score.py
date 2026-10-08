@@ -31,6 +31,15 @@ def read_prediction(model: str, label: str) -> np.ndarray | None:
     return pd.read_csv(p, index_col=0).to_numpy(float)
 
 
+AA_MASS = {"A": 71.08, "R": 156.19, "N": 114.10, "D": 115.09, "C": 103.14, "E": 129.12, "Q": 128.13,
+           "G": 57.05, "H": 137.14, "I": 113.16, "L": 113.16, "K": 128.17, "M": 131.19, "F": 147.18,
+           "P": 97.12, "S": 87.08, "T": 101.10, "W": 186.21, "Y": 163.18, "V": 99.13}
+
+
+def sequence_mass_kda(seq: str) -> float:
+    return (sum(AA_MASS.get(a, 110.0) for a in seq) + 18.02) / 1000
+
+
 def disorder_class(mean_gscore: float) -> str:
     for name, lo, hi in C.DISORDER_CLASSES:
         if lo <= mean_gscore < hi:
@@ -39,8 +48,12 @@ def disorder_class(mean_gscore: float) -> str:
 
 
 def entry_metadata(table: pd.DataFrame) -> pd.DataFrame:
+    summ = json.load(open(C.SASBDB_SUMMARY)) if C.SASBDB_SUMMARY.exists() else {}
     rows = []
     for _, r in table.iterrows():
+        sm = summ.get(r["label"], {})
+        mw_exp = float(sm["experimental_mw"]) if sm.get("experimental_mw") else np.nan
+        mw_seq = sequence_mass_kda(r["sequence"])
         exp = read_experiment(r["label"])
         usable = exp[exp["sigma"] > 0]
         g = (saxs.guinier(usable["q"].to_numpy(), usable["I"].to_numpy(), usable["sigma"].to_numpy(),
@@ -57,6 +70,9 @@ def entry_metadata(table: pd.DataFrame) -> pd.DataFrame:
                                               and g["upturn"] > C.AGGREGATION_UPTURN),
                      "flag_negative_I": bool(((usable["I"] / usable["sigma"]) < -C.NEGATIVE_SIGMA).any()),
                      "flag_bad_errors": bool((exp["sigma"] <= 0).any()),
+                     "mw_seq_kda": mw_seq, "mw_exp_kda": mw_exp, "mw_ratio": mw_exp / mw_seq,
+                     "flag_oligomer": bool(np.isfinite(mw_exp) and mw_exp / mw_seq > C.OLIGOMER_MW_RATIO),
+                     "sasbdb_title": sm.get("title"),
                      "sequence": r["sequence"]})
     return pd.DataFrame(rows)
 

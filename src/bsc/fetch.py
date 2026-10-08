@@ -80,6 +80,23 @@ def extract_predictions(archive: Path, models: list[str]) -> None:
         t.extractall(C.DATA, members=members, filter="data")
 
 
+def fetch_sasbdb_summaries(labels: list[str]) -> None:
+    """Entry summaries (measured molecular weight, Guinier Rg, project title) from the SASBDB REST API."""
+    import time
+    out = json.load(open(C.SASBDB_SUMMARY)) if C.SASBDB_SUMMARY.exists() else {}
+    keys = ("experimental_mw", "guinier_i0_mw", "porod_mw", "guinier_rg", "symmetry")
+    for lab in labels:
+        if lab in out:
+            continue
+        r = requests.get(C.SASBDB_API.format(label=lab), timeout=60)
+        r.raise_for_status()
+        d = r.json()
+        out[lab] = {k: d.get(k) for k in keys}
+        out[lab]["title"] = (d.get("project") or {}).get("title")
+        time.sleep(0.1)
+    json.dump(out, open(C.SASBDB_SUMMARY, "w"), indent=1)
+
+
 def main(models: list[str] | None = None, archive_dir: Path | None = None) -> None:
     """Fetch and unpack. `archive_dir` can point at already-downloaded archives."""
     models = models or [C.MODEL, *C.COMPARATORS]
@@ -94,3 +111,6 @@ def main(models: list[str] | None = None, archive_dir: Path | None = None) -> No
     extract_predictions(paths["Predictions.tar.gz"], models)
     n = len(list(C.SAXS_DIR.glob("*.dat")))
     print(f"  {n} experimental curves; predictions for {', '.join(models)}", flush=True)
+    import pandas as pd
+    fetch_sasbdb_summaries(pd.read_csv(C.SAXS_TABLE)["label"].tolist())
+    print(f"  SASBDB summaries for {len(json.load(open(C.SASBDB_SUMMARY)))} entries", flush=True)

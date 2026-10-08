@@ -82,7 +82,8 @@ def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
                         "disorder_class": cls, "length_bin": "x", "n_q": 200, "q_min": 0.01, "q_max": 0.3,
                         "rg_exp": 20.0, "rg_exp_err": 0.3, "guinier_points": 30, "guinier_valid": True,
                         "upturn": 0.0, "flag_aggregation": False, "flag_negative_I": False,
-                        "flag_bad_errors": False, "sequence": "A"})
+                        "flag_bad_errors": False, "flag_oligomer": False, "mw_ratio": 1.0,
+                        "sasbdb_title": "t", "sequence": "A"})
     ent.loc[0, "flag_aggregation"] = True
     ent.to_csv(results / "entries.csv", index=False)
     # disordered worse, folded chi2 rising with length, model too compact for disordered

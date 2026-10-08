@@ -24,7 +24,7 @@ def load() -> tuple[pd.DataFrame, pd.DataFrame]:
     df = sc.merge(ent.drop(columns=["sequence"]), on="label", how="left")
     df["log_chi2_raw"] = np.log10(df["chi2_raw"])
     df["rg_ratio"] = df["rg_model"] / df["rg_exp"]
-    flagged = df["flag_aggregation"] | df["flag_negative_I"] | df["flag_bad_errors"]
+    flagged = df["flag_aggregation"] | df["flag_negative_I"] | df["flag_bad_errors"] | df["flag_oligomer"]
     df["clean"] = ~flagged & df["guinier_valid"]
     return ent, df
 
@@ -126,7 +126,7 @@ def candidates(d: pd.DataFrame) -> pd.DataFrame:
     m["rg_direction"] = np.where(m["rg_ratio"] < 0.95, "model too compact",
                                  np.where(m["rg_ratio"] > 1.05, "model too extended", "Rg agrees"))
     cols = ["label", "length", "disorder_class", "chi2_raw", "chi2_best", "phi_at_chi2_2",
-            "resolvability", "rg_exp", "rg_model", "rg_direction", "priority"]
+            "resolvability", "rg_exp", "rg_model", "rg_direction", "mw_ratio", "sasbdb_title", "priority"]
     return m.sort_values("priority", ascending=False)[cols].reset_index(drop=True)
 
 
@@ -147,6 +147,8 @@ def main() -> None:
         "n_flag_aggregation": int(ent["flag_aggregation"].sum()),
         "n_flag_negative": int(ent["flag_negative_I"].sum()),
         "n_flag_bad_errors": int(ent["flag_bad_errors"].sum()),
+        "n_flag_oligomer": int(ent["flag_oligomer"].sum()),
+        "oligomer_median_chi2_raw": float(m.loc[m["flag_oligomer"], "chi2_raw"].median()),
         "n_guinier_invalid": int((~ent["guinier_valid"]).sum()),
         "class_counts": ent["disorder_class"].value_counts().to_dict(),
         "bioemu": {

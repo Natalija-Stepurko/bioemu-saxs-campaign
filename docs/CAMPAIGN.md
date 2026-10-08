@@ -5,27 +5,27 @@ is fixed in `docs/DESIGN.md` §6; the numbers below are read from the results.*
 
 ## 1. What the error map says
 
-Scored without reweighting against 421 quality-filtered SASBDB profiles, the BioEmu-1 ensemble
-reaches reduced χ² ≤ 2 for 36% of entries (median χ² 3.4;
-quartiles 1.4–11.9). By class, the median raw χ² is
-2.4 for folded proteins (n = 251),
-4.3 for partly disordered (n = 117) and
-8.9 for disordered (n = 49).
+Scored without reweighting against 403 quality-filtered SASBDB profiles, the BioEmu-1 ensemble
+reaches reduced χ² ≤ 2 for 37% of entries (median χ² 3.3;
+quartiles 1.4–10.9). By class, the median raw χ² is
+2.3 for folded proteins (n = 246),
+4.3 for partly disordered (n = 112) and
+8.9 for disordered (n = 41).
 Expectation E1 (disordered worse than folded) is met
-(one-sided p = 1.8e-06); E2 (error rising with length among folded proteins) is
-not met (ρ = +0.07); E4 (over-compaction of
+(one-sided p = 1.3e-06); E2 (error rising with length among folded proteins) is
+not met (ρ = +0.09); E4 (over-compaction of
 disordered proteins) is not met: the median ensemble Rg is
-1.21 times the measured value, and only 20% of disordered
+1.21 times the measured value, and only 24% of disordered
 entries are below 1, so the model's disordered ensembles are too extended,
 which is the direction a measurement campaign on disordered proteins would correct.
 
 ## 2. What SAXS can and cannot resolve
 
 Reweighting each ensemble towards its profile sorts the entries into four kinds
-(151 fit as they are; 66 need a modest shift, keeping at least half the
-effective sample; 93 need their populations moved substantially; 107
+(146 fit as they are; 65 need a modest shift, keeping at least half the
+effective sample; 91 need their populations moved substantially; 97
 cannot be brought to χ² ≤ 2 from the conformers the model proposes). Expectation E3 is
-not met: 9% of entries reach χ² ≈ 1 while
+not met: 10% of entries reach χ² ≈ 1 while
 keeping more than 30% of the effective sample.
 
 - **Population cases** are where new SAXS data would move the model most: the right conformers exist in
