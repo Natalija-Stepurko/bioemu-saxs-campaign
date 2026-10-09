@@ -34,3 +34,33 @@ def test_denss_logs_are_parsed(tmp_path):
     rec = envelopes.parse_average_log(avg)
     assert rec == {"resolution_A": 25.3, "resolution_sd_A": 3.7, "mean_correlation": 0.858,
                    "maps_accepted": 9}
+
+
+def test_operating_point_is_the_first_point_reaching_the_target():
+    assert envelopes.operating_point([5.0, 3.0, 1.9, 1.2], raw_chi2=6.0) == 2
+    assert envelopes.operating_point([1.5, 1.2], raw_chi2=1.8) == -1          # the raw ensemble already fits
+    assert envelopes.operating_point([5.0, 4.0, 3.0], raw_chi2=6.0) is None   # never reached
+
+
+def test_secondary_structure_records_follow_the_pdb_columns():
+    residues = [("ALA", "A", i) for i in range(12)]
+    rec = envelopes.ss_records(residues, "CHHHHCCEEECH")
+    helix, sheet = rec
+    assert helix.startswith("HELIX ") and sheet.startswith("SHEET ")
+    # the columns 3Dmol.js and other readers take the residue ranges from
+    assert helix[19] == "A" and int(helix[21:25]) == 1 and helix[31] == "A" and int(helix[33:37]) == 4
+    assert sheet[21] == "A" and int(sheet[22:26]) == 7 and sheet[32] == "A" and int(sheet[33:37]) == 9
+    assert len(rec) == 2                                       # the one-residue helix at the end stays coil
+
+
+def test_autocrop_trims_white_and_reports_edge_contact(tmp_path):
+    from PIL import Image
+    im = Image.new("RGB", (100, 80), "white")
+    for x in range(40, 60):
+        for y in range(30, 50):
+            im.putpixel((x, y), (0, 0, 0))
+    p = tmp_path / "r.png"
+    im.save(p)
+    assert envelopes.autocrop(p, margin=5) is False
+    assert Image.open(p).size == (30, 30)
+    assert envelopes.ink_extent(p, (30, 30)) == (20, 20)
