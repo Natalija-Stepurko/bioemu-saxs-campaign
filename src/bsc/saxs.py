@@ -101,15 +101,12 @@ def _standardise(curves: np.ndarray, exp: np.ndarray, sigma: np.ndarray) -> tupl
     return curves / sigma, exp / sigma
 
 
-def reweight(curves: np.ndarray, exp: np.ndarray, sigma: np.ndarray, theta: float,
-             x0: np.ndarray | None = None) -> tuple[np.ndarray, float]:
-    """Weights minimising chi2/2 + theta * KL(w || uniform), with the computed curve scaled to the
-    data (Svergun factor) and a fitted constant background inside the objective.
-
-    Optimised over log-weights; returns (weights, reduced chi2 of the reweighted curve)."""
+def reweight_objective(curves: np.ndarray, exp: np.ndarray, sigma: np.ndarray, theta: float):
+    """The objective over log-weights, chi2/2 + theta * KL(w || uniform), with the computed curve scaled
+    to the data (Svergun factor) and a constant background fitted by least squares inside it; returns a
+    function of the log-weights giving (value, gradient)."""
     X, y = _standardise(curves, exp, sigma)
-    n, m = X.shape
-    ones = 1.0 / sigma
+    ones = 1.0 / sigma           # the constant background, standardised like the data
 
     def f(logw):
         lw = logw - logsumexp(logw)
@@ -118,12 +115,21 @@ def reweight(curves: np.ndarray, exp: np.ndarray, sigma: np.ndarray, theta: floa
         # scale and background by least squares on the standardised curve
         A = np.vstack([avg, ones]).T
         (c, b), *_ = np.linalg.lstsq(A, y, rcond=None)
-        r = c * avg + b - y
+        r = c * avg + b * ones - y
         loss = 0.5 * r @ r + theta * np.sum(w * lw)
         g_w = X @ (c * r) + theta * (1.0 + lw)
         jac = w * g_w - w * (w @ g_w)
         return loss, jac
 
+    return f
+
+
+def reweight(curves: np.ndarray, exp: np.ndarray, sigma: np.ndarray, theta: float,
+             x0: np.ndarray | None = None) -> tuple[np.ndarray, float]:
+    """Weights minimising chi2/2 + theta * KL(w || uniform) (see reweight_objective), optimised over
+    log-weights; returns (weights, reduced chi2 of the reweighted curve)."""
+    n = curves.shape[0]
+    f = reweight_objective(curves, exp, sigma, theta)
     if x0 is None:
         x0 = np.full(n, -np.log(n))
     res = minimize(f, x0, jac=True, method="L-BFGS-B", options={"maxiter": 5000, "gtol": 1e-6})

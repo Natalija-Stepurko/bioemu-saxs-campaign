@@ -157,9 +157,8 @@ beside the old ones in `results/`.
 - **Presentation changes that touch numbers (2026-10-09).** The fourth kind is renamed *target fit not
   reached* (by the tested reweighting procedure); its logic and count are unchanged. The worked examples show
   the reweighted curve at the operating point the kinds use, the first point along the reweighting path with
-  χ² ≤ 2, with φ and Rg recomputed there (φ 0.96, 0.90 and 0.79 for SASDH84, SASDM65 and SASDLK9); the χ²
-  minimum of each path is reported beside it, and the conformer drawn in the envelope is still the
-  highest-weight one at that minimum. The selection evaluation also reports the two components of the
+  χ² ≤ 2, with φ and Rg recomputed there; the χ² minimum of each path is reported beside it, and the
+  conformer drawn in the envelope is still the highest-weight one at that minimum. The selection evaluation also reports the two components of the
   high-discrepancy target yield (strongly reweightable; target fit not reached) separately, and one
   strongly reweightable path, chosen in code as the entry with the median φ of its kind, is drawn on the page.
 - **Priority score not used to recommend (2026-10-09).** §6 proposed a ranked candidate list; the priority
@@ -170,6 +169,30 @@ beside the old ones in `results/`.
   350 residues, folded or partly disordered) and lists the twelve with the largest observed raw χ², the
   same twelve the score ranks first, with the final choice left to a feasibility review. Arm 2 splits test and
   control proteins by a model-and-sequence quantity, within the archive's quality-checked disordered entries.
+
+- **Worked examples re-chosen (2026-10-09, later the same day).** The first rule (nearest the class median
+  raw χ²) gave examples that were typical in error but not in size (the disordered one had an Rg ratio of
+  1.09 against a class median of 1.21, and 475 residues). The examples are now, per class, the clean entry with
+  a chain of at most 300 residues nearest the class median in both log₁₀ raw χ² and log Rg ratio (distance:
+  the norm of the two deviations, each divided by its class standard deviation): SASDD43, SASDVZ8 and
+  SASDBY5. Where an example does not reach χ² ≤ 2 along the path, the reweighted curve shown is the one at the
+  χ² minimum, labelled as such. The envelope is drawn as filled projections of two density levels (protein
+  volume and particle volume) with the conformer's Cα trace; the ribbon rendering was withdrawn. The worked
+  examples are kept out of the coordinate-Rg class statistics, which use the disordered entries and the
+  seeded folded sample only.
+
+- **Error in the reweighting residual, corrected (2026-10-10).** Inside the reweighting objective the
+  constant background was fitted on the standardised data (a column of 1/σ) but added to the residual without
+  that scaling, so the objective and its gradient did not describe the fit being made. For 40 of the 399
+  clean BioEmu-1 profiles the optimiser never moved the weights; for the others it followed a distorted
+  objective. The residual now uses the scaled background, with tests on the gradient and on a case that
+  needs a background. Raw χ², NRMSD, every Rg result and the ordering of the models do not use reweighting
+  and are unchanged. Every reweighting-derived quantity was recomputed: the kinds (raw fit 146, modestly
+  reweightable 77, strongly reweightable 106, target fit not reached 70; before: 146, 65, 91, 97), E3, the
+  φ-threshold sensitivity, the comparators' best χ², the arm 1 eligibility list, the selection evaluation, the
+  kind classifier and the worked examples' reweighted curves. E3 remains not met, the raw error remains not
+  predictable from pre-measurement features, and the policies fed predictions remain within the spread of a
+  random pick.
 
 ## 8. Conventions
 

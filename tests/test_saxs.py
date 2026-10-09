@@ -90,3 +90,32 @@ def test_nrmsd_log_on_a_synthetic_case():
     curves = np.array([sphere_curve(q, r) for r in (24.0, 25.0, 26.0)])
     path, ws = saxs.reweighting_curve(curves, truth, sigma, np.array([100.0, 1.0]), return_weights=True)
     assert len(path) == len(ws) == 2 and all(abs(w.sum() - 1) < 1e-9 for w in ws)
+
+
+def _background_case(seed: int):
+    """Data on a realistic intensity scale with non-uniform errors and a non-zero buffer offset."""
+    rng = np.random.default_rng(seed)
+    q = np.linspace(0.01, 0.3, 120)
+    radii = np.linspace(15, 35, 30)
+    curves = 4e4 * np.array([sphere_curve(q, r) for r in radii])
+    truth = 0.7 * curves[25] + 0.3 * curves[3] + 150.0          # needs a background offset
+    sigma = 0.02 * truth + 5.0
+    exp = truth + rng.normal(0, sigma)
+    return curves, exp, sigma
+
+
+def test_reweighting_gradient_matches_finite_differences():
+    curves, exp, sigma = _background_case(5)
+    f = saxs.reweight_objective(curves, exp, sigma, theta=0.5)
+    x = np.random.default_rng(6).normal(0, 0.5, len(curves))
+    _, g = f(x)
+    h = 1e-5
+    num = np.array([(f(x + h * e)[0] - f(x - h * e)[0]) / (2 * h) for e in np.eye(len(x))])
+    assert np.max(np.abs(num - g)) / np.max(np.abs(num)) < 1e-4
+
+
+def test_reweighting_with_a_background_offset_improves_on_uniform_weights():
+    curves, exp, sigma = _background_case(7)
+    uniform = saxs.chi2(saxs.ensemble_curve(curves), exp, sigma)
+    w, c2 = saxs.reweight(curves, exp, sigma, theta=0.1)
+    assert c2 < 0.5 * uniform and saxs.kish_fraction(w) < 0.9
