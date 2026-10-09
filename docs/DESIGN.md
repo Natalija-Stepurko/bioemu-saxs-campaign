@@ -167,8 +167,9 @@ beside the old ones in `results/`.
   tested retrospectively (`select_eval`) and does not pick high-discrepancy profiles better than random choice
   when fed pre-measurement quantities. It is reported with its test and not used for selection: arm 1 takes
   the systems that meet stated eligibility rules (reweighting reaches χ² ≤ 2, monomer by measured mass, at most
-  350 residues, folded or partly disordered), listed by raw χ² as a sort key, with the final choice left to a
-  feasibility review.
+  350 residues, folded or partly disordered) and lists the twelve with the largest observed raw χ², the
+  same twelve the score ranks first, with the final choice left to a feasibility review. Arm 2 splits test and
+  control proteins by a model-and-sequence quantity, within the archive's quality-checked disordered entries.
 
 ## 8. Conventions
 

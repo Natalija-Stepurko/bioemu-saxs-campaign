@@ -749,9 +749,9 @@ profiles better than random choice when it is fed the quantities known before a 
 set by judgement, so it is not used to recommend measurements. Arm 1 takes the systems that meet stated
 eligibility rules: reweighting reaches χ² ≤ 2 (strongly or modestly reweightable), the measured mass matches a
 monomer, the chain has at most {arms['arm1']['max_length']} residues, and the protein is folded or partly disordered.
-{arms['arm1']['n_eligible']} entries qualify. The {len(arm1)} with the largest raw χ² are listed; that order is a
-sort by the size of the known discrepancy, which is what a replication can test, and not an estimate of what the
-measurement is worth. The final choice among eligible systems needs a feasibility review (construct availability,
+{arms['arm1']['n_eligible']} entries qualify. The {len(arm1)} with the largest observed raw χ² are listed, which is the
+size of the known discrepancy a replication can test and not an estimate of what the measurement is worth.
+They are the same {len(arm1)} the score ranks first; what is dropped is its judgement-set weighting. The final choice among eligible systems needs a feasibility review (construct availability,
 expression, deposited buffer).
 
 | SASBDB | length | class | raw χ² | best χ² | kind | Rg |
@@ -771,7 +771,8 @@ says only how far the rule can be trusted to rank unmeasured proteins from what 
 
 The pre-registered expectation E4 predicted over-compaction; the archive shows the opposite. The hypothesis
 came from this archive, so this arm is a prospective replication test with pre-specified model-based
-selection and new SAXS measurements. The test arm takes disordered
+selection and new SAXS measurements. The split into test and control proteins uses only the model and the
+sequence; the pool is the archive's disordered entries whose deposited profiles pass the quality checks. The test arm takes disordered
 proteins whose BioEmu-1 ensemble Rg exceeds the disordered scaling-law Rg (1.927 N^0.598 Å) by more than
 {int(100 * (arms['arm2']['threshold_ratio'] - 1))}%, spanning chain length and net charge
 ({arms['arm2']['n_test_candidates']} of {arms['arm2']['n_disordered_pool']} disordered entries qualify); the
