@@ -40,6 +40,8 @@ OUT = C.RESULTS / "figures"
 
 PX_PER_IN = 80                   # figure inches -> CSS pixels at the display width
 DPI = 2 * PX_PER_IN               # PNGs carry two pixels per CSS pixel; the page reads the width back
+LINE_ALPHA = 0.9                 # one transparency for every line plot on the page
+RESIDUAL_LW = 0.8
 KIND_GREYS = ["#C3C9CF", "#959DA5", "#66707A", "#3A4148"]
 
 
@@ -211,7 +213,7 @@ def fig_rg_robustness(d: pd.DataFrame, A: dict) -> None:
     if cr and p.exists():
         frame(ax)
         tab = pd.read_csv(p)
-        tab = tab[tab["label"].isin(m["label"])]
+        tab = tab[tab["label"].isin(m["label"]) & (tab.get("reason", "") != "worked example")]
         pos, ticks, labels = 0.0, [], []
         for cls in ("folded", "disordered"):
             if cls not in cr:
@@ -269,7 +271,7 @@ def fig_kinds(d: pd.DataFrame, paths: list[dict], A: dict) -> None:
     P = pd.DataFrame(paths)
     g = P[P["label"] == lab].sort_values("theta", ascending=False) if lab else P.iloc[:0]
     if len(g):
-        ax.plot(g["phi"], g["chi2"], color=ROLE_COL["reweighted"], lw=1.6,
+        ax.plot(g["phi"], g["chi2"], color=ROLE_COL["reweighted"], lw=1.6, alpha=LINE_ALPHA,
                 marker="o", ms=3)
         ax.axhline(2, color=MUTED, lw=0.8, ls="--")
         hit = g[g["chi2"] <= 2]
@@ -469,7 +471,7 @@ def fig_predict_detail() -> None:
     ax = axes[0]
     cal = P["calibration_hgb"]
     ax.plot([0, 1], [0, 1], color=MUTED, lw=0.8)
-    ax.plot([c["mean_predicted"] for c in cal], [c["observed_rate"] for c in cal], "o-", color=ACCENT, ms=5)
+    ax.plot([c["mean_predicted"] for c in cal], [c["observed_rate"] for c in cal], "o-", color=ACCENT, ms=5, alpha=LINE_ALPHA)
     for c in cal:
         ax.text(c["mean_predicted"], c["observed_rate"] + 0.04, f"n={c['n']}", ha="center", fontsize=9.5, color=MUTED)
     ax.set_xlim(0, 1)
@@ -491,11 +493,27 @@ def fig_predict_detail() -> None:
     save(fig, "fig_predict_detail")
 
 
+SILHOUETTE = {"particle": "#DDE3E9", "protein": "#AAB7C5"}    # neutral grey-blue: lighter outside, darker inside
+TRACE_COL = "#3A4148"
+
+
+def _silhouette(ax, xy: np.ndarray, colour: str, lo: np.ndarray, hi: np.ndarray, step: float) -> None:
+    """Filled projection of a set of map points (spaced `step` Å apart) onto the drawing plane, with
+    a smoothed outline."""
+    from scipy import ndimage
+    bx = np.arange(lo[0], hi[0] + step, step)
+    by = np.arange(lo[1], hi[1] + step, step)
+    h, _, _ = np.histogram2d(xy[:, 0], xy[:, 1], bins=[bx, by])
+    occ = ndimage.gaussian_filter(ndimage.binary_closing(h > 0, iterations=2).astype(float), 0.8)
+    cx, cy = 0.5 * (bx[1:] + bx[:-1]), 0.5 * (by[1:] + by[:-1])
+    ax.contourf(cx, cy, occ.T, levels=[0.5, 2.0], colors=[colour], zorder=1)
+
+
 def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
     """Figure 2: one column per class. The measured profile (every point, with its error as a band),
-    the raw and reweighted BioEmu-1 curves and the AlphaFold2 curve; residuals; and the ribbon of the
-    highest-weight conformer inside three density levels of the DENSS envelope, rendered by `bsc envelopes`,
-    with a density key under the row."""
+    the raw and reweighted BioEmu-1 curves and the AlphaFold2 curve under one shared legend, with the
+    chi2 values in a second title line; residuals; and the DENSS envelope as projected silhouettes of
+    two density levels with the C-alpha trace of the highest-weight conformer docked inside."""
     stats_path = C.RESULTS / "denss_stats.json"
     if not stats_path.exists():
         print("  fig_examples: no results/denss_stats.json (run `bsc envelopes`); tracked figure kept", flush=True)
@@ -503,20 +521,18 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
     stats = json.load(open(stats_path))
     examples = A["examples"]
     need = [C.RESULTS / stats[lab]["avg_map"] for lab in examples.values() if lab in stats]
-    ribbons = [envelopes.ribbon_png(lab) for lab in examples.values()]
-    if (len(need) < len(examples) or not all(p.exists() for p in need + ribbons) or not C.SAXS_DIR.exists()):
-        print("  fig_examples: DENSS maps, ribbon renderings or input curves missing; tracked figure kept", flush=True)
+    if len(need) < len(examples) or not all(p.exists() for p in need) or not C.SAXS_DIR.exists():
+        print("  fig_examples: DENSS maps or input curves missing; tracked figure kept", flush=True)
         return None
-    from PIL import Image
     e = ent.set_index("label")
-    W, H = 860, 670
+    W, H = 860, 650
     fig = plt.figure(figsize=(W / PX_PER_IN, H / PX_PER_IN))
-    gs = fig.add_gridspec(2, 3, height_ratios=[2.2, 0.85], hspace=0.07, wspace=0.2,
-                          left=0.065, right=0.99, top=0.957, bottom=0.4985)
-    gs3 = fig.add_gridspec(1, 3, wspace=0.04, left=0.01, right=0.99, top=0.445, bottom=0.088)
+    gs = fig.add_gridspec(2, 3, height_ratios=[2.1, 0.85], hspace=0.07, wspace=0.2,
+                          left=0.065, right=0.99, top=0.862, bottom=0.44)
+    gs3 = fig.add_gridspec(1, 3, wspace=0.06, left=0.02, right=0.99, top=0.34, bottom=0.085)
     data_style = {"facecolors": "none", "edgecolors": ROLE_COL["data"], "alpha": 0.4, "linewidths": 0.5}
     col = {"raw": ROLE_COL["bioemu"], "operating": ROLE_COL["reweighted"], "alphafold": ROLE_COL["single_structure"]}
-    dash = {"raw": "-", "operating": "-", "alphafold": (0, (4, 2))}
+    style = {"raw": "-", "operating": ":", "alphafold": "--"}
     out = {}
     for j, (cls, label) in enumerate(examples.items()):
         f = envelopes.example_fit(label)
@@ -525,53 +541,55 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
         axr = fig.add_subplot(gs[1, j], sharex=ax)
         q, I, s = f["q"], f["I"], f["sigma"]
         pos = I > 0
-        y0 = np.log(I[pos]).min() - 0.35 * np.ptp(np.log(I[pos]))
+        y0 = np.log(I[pos]).min() - 0.08 * np.ptp(np.log(I[pos]))
         lo = np.where(I - s > 0, np.log(np.clip(I - s, 1e-30, None)), y0)
         hi = np.log(np.clip(I + s, 1e-30, None))
         ax.fill_between(q, np.maximum(lo, y0), np.maximum(hi, y0), color="#BFC8D0", lw=0, zorder=0)
         ax.scatter(q[pos], np.log(I[pos]), s=6, zorder=1, **data_style)
         for k, name in enumerate(("alphafold", "raw", "operating")):
-            if name not in f["curves"]:
-                continue
             fit = f["curves"][name]["fit"]
             okf = fit > 0
-            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.4 if name == "alphafold" else 1.7,
-                    ls=dash[name], zorder=3 + k)
-            axr.plot(q, (fit - I) / s, color=col[name], lw=0.7, alpha=0.8, ls=dash[name] if name != "alphafold" else "-",
-                     zorder=3 + k)
-        lines = [("raw", f"BioEmu-1 raw · χ² {f['curves']['raw']['chi2']:.2f}"),
-                 ("operating", f"reweighted, φ {f['phi_operating']:.2f} · χ² {f['curves']['operating']['chi2']:.2f}"),
-                 ("alphafold", f"AlphaFold2 · χ² {f['curves']['alphafold']['chi2']:.1f}")]
-        for k, (name, txt) in enumerate(lines):
-            yy = 0.05 + 0.08 * (3 - k)
-            ax.plot([0.03, 0.09], [yy, yy], color=col[name], lw=2, ls=dash[name], transform=ax.transAxes)
-            ax.text(0.11, yy, txt, transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
-        ax.scatter([0.06], [0.05], s=9, transform=ax.transAxes, **{**data_style, "alpha": 0.6, "linewidths": 0.6})
-        ax.text(0.11, 0.05, "measured, grey band ± σ", transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
-        ax.set_ylim(y0, np.log(I[pos]).max() + 0.3)
-        ax.set_title(f"{cls}: {label} · {int(e.loc[label, 'length'])} residues", loc="left", fontsize=10)
+            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.8, ls=style[name], alpha=LINE_ALPHA,
+                    zorder=3 + k)
+            axr.plot(q, (fit - I) / s, color=col[name], lw=RESIDUAL_LW, ls="-", alpha=LINE_ALPHA, zorder=3 + k)
+        c2 = f["curves"]
+        rew = (f"reweighted {c2['operating']['chi2']:.2f} (φ {f['phi_operating']:.2f})" if f["operating_reached"]
+               else f"χ² minimum {c2['operating']['chi2']:.2f} (φ {f['phi_operating']:.2f})")
+        ax.set_title(f"{cls}: {label} · {int(e.loc[label, 'length'])} residues", loc="left", fontsize=10, pad=30)
+        ax.text(0, 1.015, f"χ² raw {c2['raw']['chi2']:.2f} · AlphaFold2 {c2['alphafold']['chi2']:.1f}\n{rew}",
+                transform=ax.transAxes, fontsize=8.5, color=MUTED, va="bottom", linespacing=1.25)
+        ax.set_ylim(y0, np.log(I[pos]).max() + 0.2)
         plt.setp(ax.get_xticklabels(), visible=False)
         axr.axhline(0, color=MUTED, lw=0.7, zorder=1)
         for g in (-3, 3):
             axr.axhline(g, color="#C3C9CF", lw=0.7, ls="--", zorder=1)
-        lim = np.nanmax(np.abs(np.concatenate([(f["curves"][n]["fit"] - I) / s for n in f["curves"]])))
+        lim = np.nanmax(np.abs(np.concatenate([(c2[n]["fit"] - I) / s for n in c2])))
         axr.set_ylim(-min(lim * 1.05, 25), min(lim * 1.05, 25))
         axr.set_xlabel("q (Å⁻¹)")
         if j == 0:
             ax.set_ylabel("ln I(q)")
             axr.set_ylabel("residual / σ")
-        # the ribbon rendering, with the docking statistics recomputed here
+        # envelope: projected silhouettes of the two density levels, C-alpha trace on top
         volume = envelopes.POROD_A3_PER_DA * 1000.0 * float(e.loc[label, "mw_seq_kda"])
         support = float(st.get("support_volume_mean_A3", volume))
         dk = envelopes.docked_example(label, f["top_conformer"], C.RESULTS / st["avg_map"], volume, support)
         ax3 = fig.add_subplot(gs3[0, j])
-        ax3.imshow(np.asarray(Image.open(envelopes.ribbon_png(label)).convert("RGB")), interpolation="lanczos")
+        allxy = np.vstack([sf["points"][:, :2] for sf in dk["surfaces"]] + [dk["ca"][:, :2]])
+        pad = 2 * dk["voxel_A"]
+        lo2, hi2 = allxy.min(axis=0) - pad, allxy.max(axis=0) + pad
+        for sf in dk["surfaces"]:
+            _silhouette(ax3, sf["points"][:, :2], SILHOUETTE[sf["name"]], lo2, hi2, dk["voxel_A"])
+        ax3.plot(dk["ca"][:, 0], dk["ca"][:, 1], color=TRACE_COL, lw=0.8, alpha=LINE_ALPHA, zorder=3,
+                 solid_joinstyle="round")
+        ax3.set_xlim(lo2[0], hi2[0])
+        ax3.set_ylim(lo2[1], hi2[1])
+        ax3.set_aspect("equal")
+        ax3.set_anchor("S")
         ax3.set_axis_off()
-        ax3.set_anchor("S")          # images sit on their captions whatever their aspect
-        fig.text(gs3[0, j].get_position(fig).x0 + 0.02, 0.06, f"{st.get('resolution_A', 0):.0f} Å envelope · "
+        fig.text(gs3[0, j].get_position(fig).x0 + 0.01, 0.05, f"{st.get('resolution_A', 0):.0f} Å envelope · "
                  f"w = {f['top_weight']:.2f} · {100 * dk['inside']:.0f}% of Cα inside", fontsize=9.5, color=MUTED)
         out[label] = {"class": cls, "length": int(e.loc[label, "length"]),
-                      "chi2": {k: float(v["chi2"]) for k, v in f["curves"].items()},
+                      "chi2": {k: float(v["chi2"]) for k, v in c2.items()},
                       "chi2_minimum": f["chi2_minimum"], "phi_operating": float(f["phi_operating"]),
                       "phi_minimum": float(f["phi_minimum"]), "operating_is_raw": f["operating_is_raw"],
                       "operating_reached": f["operating_reached"],
@@ -579,27 +597,34 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
                       "rg_operating": float(f["rg_operating"]), "rg_minimum": float(f["rg_minimum"]),
                       "top_conformer": f["top_conformer"], "top_weight": f["top_weight"],
                       "ca_inside_envelope": dk["inside"], "ca_inside_support_surface": dk["inside_outer"],
-                      "ca_inside_core": dk["inside_core"],
                       "density_levels": [{k: lv[k] for k in ("name", "volume_A3", "iso_over_max", "ca_inside")}
                                          for lv in dk["surfaces"]],
                       "chain_breaks": dk["chain_breaks"], "n_points": int(len(q)), "n_points_positive": int(pos.sum()),
                       "isovalue_volume_A3": volume, "support_volume_A3": support,
                       "denss": {k: st[k] for k in ("dmax_A", "n_maps", "chi2_median", "resolution_A",
                                                   "maps_accepted", "rg_per_map_mean") if k in st}}
-    # density key: each swatch is the colour a level takes over the ones outside it, as composited
-    rgb, x = np.ones(3), 0.03
-    fig.text(x, 0.022, "envelope density", fontsize=9.5, color=MUTED, va="center")
-    x += 0.115
-    names = {"particle": "lowest: particle volume", "protein": "protein volume (1.7 Å³/Da)",
-             "dense core": "highest: densest half"}
-    for k, (name, colour, opacity) in enumerate(envelopes.DENSITY_LEVELS):
-        rgb = rgb * (1 - opacity) + np.array(matplotlib.colors.to_rgb(colour)) * opacity
-        fig.add_artist(matplotlib.patches.Rectangle((x, 0.010), 0.022, 0.025, transform=fig.transFigure,
-                                                    facecolor=rgb, edgecolor=RULE, lw=0.6))
-        fig.text(x + 0.028, 0.022, names[name], fontsize=9.5, color=INK, va="center")
-        x += 0.235 if k < 2 else 0
-        if k < 2:
-            fig.text(x - 0.022, 0.022, "→", fontsize=9.5, color=MUTED, va="center")
+    # one shared legend above the three columns
+    handles = [matplotlib.lines.Line2D([], [], color=col["raw"], lw=1.8, ls=style["raw"], label="BioEmu-1 raw"),
+               matplotlib.lines.Line2D([], [], color=col["operating"], lw=1.8, ls=style["operating"],
+                                       label="reweighted"),
+               matplotlib.lines.Line2D([], [], color=col["alphafold"], lw=1.8, ls=style["alphafold"],
+                                       label="AlphaFold2"),
+               matplotlib.lines.Line2D([], [], marker="o", ls="none", mfc="none", mec=ROLE_COL["data"], mew=0.7,
+                                       ms=4, label="measured"),
+               matplotlib.patches.Patch(color="#BFC8D0", label="± σ")]
+    fig.legend(handles=handles, loc="upper center", ncol=5, frameon=False, fontsize=9.5,
+               bbox_to_anchor=(0.53, 1.0), handlelength=2.6, columnspacing=1.6)
+    # density key
+    x = 0.03
+    fig.text(x, 0.02, "envelope density", fontsize=9.5, color=MUTED, va="center")
+    for name, label_txt in (("particle", "lower: particle volume"), ("protein", "higher: protein volume")):
+        x += 0.13 if name == "particle" else 0.2
+        fig.add_artist(matplotlib.patches.Rectangle((x, 0.008), 0.022, 0.025, transform=fig.transFigure,
+                                                    facecolor=SILHOUETTE[name], edgecolor=RULE, lw=0.6))
+        fig.text(x + 0.028, 0.02, label_txt, fontsize=9.5, color=INK, va="center")
+    fig.add_artist(matplotlib.lines.Line2D([0.61, 0.645], [0.02, 0.02], transform=fig.transFigure, color=TRACE_COL,
+                                           lw=0.8))
+    fig.text(0.652, 0.02, "Cα trace of the top-weight conformer", fontsize=9.5, color=INK, va="center")
     save(fig, "fig_examples")
     json.dump(out, open(C.RESULTS / "examples.json", "w"), indent=1)
     return out

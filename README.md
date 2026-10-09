@@ -49,11 +49,11 @@ reversed, two not met. The additions made after the first run are listed, dated,
 |---|---|
 | `bsc fetch` | downloads the two Zenodo archives, verifies their md5 against the record, records sha256, unpacks the SAXS data and the back-calculated curves of the chosen models |
 | `bsc score` | per entry × model: raw χ², the error-free NRMSD score, Guinier Rg (experiment and ensemble), reweighting path, data-quality flags |
-| `bsc coordrg` | Cα radius of gyration of the BioEmu-1 conformers for every clean disordered entry and 40 random folded ones; `-- --archive Predictions.tar.gz` extracts the missing ensembles in one pass |
+| `bsc coordrg` | Cα radius of gyration of the BioEmu-1 conformers for every clean disordered entry and 40 random folded ones (the worked examples are added for the figure and kept out of the class statistics); `-- --archive Predictions.tar.gz` extracts the missing ensembles in one pass |
 | `bsc analyse` | error map by class, the four expectations, the four kinds, model comparison, the design's priority score (reported and tested, not used to select systems), bootstrap intervals, near-duplicate clusters, NRMSD orderings |
 | `bsc select_eval` | retrospective evaluation of the selection rule on held-out folds grouped by sequence cluster |
 | `bsc predict` | can the error be predicted before measuring: grouped, repeated cross-validation of baselines, linear models and small trees |
-| `bsc envelopes` | DENSS ab initio envelopes of the three worked examples and a ribbon rendering of the highest-weight conformer inside each (needs the DENSS environment and a Python with playwright, see below; skipped with a notice otherwise) |
+| `bsc envelopes` | DENSS ab initio envelopes of the three worked examples (needs the DENSS environment, see below; skipped with a notice otherwise) |
 | `bsc report` | figures, `docs/CAMPAIGN.md` and the campaign arms from `results/` |
 
 `python3 docs/site/build.py` builds the project page from `results/`; it stops if the prose and the numbers
@@ -89,21 +89,10 @@ BSC_DENSS_ENV=/scratch/.venv-denss uv run bsc envelopes
 The reconstructions themselves (`results/denss/`) are not tracked; `results/denss_stats.json` keeps their
 fit statistics.
 
-### The ribbon rendering
-
-After the reconstructions, `bsc envelopes` docks the highest-weight conformer into each averaged map by
-principal axes, writes it as PDB with HELIX/SHEET records from DSSP (mdtraj), and renders the cartoon inside
-three density levels of the map (the isosurfaces enclosing the particle volume DENSS assigned, the protein's
-expected volume and its densest half) in 3Dmol.js (loaded from cdnjs) inside headless Chromium. Each level and
-the ribbon are rendered as separate layers with one camera and blended outer level first, so the nested
-translucent surfaces do not hide one another. Chromium is driven by
-playwright from the interpreter named in `BSC_RENDER_PY` (default: the project interpreter, if it can import
-playwright); without one the step prints a notice and `bsc report` keeps the tracked `fig_examples.png`.
-
-```bash
-python3 -m venv /path/to/pw && /path/to/pw/bin/pip install playwright && /path/to/pw/bin/playwright install chromium
-BSC_RENDER_PY=/path/to/pw/bin/python uv run bsc envelopes
-```
+`bsc report` then docks the highest-weight BioEmu-1 conformer of each example into its averaged map by
+principal axes and draws the envelope as projected silhouettes of two density levels (the particle volume
+DENSS assigned and the protein's expected volume) with the conformer's Cα trace on top. The ensembles of the
+examples are extracted from the archive by `bsc coordrg -- --archive Predictions.tar.gz`.
 
 ## What is tracked and what is not
 

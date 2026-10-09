@@ -41,9 +41,9 @@
   "target fit not reached"
  ],
  "examples": {
-  "folded": "SASDH84",
-  "partly disordered": "SASDM65",
-  "disordered": "SASDLK9"
+  "folded": "SASDD43",
+  "partly disordered": "SASDVZ8",
+  "disordered": "SASDBY5"
  },
  "representative_path": "SASDAB4",
  "expectations": {
@@ -1314,7 +1314,7 @@
    "collapsed_chi2_raw_median": 3.3095644640041835
   },
   "coordinate_rg": {
-   "n": 82,
+   "n": 81,
    "by_class": {
     "folded": {
      "n": 40,

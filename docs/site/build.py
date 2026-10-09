@@ -16,6 +16,7 @@ from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -416,31 +417,30 @@ def build():
     rep = A["representative_path"]
     check(RV.loc[rep, "resolvability"] == KIND_STRONG, "the representative path is strongly reweightable")
 
-    # ---- worked examples at the operating point
+    # ---- worked examples: nearest the class median in raw chi2 and size ratio, chains <= 300 residues
     for cls in CLASSES:
         lab = A["examples"][cls]
         ex = EX[lab]
-        check(ex["operating_reached"] and not ex["operating_is_raw"], f"{lab}: chi2 <= 2 reached by reweighting")
-        check(abs(ex["phi_operating"] - RV.loc[lab, "phi_at_chi2_2"]) < 1e-6, f"{lab}: operating phi equals the stored phi at chi2 = 2")
-        check(ex["chi2"]["operating"] <= 2 < ex["chi2"]["raw"], f"{lab}: operating chi2 <= 2 < raw chi2")
-        check(RV.loc[lab, "resolvability"] == KIND_MODEST and ex["phi_operating"] >= 0.5, f"{lab}: modestly reweightable")
-        check(ex["chi2_minimum"] < ex["chi2"]["operating"] and ex["phi_minimum"] < 0.1, f"{lab}: chi2 minimum lower, at small phi")
-    ex_f, ex_p, ex_d = (EX[A["examples"][c]] for c in CLASSES)
-    check(ex_f["chi2"]["alphafold"] < ex_f["chi2"]["raw"], "folded example: AF2 fits as well as the ensemble")
-    check(ex_p["chi2"]["alphafold"] > 5 * ex_p["chi2"]["raw"] and ex_d["chi2"]["alphafold"] > 5 * ex_d["chi2"]["raw"],
-          "partly disordered and disordered examples: AF2 several times worse")
-    check(ex_d["rg_raw"] > ex_d["rg_operating"] > ex_d["rg_exp"] and abs(ex_d["rg_minimum"] - ex_d["rg_exp"]) < 1.0,
-          "disordered example: operating point shrinks Rg part of the way; the chi2 minimum reaches the measured Rg")
-    check(ex_d["ca_inside_envelope"] < 0.25 < ex_f["ca_inside_envelope"], "disordered conformer mostly outside; folded inside")
-    check(ex_d["chain_breaks"] > 0, "the disordered conformer has chain breaks (caption names them)")
-    for ex in (ex_f, ex_p, ex_d):
+        g = RV[RV["disorder_class"] == cls].dropna(subset=["rg_ratio"])
+        check(ex["length"] <= 300, f"{lab}: chain of at most 300 residues")
+        lc, lr = np.log10(g["chi2_raw"]), np.log(g["rg_ratio"])
+        dist = np.hypot((np.log10(ex["chi2"]["raw"]) - lc.median()) / lc.std(ddof=1),
+                        (np.log(RV.loc[lab, "rg_ratio"]) - lr.median()) / lr.std(ddof=1))
+        check(dist < 0.5, f"{lab}: near the class median in raw chi2 and in size ratio (standardised distance < 0.5)")
+        reached = RV.loc[lab, "resolvability"] in (KIND_RAW, KIND_MODEST, KIND_STRONG)
+        check(ex["operating_reached"] == reached, f"{lab}: reweighted curve at the operating point iff chi2 <= 2 is reached")
+        if reached and not ex["operating_is_raw"]:
+            check(abs(ex["phi_operating"] - RV.loc[lab, "phi_at_chi2_2"]) < 1e-6 and ex["chi2"]["operating"] <= 2,
+                  f"{lab}: operating phi equals the stored phi at chi2 = 2")
+        else:
+            check(abs(ex["chi2"]["operating"] - ex["chi2_minimum"]) < 1e-9, f"{lab}: not reached, curve at the chi2 minimum")
         lv = ex["density_levels"]
-        check([x["name"] for x in lv] == ["particle", "protein", "dense core"]
-              and lv[0]["volume_A3"] > lv[1]["volume_A3"] > lv[2]["volume_A3"]
-              and lv[0]["iso_over_max"] < lv[1]["iso_over_max"] < lv[2]["iso_over_max"]
-              and lv[0]["ca_inside"] >= lv[1]["ca_inside"] >= lv[2]["ca_inside"]
+        check([x["name"] for x in lv] == ["particle", "protein"] and lv[0]["volume_A3"] > lv[1]["volume_A3"]
+              and lv[0]["iso_over_max"] < lv[1]["iso_over_max"] and lv[0]["ca_inside"] >= lv[1]["ca_inside"]
               and abs(lv[1]["ca_inside"] - ex["ca_inside_envelope"]) < 1e-12,
-              "density levels nested: smaller volume, higher density, fewer Cα inside; protein level is the docking level")
+              f"{lab}: two nested density levels; the protein level is the docking level")
+    ex_f, ex_p, ex_d = (EX[A["examples"][c]] for c in CLASSES)
+    check(ex_d["rg_raw"] > 1.1 * ex_d["rg_exp"], "disordered example: the raw ensemble is clearly larger than measured")
 
     # ---- result 4: prediction and selection
     r2_best = max(P["regression"]["ridge"]["r2"]["mean"], P["regression"]["hgb"]["r2"]["mean"])
@@ -619,19 +619,23 @@ def build():
     dup_rows = "".join(f'<tr><td>{p["a"]}</td><td>{p["b"]}</td><td class="num">{p["jaccard"]:.2f}</td><td class="num">{p["containment"]:.2f}</td></tr>'
                        for p in nd["pairs"])
 
-    ex_cells = "".join(
-        f'<tr><td>{cls}</td><td><a href="https://www.sasbdb.org/data/{A["examples"][cls]}/">{A["examples"][cls]}</a></td>'
-        f'<td class="num">{EX[A["examples"][cls]]["chi2"]["raw"]:.2f} → {EX[A["examples"][cls]]["chi2"]["operating"]:.2f}</td>'
-        f'<td class="num">{EX[A["examples"][cls]]["phi_operating"]:.2f}</td><td class="num">{EX[A["examples"][cls]]["chi2"]["alphafold"]:.1f}</td>'
-        f'<td class="num">{EX[A["examples"][cls]]["rg_exp"]:.1f}</td><td class="num">{EX[A["examples"][cls]]["rg_raw"]:.1f}</td>'
-        f'<td class="num">{EX[A["examples"][cls]]["rg_operating"]:.1f}</td><td class="num">{pct(EX[A["examples"][cls]]["ca_inside_envelope"])}</td>'
-        f'<td class="num">{EX[A["examples"][cls]]["denss"]["chi2_median"]:.2f}</td><td class="num">{EX[A["examples"][cls]]["denss"]["resolution_A"]:.0f}</td></tr>'
-        for cls in CLASSES)
-    ex_table = ('<div class="scroll"><table class="wide"><thead><tr><th>class</th><th>entry</th><th>χ² raw → reweighted</th><th>φ</th>'
-                '<th>χ² AlphaFold2</th><th>Rg measured (Å)</th><th>Rg raw</th><th>Rg reweighted</th><th>Cα inside envelope</th>'
-                '<th>DENSS χ²</th><th>resolution (Å)</th></tr></thead><tbody>' + ex_cells + '</tbody></table></div>'
-                '<p class="note">Rg from Guinier fits (q·Rg ≤ 1.3) of the measured curve, of the raw ensemble curve and of the curve reweighted to the operating point. DENSS χ² is the median fit of the ten reconstructions to the curve.</p>')
-
+    def ex_row(cls):
+        lab = A["examples"][cls]
+        ex = EX[lab]
+        rew = (f'{ex["chi2"]["operating"]:.2f} (φ {ex["phi_operating"]:.2f})' if ex["operating_reached"]
+               else f'minimum {ex["chi2"]["operating"]:.2f} (φ {ex["phi_operating"]:.2f})')
+        lv = {x["name"]: x for x in ex["density_levels"]}
+        return (f'<tr><td>{cls}</td><td><a href="https://www.sasbdb.org/data/{lab}/">{lab}</a></td><td class="num">{ex["length"]}</td>'
+                f'<td>{RV.loc[lab, "resolvability"]}</td><td class="num">{ex["chi2"]["raw"]:.2f}</td><td class="num">{rew}</td>'
+                f'<td class="num">{ex["chi2"]["alphafold"]:.1f}</td><td class="num">{ex["rg_exp"]:.1f}</td><td class="num">{ex["rg_raw"]:.1f}</td>'
+                f'<td class="num">{ex["rg_operating"]:.1f}</td><td class="num">{pct(lv["protein"]["ca_inside"])} / {pct(lv["particle"]["ca_inside"])}</td>'
+                f'<td class="num">{ex["chain_breaks"]}</td><td class="num">{ex["denss"]["chi2_median"]:.2f}</td>'
+                f'<td class="num">{ex["denss"]["resolution_A"]:.0f}</td></tr>')
+    ex_table = ('<div class="scroll"><table class="wide"><thead><tr><th>class</th><th>entry</th><th>residues</th><th>kind</th>'
+                '<th>χ² raw</th><th>χ² reweighted</th><th>χ² AlphaFold2</th><th>Rg measured (Å)</th><th>Rg raw</th>'
+                '<th>Rg reweighted</th><th>Cα inside, protein / particle level</th><th>chain breaks</th>'
+                '<th>DENSS χ²</th><th>resolution (Å)</th></tr></thead><tbody>' + "".join(ex_row(c) for c in CLASSES)
+                + '</tbody></table></div>')
     nav = "".join(f'<li><a href="#{a}">{t}</a></li>' for a, t in [
         ("method", "Method"), ("expectations", "Expectations"), ("fit", "Raw fit"), ("examples", "Examples"),
         ("size", "Size"), ("reweight", "Reweighting"), ("guide", "Guidance"), ("next", "Next"),
@@ -641,7 +645,35 @@ def build():
     diagram = method_diagram(n_entries, int(B["n_conformers_median"]))
     decision = decision_diagram(len(arm1), len(arm2["test"]), len(arm2["controls"]))
     favicon = "data:image/svg+xml," + quote(FAVICON)
-    exf, exp_, exd = A["examples"]["folded"], A["examples"]["partly disordered"], A["examples"]["disordered"]
+
+    exs = {c: EX[A["examples"][c]] for c in CLASSES}
+    labs = {c: A["examples"][c] for c in CLASSES}
+    reached = [c for c in CLASSES if exs[c]["operating_reached"]]
+    not_reached = [c for c in CLASSES if not exs[c]["operating_reached"]]
+    rew_sentence = "The reweighted curve is taken where the four kinds are read, at the first point along the reweighting path with χ² ≤ 2"
+    if reached:
+        rew_sentence += " (" + ", ".join("φ {:.2f} for {}".format(exs[c]["phi_operating"], labs[c]) for c in reached) + ")"
+    if not_reached:
+        rew_sentence += ("; where that target is not reached (" + ", ".join(labs[c] for c in not_reached)
+                         + "), it is the curve at the χ² minimum of the path, labelled as such")
+    rew_sentence += (". φ is the effective sample fraction the weights keep, 1 for uniform weights. The χ² minimum of each path is "
+                     + ", ".join("{:.2f} at φ {:.3f}".format(exs[c]["chi2_minimum"], exs[c]["phi_minimum"]) for c in CLASSES)
+                     + " (folded, partly disordered, disordered); a minimum at small φ rests on a few conformers and overfits.")
+    breaks = [c for c in CLASSES if exs[c]["chain_breaks"] > 0]
+    breaks_sentence = ""
+    if breaks:
+        breaks_sentence = (" The drawn conformer has breaks in the sampled chain (consecutive Cα more than 4.2 Å apart): "
+                           + ", ".join("{} in {}".format(exs[c]["chain_breaks"], labs[c]) for c in breaks) + ".")
+    uniform = [c for c in CLASSES if exs[c]["top_weight"] <= 1.5 / 100]
+    uniform_sentence = ""
+    if uniform:
+        uniform_sentence = (" Where the weights stay uniform along the whole path (" + ", ".join(labs[c] for c in uniform)
+                            + "), no conformer carries more weight than another and the one drawn is the first of the ensemble.")
+    how_to_read = (
+        "<p><strong>Residuals.</strong> (I<sub>model</sub> − I<sub>exp</sub>)/σ against q, with ±3 guides. A residual that wanders outside ±3 over a range of q is a shape error at that length scale (about 1/q); a flat band within ±3 is a fit at the noise level.</p>"
+        f"<p><strong>Reweighted curve.</strong> {rew_sentence}</p>"
+        f"<p><strong>Envelope.</strong> DENSS {cite('grant')} reconstructions from the measured curve alone (ten maps, aligned and averaged; Dmax from the SASBDB record), drawn as filled projections of two density levels of the averaged map: the isosurface enclosing the protein's expected volume at 1.7 Å³ per Da (darker) and the one enclosing the volume DENSS assigned to the particle (lighter). The conformer is the highest-weight one at the χ² minimum of the path, docked into the protein-volume level by principal axes; the share of its Cα atoms inside that level is given under each panel and, for both levels, in the table.{uniform_sentence}{breaks_sentence}</p>"
+        "<p><strong>What the envelope is.</strong> An illustration from an ensemble-averaged measurement, not evidence about any single conformation; for a disordered protein one conformer cannot fill it.</p>")
     pp = y["predicted priority"]
 
     html = f"""<!doctype html>
@@ -687,11 +719,11 @@ def build():
 {details("Class table and the chain-length test (E2)", class_table + fig("fig_length", "Raw χ² against chain length", f"Raw reduced χ² of every profile against chain length, coloured by class. Among folded proteins the rank correlation is weak (ρ = {E['E2']['spearman_rho']:+.2f}); chains of up to 100 residues meet χ² ≤ 2 more often ({pct(E['E2']['share_fit_le_100'])} against {pct(E['E2']['share_fit_gt_100'])})."))}
 
 <h2 id="examples">What a fit looks like</h2>
-<p class="lead">One entry per class, the one nearest its class median of raw χ², shows what the numbers above mean on a measured curve.</p>
+<p class="lead">One protein per class, the one nearest its class median in both raw χ² and size ratio among chains of at most 300 residues, shows the fits on measured curves.</p>
 {fig("fig_examples", "Figure 2 · one worked example per class",
-     f"Top: ln I(q) of every measured point (open circles) with the measurement error as a grey band from ln(I − σ) to ln(I + σ) (clipped at the panel floor where I − σ ≤ 0), and three computed curves scaled to the data: the raw BioEmu-1 ensemble (blue), the ensemble reweighted to the operating point that the four kinds use, the first point along the reweighting path with χ² ≤ 2 (terracotta; labelled with χ² and φ there), and the AlphaFold2 single structure (green, dashed). Middle: residual (I<sub>model</sub> − I<sub>exp</sub>)/σ with ±3 guides. Bottom: the highest-weight conformer at the χ² minimum of the path, drawn as a ribbon coloured from amber at the N terminus to terracotta at the C terminus (helices a shade darker) inside an ab initio envelope reconstructed from the measured curve alone with DENSS {cite('grant')} (ten maps, aligned and averaged), docked by principal axes. The shading shows three density levels of the averaged map, each the isosurface enclosing a set volume: the volume DENSS assigned to the particle (palest), the protein's expected volume at 1.7 Å³ per Da (middle; the level used for docking and for the Cα share under each panel) and the densest half of that volume (darkest), so darker shading marks higher electron density. The χ² minimum of each path lies lower ({ex_f['chi2_minimum']:.2f}, {ex_p['chi2_minimum']:.2f} and {ex_d['chi2_minimum']:.2f}) but needs φ of {ex_f['phi_minimum']:.3f}, {ex_p['phi_minimum']:.3f} and {ex_d['phi_minimum']:.3f}, a few conformers carrying most of the weight, which overfits; for {exd} it brings Rg to {ex_d['rg_minimum']:.1f} Å against {ex_d['rg_exp']:.1f} Å measured. Gaps in the {exd} ribbon are {ex_d['chain_breaks']} breaks in the sampled chain (consecutive Cα more than 4.2 Å apart).",
-     f"A residual that wanders outside ±3 over a range of q is a shape error at that length scale (about 1/q); a flat band within ±3 is a fit at the noise level. All three examples are modestly reweightable: χ² ≤ 2 is reached keeping φ = {ex_f['phi_operating']:.2f}, {ex_p['phi_operating']:.2f} and {ex_d['phi_operating']:.2f} of the effective sample. For the folded {exf} the single structure fits as well as the ensemble. For the partly disordered {exp_} and the disordered {exd} the single structure misses (χ² {ex_p['chi2']['alphafold']:.0f} and {ex_d['chi2']['alphafold']:.0f}). For {exd} the raw ensemble is too large at low q (Rg {ex_d['rg_raw']:.1f} Å against {ex_d['rg_exp']:.1f} Å measured); at the operating point Rg is {ex_d['rg_operating']:.1f} Å, so meeting χ² ≤ 2 removes part of the size excess. The envelope is an illustration from an ensemble-averaged measurement, not evidence about any single conformation: for the disordered protein only {pct(ex_d['ca_inside_envelope'])} of the conformer's Cα atoms fall inside the protein-volume level ({pct(ex_d['ca_inside_support_surface'])} inside the palest, particle level).")}
-{details("Numbers behind Figure 2", ex_table)}
+     "Top: every measured point with its error band and three computed curves scaled to it, BioEmu-1 raw (solid), reweighted (dotted) and AlphaFold2 (dashed), with their χ² above each panel. Middle: residuals. Bottom: the ab initio envelope reconstructed from the measured curve, with the Cα trace of a BioEmu-1 conformer docked inside.",
+     f"In the disordered column the raw ensemble is larger than the protein in solution (Rg {ex_d['rg_raw']:.0f} Å against {ex_d['rg_exp']:.0f} Å measured), the size gap examined in the next section.")}
+{details("How to read Figure 2", how_to_read + ex_table)}
 
 <h2 id="size">Disordered ensembles are systematically too extended</h2>
 <p>The radius of gyration, Rg, is the root-mean-square distance of a protein's mass from its centre, a single number for overall size; SAXS measures it from the lowest-angle part of the curve. For disordered proteins the median ensemble size is {pct(ext_curve)} above experiment from the scattering curves and {pct(ext_coord)} above from the conformer coordinates.</p>

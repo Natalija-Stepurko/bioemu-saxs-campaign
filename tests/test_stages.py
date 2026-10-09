@@ -11,7 +11,7 @@ def test_coordrg_selection_is_seeded_and_covers_the_examples():
     cls = np.array(["folded"] * 70 + ["partly disordered"] * 30 + ["disordered"] * 20)
     d = pd.DataFrame({"model": "bioemu", "clean": True, "label": [f"S{i:03d}" for i in range(n)],
                       "disorder_class": cls, "chi2_raw": rng.lognormal(1, 0.5, n),
-                      "length": rng.integers(50, 400, n)})
+                      "length": rng.integers(50, 400, n), "rg_ratio": rng.lognormal(0, 0.1, n)})
     d.loc[5, "clean"] = False
     sel = coordrg.selection(d)
     assert sel == coordrg.selection(d)                      # deterministic
@@ -42,40 +42,19 @@ def test_operating_point_is_the_first_point_reaching_the_target():
     assert envelopes.operating_point([5.0, 4.0, 3.0], raw_chi2=6.0) is None   # never reached
 
 
-def test_secondary_structure_records_follow_the_pdb_columns():
-    residues = [("ALA", "A", i) for i in range(12)]
-    rec = envelopes.ss_records(residues, "CHHHHCCEEECH")
-    helix, sheet = rec
-    assert helix.startswith("HELIX ") and sheet.startswith("SHEET ")
-    # the columns 3Dmol.js and other readers take the residue ranges from
-    assert helix[19] == "A" and int(helix[21:25]) == 1 and helix[31] == "A" and int(helix[33:37]) == 4
-    assert sheet[21] == "A" and int(sheet[22:26]) == 7 and sheet[32] == "A" and int(sheet[33:37]) == 9
-    assert len(rec) == 2                                       # the one-residue helix at the end stays coil
+def test_density_levels_are_the_particle_and_the_protein_volume():
+    assert envelopes.density_volumes(100.0, 120.0) == [150.0, 100.0]       # particle at least 1.5x
+    assert envelopes.density_volumes(100.0, 400.0) == [400.0, 100.0]
 
 
-def test_autocrop_trims_white_and_reports_edge_contact(tmp_path):
-    from PIL import Image
-    im = Image.new("RGB", (100, 80), "white")
-    for x in range(40, 60):
-        for y in range(30, 50):
-            im.putpixel((x, y), (0, 0, 0))
-    p = tmp_path / "r.png"
-    im.save(p)
-    assert envelopes.autocrop(p, margin=5) is False
-    assert Image.open(p).size == (30, 30)
-    assert envelopes.ink_extent(p, (30, 30)) == (20, 20)
-
-
-def test_composite_blends_levels_outer_first_and_keeps_the_ribbon_on_top():
-    h, w = 4, 4
-    outer = np.zeros((h, w, 4))
-    outer[..., :3], outer[..., 3] = (0.0, 0.0, 1.0), 1.0          # blue everywhere
-    inner = np.zeros((h, w, 4))
-    inner[1:3, 1:3, :3], inner[1:3, 1:3, 3] = (1.0, 0.0, 0.0), 1.0  # red in the middle
-    ribbon = np.zeros((h, w, 4))
-    ribbon[0, 0, :3], ribbon[0, 0, 3] = (0.0, 0.0, 0.0), 1.0
-    img = envelopes.composite([(outer, 0.5), (inner, 0.5)], ribbon, halo_px=0)
-    assert np.allclose(img[3, 3], [0.5, 0.5, 1.0])                 # outer level over white
-    assert np.allclose(img[1, 1], [0.75, 0.25, 0.5])               # inner level over the outer one
-    assert np.allclose(img[0, 0], [0.0, 0.0, 0.0])                 # the ribbon is opaque on top
-    assert envelopes.density_volumes(100.0, 120.0) == [150.0, 100.0, 50.0]
+def test_examples_are_nearest_the_class_median_in_error_and_size():
+    from bsc import analyse
+    rows = []
+    for cls in ("folded", "partly disordered", "disordered"):
+        for i, (chi2, ratio, length) in enumerate([(2.0, 1.0, 120), (2.0, 1.0, 420), (8.0, 1.0, 100),
+                                                   (2.0, 1.5, 100), (1.0, 0.8, 90), (4.0, 1.25, 110)]):
+            rows.append({"model": "bioemu", "clean": True, "label": f"{cls[:3]}{i}", "disorder_class": cls,
+                         "chi2_raw": chi2, "rg_ratio": ratio, "length": length})
+    ex = analyse.choose_examples(pd.DataFrame(rows))
+    # the two entries at both medians tie; the one longer than 300 residues is not eligible
+    assert ex == {"folded": "fol0", "partly disordered": "par0", "disordered": "dis0"}
