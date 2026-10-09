@@ -64,3 +64,18 @@ def test_autocrop_trims_white_and_reports_edge_contact(tmp_path):
     assert envelopes.autocrop(p, margin=5) is False
     assert Image.open(p).size == (30, 30)
     assert envelopes.ink_extent(p, (30, 30)) == (20, 20)
+
+
+def test_composite_blends_levels_outer_first_and_keeps_the_ribbon_on_top():
+    h, w = 4, 4
+    outer = np.zeros((h, w, 4))
+    outer[..., :3], outer[..., 3] = (0.0, 0.0, 1.0), 1.0          # blue everywhere
+    inner = np.zeros((h, w, 4))
+    inner[1:3, 1:3, :3], inner[1:3, 1:3, 3] = (1.0, 0.0, 0.0), 1.0  # red in the middle
+    ribbon = np.zeros((h, w, 4))
+    ribbon[0, 0, :3], ribbon[0, 0, 3] = (0.0, 0.0, 0.0), 1.0
+    img = envelopes.composite([(outer, 0.5), (inner, 0.5)], ribbon, halo_px=0)
+    assert np.allclose(img[3, 3], [0.5, 0.5, 1.0])                 # outer level over white
+    assert np.allclose(img[1, 1], [0.75, 0.25, 0.5])               # inner level over the outer one
+    assert np.allclose(img[0, 0], [0.0, 0.0, 0.0])                 # the ribbon is opaque on top
+    assert envelopes.density_volumes(100.0, 120.0) == [150.0, 100.0, 50.0]

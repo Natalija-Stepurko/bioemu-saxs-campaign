@@ -20,6 +20,27 @@
   "top_weight": 0.5629295940585813,
   "ca_inside_envelope": 0.8888888888888888,
   "ca_inside_support_surface": 0.9925925925925926,
+  "ca_inside_core": 0.5259259259259259,
+  "density_levels": [
+   {
+    "name": "particle",
+    "volume_A3": 51840.444299999996,
+    "iso_over_max": 0.2091409786292968,
+    "ca_inside": 0.9925925925925926
+   },
+   {
+    "name": "protein",
+    "volume_A3": 26301.601000000006,
+    "iso_over_max": 0.43174382060516836,
+    "ca_inside": 0.8888888888888888
+   },
+   {
+    "name": "dense core",
+    "volume_A3": 13150.800500000003,
+    "iso_over_max": 0.6091012604129649,
+    "ca_inside": 0.5259259259259259
+   }
+  ],
   "chain_breaks": 0,
   "n_points": 1324,
   "n_points_positive": 1324,
@@ -55,6 +76,27 @@
   "top_weight": 0.2543012513635661,
   "ca_inside_envelope": 0.5958904109589042,
   "ca_inside_support_surface": 0.863013698630137,
+  "ca_inside_core": 0.3698630136986301,
+  "density_levels": [
+   {
+    "name": "particle",
+    "volume_A3": 161136.1589,
+    "iso_over_max": 0.15725755350891,
+    "ca_inside": 0.863013698630137
+   },
+   {
+    "name": "protein",
+    "volume_A3": 55410.616000000045,
+    "iso_over_max": 0.3552899698496289,
+    "ca_inside": 0.5958904109589042
+   },
+   {
+    "name": "dense core",
+    "volume_A3": 27705.308000000023,
+    "iso_over_max": 0.48537306452869416,
+    "ca_inside": 0.3698630136986301
+   }
+  ],
   "chain_breaks": 5,
   "n_points": 1186,
   "n_points_positive": 1186,
@@ -90,6 +132,27 @@
   "top_weight": 0.5071925740886484,
   "ca_inside_envelope": 0.13052631578947368,
   "ca_inside_support_surface": 0.6357894736842106,
+  "ca_inside_core": 0.07157894736842105,
+  "density_levels": [
+   {
+    "name": "particle",
+    "volume_A3": 998957.8125,
+    "iso_over_max": 0.17195817572841696,
+    "ca_inside": 0.6357894736842106
+   },
+   {
+    "name": "protein",
+    "volume_A3": 89375.83400000022,
+    "iso_over_max": 0.6350448990792018,
+    "ca_inside": 0.13052631578947368
+   },
+   {
+    "name": "dense core",
+    "volume_A3": 44687.91700000011,
+    "iso_over_max": 0.7107275590360933,
+    "ca_inside": 0.07157894736842105
+   }
+  ],
   "chain_breaks": 24,
   "n_points": 230,
   "n_points_positive": 230,

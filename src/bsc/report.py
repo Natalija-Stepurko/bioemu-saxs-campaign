@@ -484,7 +484,8 @@ def fig_predict_detail() -> None:
 def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
     """Figure 2: one column per class. The measured profile (every point, with its error as a band),
     the raw and reweighted BioEmu-1 curves and the AlphaFold2 curve; residuals; and the ribbon of the
-    highest-weight conformer inside the DENSS envelope, rendered by `bsc envelopes`."""
+    highest-weight conformer inside three density levels of the DENSS envelope, rendered by `bsc envelopes`,
+    with a density key under the row."""
     stats_path = C.RESULTS / "denss_stats.json"
     if not stats_path.exists():
         print("  fig_examples: no results/denss_stats.json (run `bsc envelopes`); tracked figure kept", flush=True)
@@ -498,11 +499,12 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
         return None
     from PIL import Image
     e = ent.set_index("label")
-    W, H = 860, 590
+    W, H = 860, 625
     fig = plt.figure(figsize=(W / PX_PER_IN, H / PX_PER_IN))
     gs = fig.add_gridspec(2, 3, height_ratios=[2.2, 0.85], hspace=0.07, wspace=0.2,
-                          left=0.065, right=0.99, top=0.95, bottom=0.43)
-    gs3 = fig.add_gridspec(1, 3, wspace=0.06, left=0.03, right=0.99, top=0.345, bottom=0.065)
+                          left=0.065, right=0.99, top=0.953, bottom=0.461)
+    gs3 = fig.add_gridspec(1, 3, wspace=0.06, left=0.03, right=0.99, top=0.382, bottom=0.117)
+    data_style = {"facecolors": "none", "edgecolors": "#3C4650", "alpha": 0.4, "linewidths": 0.5}
     col = {"raw": INK, "operating": ACCENT, "alphafold": MODEL_COL["alphafold"]}
     out = {}
     for j, (cls, label) in enumerate(examples.items()):
@@ -515,8 +517,8 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
         y0 = np.log(I[pos]).min() - 0.35 * np.ptp(np.log(I[pos]))
         lo = np.where(I - s > 0, np.log(np.clip(I - s, 1e-30, None)), y0)
         hi = np.log(np.clip(I + s, 1e-30, None))
-        ax.fill_between(q, np.maximum(lo, y0), np.maximum(hi, y0), color="#CBD2D8", lw=0, zorder=0)
-        ax.scatter(q[pos], np.log(I[pos]), s=7, facecolors="none", edgecolors=INK, linewidths=0.5, zorder=1)
+        ax.fill_between(q, np.maximum(lo, y0), np.maximum(hi, y0), color="#BFC8D0", lw=0, zorder=0)
+        ax.scatter(q[pos], np.log(I[pos]), s=6, zorder=1, **data_style)
         for k, name in enumerate(("alphafold", "raw", "operating")):
             if name not in f["curves"]:
                 continue
@@ -531,7 +533,7 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
             yy = 0.05 + 0.08 * (3 - k)
             ax.plot([0.03, 0.09], [yy, yy], color=col[name], lw=2, transform=ax.transAxes)
             ax.text(0.11, yy, txt, transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
-        ax.scatter([0.06], [0.05], s=9, facecolors="none", edgecolors=INK, linewidths=0.6, transform=ax.transAxes)
+        ax.scatter([0.06], [0.05], s=9, transform=ax.transAxes, **{**data_style, "alpha": 0.6, "linewidths": 0.6})
         ax.text(0.11, 0.05, "measured, grey band ± σ", transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
         ax.set_ylim(y0, np.log(I[pos]).max() + 0.3)
         ax.set_title(f"{cls}: {label} · {int(e.loc[label, 'length'])} residues", loc="left", fontsize=10)
@@ -552,7 +554,7 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
         ax3 = fig.add_subplot(gs3[0, j])
         ax3.imshow(np.asarray(Image.open(envelopes.ribbon_png(label)).convert("RGB")), interpolation="lanczos")
         ax3.set_axis_off()
-        fig.text(gs3[0, j].get_position(fig).x0 + 0.01, 0.018, f"{st.get('resolution_A', 0):.0f} Å envelope · "
+        fig.text(gs3[0, j].get_position(fig).x0 + 0.01, 0.073, f"{st.get('resolution_A', 0):.0f} Å envelope · "
                  f"w = {f['top_weight']:.2f} · {100 * dk['inside']:.0f}% of Cα inside", fontsize=9.5, color=MUTED)
         out[label] = {"class": cls, "length": int(e.loc[label, "length"]),
                       "chi2": {k: float(v["chi2"]) for k, v in f["curves"].items()},
@@ -563,10 +565,27 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
                       "rg_operating": float(f["rg_operating"]), "rg_minimum": float(f["rg_minimum"]),
                       "top_conformer": f["top_conformer"], "top_weight": f["top_weight"],
                       "ca_inside_envelope": dk["inside"], "ca_inside_support_surface": dk["inside_outer"],
+                      "ca_inside_core": dk["inside_core"],
+                      "density_levels": [{k: lv[k] for k in ("name", "volume_A3", "iso_over_max", "ca_inside")}
+                                         for lv in dk["surfaces"]],
                       "chain_breaks": dk["chain_breaks"], "n_points": int(len(q)), "n_points_positive": int(pos.sum()),
                       "isovalue_volume_A3": volume, "support_volume_A3": support,
                       "denss": {k: st[k] for k in ("dmax_A", "n_maps", "chi2_median", "resolution_A",
                                                   "maps_accepted", "rg_per_map_mean") if k in st}}
+    # density key: each swatch is the colour a level takes over the ones outside it, as composited
+    rgb, x = np.ones(3), 0.03
+    fig.text(x, 0.026, "envelope density", fontsize=9.5, color=MUTED, va="center")
+    x += 0.115
+    names = {"particle": "lowest: particle volume", "protein": "protein volume (1.7 Å³/Da)",
+             "dense core": "highest: densest half"}
+    for k, (name, colour, opacity) in enumerate(envelopes.DENSITY_LEVELS):
+        rgb = rgb * (1 - opacity) + np.array(matplotlib.colors.to_rgb(colour)) * opacity
+        fig.add_artist(matplotlib.patches.Rectangle((x, 0.012), 0.022, 0.028, transform=fig.transFigure,
+                                                    facecolor=rgb, edgecolor=RULE, lw=0.6))
+        fig.text(x + 0.028, 0.026, names[name], fontsize=9.5, color=INK, va="center")
+        x += 0.235 if k < 2 else 0
+        if k < 2:
+            fig.text(x - 0.022, 0.026, "→", fontsize=9.5, color=MUTED, va="center")
     save(fig, "fig_examples")
     json.dump(out, open(C.RESULTS / "examples.json", "w"), indent=1)
     return out
