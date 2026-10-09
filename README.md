@@ -92,8 +92,11 @@ fit statistics.
 ### The ribbon rendering
 
 After the reconstructions, `bsc envelopes` docks the highest-weight conformer into each averaged map by
-principal axes, writes it as PDB with HELIX/SHEET records from DSSP (mdtraj), and renders the cartoon with the
-envelope isosurface in 3Dmol.js (loaded from cdnjs) inside headless Chromium. Chromium is driven by
+principal axes, writes it as PDB with HELIX/SHEET records from DSSP (mdtraj), and renders the cartoon inside
+three density levels of the map (the isosurfaces enclosing the particle volume DENSS assigned, the protein's
+expected volume and its densest half) in 3Dmol.js (loaded from cdnjs) inside headless Chromium. Each level and
+the ribbon are rendered as separate layers with one camera and blended outer level first, so the nested
+translucent surfaces do not hide one another. Chromium is driven by
 playwright from the interpreter named in `BSC_RENDER_PY` (default: the project interpreter, if it can import
 playwright); without one the step prints a notice and `bsc report` keeps the tracked `fig_examples.png`.
 

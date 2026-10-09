@@ -115,7 +115,14 @@ def run_denss(label: str, dmax: float, cores: int) -> dict:
 # ---- worked examples: fit at the operating point, docking and ribbon rendering --------------------
 POROD_A3_PER_DA = 1.7          # protein volume from mass, for the isovalue that encloses the expected volume
 RAW_FIT_CHI2 = 2.0             # the operating point of the kinds: the first point on the path with chi2 <= 2
-ENVELOPE_COLOUR, ENVELOPE_OPACITY = "#6F98C4", 0.50
+# three density levels of the averaged DENSS map, each the isovalue enclosing a volume: the particle
+# volume DENSS assigned (at least 1.5 times the protein volume), the protein's expected volume (the
+# level used for docking and for the C-alpha counts) and its densest half. Colours are a muted ramp of
+# the page accent; each level is rendered as its own opaque layer and blended at its opacity, outer first
+DENSITY_LEVELS = (("particle", "#BFD0E2", 0.40), ("protein", "#86A5C8", 0.45),
+                  ("dense core", "#4A7299", 0.50))
+OUTER_MIN_FACTOR, CORE_FRACTION = 1.5, 0.5
+RIBBON_HALO = 0.75             # opacity of the white outline drawn under the ribbon
 CA_BREAK_A = 4.2               # consecutive C-alpha atoms further apart than this: a break in the chain
 HELIX_COLOUR, COIL_COLOUR = "#2F5D8A", "#3A4048"
 THREE_DMOL = "https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js"
@@ -191,23 +198,37 @@ def principal_frame(x: np.ndarray, weights: np.ndarray | None = None) -> tuple[n
     return c, R
 
 
-def envelope_mesh(mrc_path, volume_A3: float, upsample: int = 3):
-    """Marching-cubes mesh (vertices, faces, vertex normals) of the averaged DENSS map at the isovalue
-    enclosing `volume_A3`, with the upsampled map, its voxel size and the isovalue."""
+def load_map(mrc_path, upsample: int = 3) -> tuple[np.ndarray, float]:
+    """The averaged DENSS map, cubic-upsampled and clipped at zero, with its voxel size in Å."""
     import mrcfile
     from scipy import ndimage
-    from skimage import measure
     with mrcfile.open(mrc_path) as m:
         rho = np.asarray(m.data, float)
         vox = float(m.voxel_size.x)
-    rho = np.clip(ndimage.zoom(rho, upsample, order=3), 0, None)
-    vox /= upsample
+    return np.clip(ndimage.zoom(rho, upsample, order=3), 0, None), vox / upsample
+
+
+def isovalue(rho: np.ndarray, vox: float, volume_A3: float) -> float:
+    """The density level whose isosurface encloses `volume_A3`."""
     frac = min(0.95, volume_A3 / (rho.size * vox**3))
-    iso = float(np.quantile(rho, 1 - frac))
+    return float(np.quantile(rho, 1 - frac))
+
+
+def mesh_at(rho: np.ndarray, vox: float, iso: float):
+    """Marching-cubes mesh (vertices in Å, faces, outward vertex normals) at one density level."""
+    from skimage import measure
     verts, faces, normals, _ = measure.marching_cubes(rho, level=iso, spacing=(vox, vox, vox))
     # scikit-image's normals point up the density gradient, into the particle; the renderer lights
     # the side the normal points to, so they are turned outwards
-    return verts, faces, -normals, rho, vox, iso
+    return verts, faces, -normals
+
+
+def envelope_mesh(mrc_path, volume_A3: float, upsample: int = 3):
+    """Marching-cubes mesh (vertices, faces, vertex normals) of the averaged DENSS map at the isovalue
+    enclosing `volume_A3`, with the upsampled map, its voxel size and the isovalue."""
+    rho, vox = load_map(mrc_path, upsample)
+    iso = isovalue(rho, vox, volume_A3)
+    return (*mesh_at(rho, vox, iso), rho, vox, iso)
 
 
 class Docking:
@@ -300,14 +321,19 @@ def cartoon_pdb(frame, xyz_A: np.ndarray) -> tuple[str, str]:
 
 RENDER_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <script src="__LIB__"></script>
-<style>html,body{margin:0;background:#fff}#v{width:__W__px;height:__H__px;position:relative}</style></head>
+<style>html,body{margin:0;background:transparent}#v{width:__W__px;height:__H__px;position:relative}</style></head>
 <body><div id="v"></div><script>
 const pdb = __PDB__; const surfaces = __SURF__;
-const v = $3Dmol.createViewer(document.getElementById('v'), {backgroundColor: 'white', antialias: true});
+const v = $3Dmol.createViewer(document.getElementById('v'), {backgroundColor: 'white', backgroundAlpha: 0,
+                                                              antialias: true});
 v.setProjection('orthographic');
 const m = v.addModel(pdb, 'pdb');
-m.setStyle({}, {cartoon: {color: '__COIL__', thickness: 0.5}});
-m.setStyle({ss: 'h'}, {cartoon: {color: '__HELIX__'}});
+if (__RIBBON__) {
+  m.setStyle({}, {cartoon: {color: '__COIL__', thickness: 0.5}});
+  m.setStyle({ss: 'h'}, {cartoon: {color: '__HELIX__'}});
+} else {
+  m.setStyle({}, {});
+}
 const box = v.addModel(__BOX__, 'xyz');   // the corners of everything drawn, hidden, so zoomTo frames it all
 box.setStyle({}, {});
 for (const s of surfaces) {
@@ -320,15 +346,16 @@ v.zoomTo(); v.zoom(__ZOOM__); v.render(); window.renderDone = true;
 
 SHOOT = """import sys
 from playwright.sync_api import sync_playwright
-html, png, w, h = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+w, h, jobs = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3:]
 with sync_playwright() as p:
     b = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader",
                                 "--ignore-gpu-blocklist"])
     pg = b.new_page(viewport={"width": w, "height": h}, device_scale_factor=1)
-    pg.goto("file://" + html)
-    pg.wait_for_function("window.renderDone === true", timeout=120000)
-    pg.wait_for_timeout(500)
-    pg.locator("#v").screenshot(path=png)
+    for html, png in zip(jobs[::2], jobs[1::2]):
+        pg.goto("file://" + html)
+        pg.wait_for_function("window.renderDone === true", timeout=120000)
+        pg.wait_for_timeout(300)
+        pg.locator("#v").screenshot(path=png, omit_background=True)
     b.close()
 """
 
@@ -345,51 +372,19 @@ def render_python() -> str | None:
         return None
 
 
-def render_ribbon(pdb: str, surfaces: list[dict], png: Path, size=(1800, 1200), fill: float = 0.94) -> bool:
-    """Cartoon of `pdb` with translucent surfaces, rendered by 3Dmol.js in headless Chromium. A first
-    pass at the default zoom measures the drawing; the second zooms it to `fill` of the frame."""
-    py = render_python()
-    if py is None:
-        print("  no Python with playwright (set BSC_RENDER_PY); ribbon rendering skipped", flush=True)
-        return False
-    pts = np.vstack([np.array([[float(x) for x in ln[30:54].split()] for ln in pdb.splitlines()
-                               if ln.startswith("ATOM")])] + [s["verts"] for s in surfaces])
-    lo, hi = pts.min(axis=0), pts.max(axis=0)
-    corners = [(x, y, z) for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])]
-    box = "8\nbox\n" + "".join(f"X {x:.2f} {y:.2f} {z:.2f}\n" for x, y, z in corners)
-    surf = [{"v": np.round(s["verts"], 2).tolist(), "n": np.round(s["normals"], 3).tolist(),
-             "f": s["faces"].ravel().astype(int).tolist(), "color": s["color"], "opacity": s["opacity"]}
-            for s in surfaces]
-    page = png.with_suffix(".html")
-    script = png.with_name("render_ribbon.py")
-    script.write_text(SHOOT)
-    zoom = 1.0
-    for _ in range(2):
-        subs = {"__LIB__": THREE_DMOL, "__PDB__": json.dumps(pdb), "__SURF__": json.dumps(surf),
-                "__W__": str(size[0]), "__H__": str(size[1]), "__COIL__": COIL_COLOUR,
-                "__HELIX__": HELIX_COLOUR, "__ZOOM__": f"{zoom:.3f}", "__BOX__": json.dumps(box)}
-        html = RENDER_HTML
-        for k, v in subs.items():
-            html = html.replace(k, v)
-        page.write_text(html)
-        r = subprocess.run([py, str(script), str(page.resolve()), str(png.resolve()), str(size[0]),
-                            str(size[1])], capture_output=True, text=True)
-        if r.returncode != 0:
-            print(f"  ribbon rendering failed: {r.stderr.strip()[-400:]}", flush=True)
-            return False
-        w, h = ink_extent(png, size)
-        zoom *= fill / max(w / size[0], h / size[1])
-    if autocrop(png):
-        print(f"  {png.name}: the rendering touches the frame", flush=True)
-    return True
+def _alpha(im) -> np.ndarray:
+    """Coverage of an image in [0, 1]: its alpha channel, or the departure from white without one."""
+    a = np.asarray(im).astype(float)
+    if a.ndim == 3 and a.shape[2] == 4:
+        return a[..., 3] / 255.0
+    return np.clip((255.0 * 3 - a[..., :3].sum(axis=2)) / 60.0, 0, 1)
 
 
 def ink_extent(png: Path, size: tuple[int, int]) -> tuple[int, int]:
-    """Width and height, symmetric about the frame centre (zoom acts about it), of the non-white part
-    of an image."""
+    """Width and height, symmetric about the frame centre (zoom acts about it), of the drawn part of
+    an image."""
     from PIL import Image
-    a = np.asarray(Image.open(png).convert("RGB")).astype(int)
-    ink = np.argwhere((255 - a).sum(axis=2) > 12)
+    ink = np.argwhere(_alpha(Image.open(png)) > 0.05)
     if len(ink) == 0:
         return size
     (y0, x0), (y1, x1) = ink.min(axis=0), ink.max(axis=0)
@@ -414,30 +409,117 @@ def autocrop(png: Path, margin: int = 12) -> bool:
     return touches
 
 
+def composite(layers: list[tuple[np.ndarray, float]], ribbon: np.ndarray, halo_px: int = 3) -> np.ndarray:
+    """Blend RGBA layers (float arrays in [0, 1]) onto white, each at its opacity and in order (outer
+    density level first), then the ribbon at full opacity over a white outline `halo_px` wide."""
+    from scipy import ndimage
+    h, w = ribbon.shape[:2]
+    out = np.ones((h, w, 3))
+    for rgba, opacity in layers:
+        a = rgba[..., 3:4] * opacity
+        out = out * (1 - a) + rgba[..., :3] * a
+    cover = ribbon[..., 3] > 0.3
+    # (scipy dilates until nothing changes when iterations is 0, so no halo is a separate case)
+    grown = ndimage.binary_dilation(cover, iterations=halo_px) if halo_px > 0 else cover
+    halo = grown[..., None] * RIBBON_HALO
+    out = out * (1 - halo) + halo
+    a = ribbon[..., 3:4]
+    return out * (1 - a) + ribbon[..., :3] * a
+
+
+def render_density_ribbon(pdb: str, surfaces: list[dict], png: Path, size=(1800, 1200),
+                          fill: float = 0.94) -> bool:
+    """The ribbon of `pdb` inside nested density surfaces, rendered by 3Dmol.js in headless Chromium.
+    Every layer (each surface alone, then the ribbon alone) is rendered opaque on a transparent
+    background with the same camera, so the layers share one frame; they are blended in Python, outer
+    surface first, so no translucent surface hides another. A first pass of the whole scene sets the
+    zoom that fills `fill` of the frame."""
+    from PIL import Image
+    py = render_python()
+    if py is None:
+        print("  no Python with playwright (set BSC_RENDER_PY); ribbon rendering skipped", flush=True)
+        return False
+    pts = np.vstack([np.array([[float(x) for x in ln[30:54].split()] for ln in pdb.splitlines()
+                               if ln.startswith("ATOM")])] + [s["verts"] for s in surfaces])
+    lo, hi = pts.min(axis=0), pts.max(axis=0)
+    corners = [(x, y, z) for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])]
+    box = "8\nbox\n" + "".join(f"X {x:.2f} {y:.2f} {z:.2f}\n" for x, y, z in corners)
+    surf = [{"v": np.round(s["verts"], 2).tolist(), "n": np.round(s["normals"], 3).tolist(),
+             "f": s["faces"].ravel().astype(int).tolist(), "color": s["color"], "opacity": 1.0}
+            for s in surfaces]
+    script = png.with_name("render_layers.py")
+    script.write_text(SHOOT)
+
+    def page(name: str, layer_surf: list, ribbon: bool, zoom: float) -> tuple[str, str]:
+        subs = {"__LIB__": THREE_DMOL, "__PDB__": json.dumps(pdb), "__SURF__": json.dumps(layer_surf),
+                "__W__": str(size[0]), "__H__": str(size[1]), "__COIL__": COIL_COLOUR,
+                "__HELIX__": HELIX_COLOUR, "__ZOOM__": f"{zoom:.3f}", "__BOX__": json.dumps(box),
+                "__RIBBON__": "true" if ribbon else "false"}
+        html = RENDER_HTML
+        for k, v in subs.items():
+            html = html.replace(k, v)
+        hp = png.with_name(f"{png.stem}_{name}.html")
+        hp.write_text(html)
+        return str(hp.resolve()), str(png.with_name(f"{png.stem}_{name}.png").resolve())
+
+    def shoot(jobs) -> bool:
+        r = subprocess.run([py, str(script), str(size[0]), str(size[1]), *[x for j in jobs for x in j]],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            print(f"  ribbon rendering failed: {r.stderr.strip()[-400:]}", flush=True)
+        return r.returncode == 0
+
+    whole = page("whole", surf, True, 1.0)
+    if not shoot([whole]):
+        return False
+    w, h = ink_extent(Path(whole[1]), size)
+    zoom = fill / max(w / size[0], h / size[1])
+    jobs = [page(f"level{i}", [s], False, zoom) for i, s in enumerate(surf)]
+    jobs.append(page("ribbon", [], True, zoom))
+    if not shoot(jobs):
+        return False
+
+    def rgba(p):
+        return np.asarray(Image.open(p).convert("RGBA")).astype(float) / 255.0
+
+    img = composite([(rgba(j[1]), s["opacity"]) for j, s in zip(jobs[:-1], surfaces, strict=True)],
+                    rgba(jobs[-1][1]))
+    Image.fromarray(np.round(255 * np.clip(img, 0, 1)).astype(np.uint8)).save(png)
+    if autocrop(png):
+        print(f"  {png.name}: the rendering touches the frame", flush=True)
+    return True
+
+
+def density_volumes(volume: float, support: float) -> list[float]:
+    """Enclosed volumes of the three density levels, outer first: the particle volume DENSS assigned
+    (at least OUTER_MIN_FACTOR times the protein volume), the protein volume, its densest part."""
+    return [max(support, OUTER_MIN_FACTOR * volume), volume, CORE_FRACTION * volume]
+
+
 def docked_example(label: str, conformer: int, avg_map: Path, volume: float, support: float) -> dict:
-    """The envelope surface at the isovalue enclosing the protein's expected volume and the conformer,
-    both in the displayed frame, with the share of C-alpha atoms inside that surface and inside the
-    larger surface at the volume DENSS assigned to the particle (when that is much larger). One surface
-    is drawn: a second translucent surface around it hides the first in the renderer."""
-    verts, faces, normals, rho, vox, iso = envelope_mesh(avg_map, volume)
+    """The conformer docked into the averaged map at the protein-volume level, and the three density
+    surfaces, all in the displayed frame; the share of C-alpha atoms inside each level."""
+    rho, vox = load_map(avg_map)
+    vols = density_volumes(volume, support)
+    isos = [isovalue(rho, vox, v) for v in vols]
     frame = load_conformer(label, conformer)
     xyz = 10.0 * frame.xyz[0]
     ca = xyz[frame.topology.select("name CA")]
-    dock = Docking(ca, rho, vox, iso)
+    dock = Docking(ca, rho, vox, isos[1])
     ca_show = dock.conformer(ca)
-    if np.prod(dock.M) < 0:          # a mirrored envelope turns its triangles inside out; restore the winding
-        faces = faces[:, [0, 2, 1]]
-    out = {"frame": frame, "xyz": dock.conformer(xyz), "ca": ca_show, "inside": dock.inside,
-           "chain_breaks": int(np.sum(np.linalg.norm(np.diff(ca, axis=0), axis=1) > CA_BREAK_A)),
-           "surfaces": [{"verts": dock.map_points(verts), "faces": faces,
-                         "normals": dock.map_vectors(normals), "color": ENVELOPE_COLOUR,
-                         "opacity": ENVELOPE_OPACITY}]}
-    if support > 1.3 * volume:
-        *_, iso2 = envelope_mesh(avg_map, support)
-        out["inside_outer"] = dock.inside_fraction(ca_show, iso2)
-    else:
-        out["inside_outer"] = dock.inside
-    return out
+    surfaces = []
+    for (name, colour, opacity), iso, vol in zip(DENSITY_LEVELS, isos, vols, strict=True):
+        verts, faces, normals = mesh_at(rho, vox, iso)
+        if np.prod(dock.M) < 0:      # a mirrored envelope turns its triangles inside out; restore the winding
+            faces = faces[:, [0, 2, 1]]
+        surfaces.append({"name": name, "verts": dock.map_points(verts), "faces": faces,
+                         "normals": dock.map_vectors(normals), "color": colour, "opacity": opacity,
+                         "volume_A3": vol, "iso_over_max": iso / float(rho.max()),
+                         "ca_inside": dock.inside_fraction(ca_show, iso)})
+    return {"frame": frame, "xyz": dock.conformer(xyz), "ca": ca_show, "inside": dock.inside,
+            "inside_outer": surfaces[0]["ca_inside"], "inside_core": surfaces[2]["ca_inside"],
+            "chain_breaks": int(np.sum(np.linalg.norm(np.diff(ca, axis=0), axis=1) > CA_BREAK_A)),
+            "surfaces": surfaces}
 
 
 def ribbon_png(label: str) -> Path:
@@ -445,7 +527,7 @@ def ribbon_png(label: str) -> Path:
 
 
 def render_examples(stats: dict) -> None:
-    """Ribbon renderings of the three worked examples (conformer and envelopes as in the figure)."""
+    """Ribbon renderings of the three worked examples inside three density levels of their envelopes."""
     _, d = analyse.load()
     ent = pd_read_entries()
     for cls, label in analyse.choose_examples(d).items():
@@ -460,7 +542,7 @@ def render_examples(stats: dict) -> None:
         dk = docked_example(label, f["top_conformer"], C.RESULTS / stats[label]["avg_map"], volume, support)
         pdb, ss = cartoon_pdb(dk["frame"], dk["xyz"])
         png = ribbon_png(label)
-        if render_ribbon(pdb, dk["surfaces"], png):
+        if render_density_ribbon(pdb, dk["surfaces"], png):
             print(f"  {cls}: {label} ribbon rendered ({ss.count('H')} helix, {ss.count('E')} strand "
                   f"residues; {100 * dk['inside']:.0f}% of Cα inside the inner envelope)", flush=True)
 
