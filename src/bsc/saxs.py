@@ -63,8 +63,8 @@ def guinier(q: np.ndarray, I: np.ndarray, sigma: np.ndarray, qrg_max: float = 1.
     """Guinier fit ln I = ln I0 - q^2 Rg^2 / 3 over the lowest q with q*Rg <= qrg_max (iterated).
 
     The fit uses the upper three quarters of the window, so that an aggregation upturn at the
-    lowest angles shows up as a positive excess (`upturn`) of those points above the line instead of
-    inflating Rg. Returns Rg, I0, Rg's standard error, the number of points and the validity."""
+    lowest angles shows up as a positive excess (`upturn`) of those points above the line and does
+    not inflate Rg. Returns Rg, I0, Rg's standard error, the number of points and the validity."""
     pos = I > 0
     q, I, sigma = q[pos], I[pos], sigma[pos]
     n, rg = max(12, len(q) // 10), np.nan

@@ -12,3 +12,6 @@ data/
 results/**/*.xtc
 results/**/*.npy
 results/**/*.npz
+
+# DENSS reconstructions of the worked examples (results/denss_stats.json keeps the fit statistics)
+results/denss/

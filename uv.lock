@@ -22,6 +22,7 @@ dependencies = [
     { name = "matplotlib" },
     { name = "mdtraj", version = "1.11.1.post2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "mdtraj", version = "1.11.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "mrcfile" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pandas" },
@@ -44,6 +45,7 @@ requires-dist = [
     { name = "joblib", specifier = ">=1.4" },
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "mdtraj", specifier = ">=1.10" },
+    { name = "mrcfile", specifier = ">=1.5" },
     { name = "numpy", specifier = ">=2.1" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "pyarrow", specifier = ">=17" },
@@ -808,6 +810,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/28/20/8a94375fef6b74490a29d1b320eb2876e887a057903f14758b7188ae2bef/mdtraj-1.11.2-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e38cea404e58a0a41db04e48f79bd0086645d60a10fe66cec88124c3a682699b", size = 11250285, upload-time = "2026-10-05T15:54:57.788Z" },
     { url = "https://files.pythonhosted.org/packages/40/fc/11fd697a6fea5ac3af6e41f0f472e5070ffd8e66f8975f679fe09a92daf9/mdtraj-1.11.2-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e8d8e372372036c82d1f0a3c83f087a4e84c231bd061de8c779db6c338a5889d", size = 11519780, upload-time = "2026-10-05T15:55:00.258Z" },
     { url = "https://files.pythonhosted.org/packages/52/1c/27788ae7c8a00adbbbeb47c9627f94e2d011f90acbd72fd3f6989d7b0308/mdtraj-1.11.2-cp314-cp314-win_amd64.whl", hash = "sha256:60182169d5d8183e358cefc964b1e12bd121e8104544d803a9b6efdb3e7242ad", size = 4494699, upload-time = "2026-10-05T15:55:02.323Z" },
+]
+
+[[package]]
+name = "mrcfile"
+version = "1.5.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/56/22/8834f44c2455291e241fb2543c2d5d4f0fe58fd63ad0f42e86570f0b1161/mrcfile-1.5.4.tar.gz", hash = "sha256:8fa9eb2e237d87d99b301c61bf02854dd85a451db25eefcbe142c09b36d8d601", size = 52052606, upload-time = "2025-01-22T12:36:10.924Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6f/cb/3f4ee8233f30c7926f1ed4885ff32b79ec7ce3210370f43e1cb2b385bed6/mrcfile-1.5.4-py2.py3-none-any.whl", hash = "sha256:195370a13db5ce19600499f9bdf90fd9888979bf39de19a17c19024436c6f4c2", size = 45012, upload-time = "2025-01-22T12:02:38.502Z" },
 ]
 
 [[package]]

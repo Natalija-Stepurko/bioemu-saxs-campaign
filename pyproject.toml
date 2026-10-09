@@ -16,6 +16,7 @@ dependencies = [
     "joblib>=1.4",
     "scikit-learn>=1.5",
     "scikit-image>=0.24",
+    "mrcfile>=1.5",
 ]
 
 [project.scripts]

@@ -148,9 +148,17 @@ def test_report_builds_from_analysis(tmp_path, monkeypatch):
     monkeypatch.setattr(report, "OUT", results / "figures")
     analyse.main()
     report.main()
-    for f in ("fig_error_map", "fig_rg", "fig_resolvability", "fig_models", "fig_candidates"):
+    for f in ("fig_error_map", "fig_rg", "fig_rg_robustness", "fig_resolvability", "fig_models",
+              "fig_candidates"):
         assert (results / "figures" / f"{f}.png").stat().st_size > 10_000
+    # without DENSS maps and the validation stages the examples and prediction figures are left alone
+    assert not (results / "figures" / "fig_examples.png").exists()
+    assert not (results / "figures" / "fig_predict.png").exists()
     text = (docs / "CAMPAIGN.md").read_text()
-    assert "## 3. Candidate systems" in text and "| SASDB |" not in text
+    assert "## 3. Arm 1" in text and "## 4. Arm 2" in text and "| SASDB |" not in text
+    arms = json.load(open(results / "campaign_arms.json"))
+    assert arms["arm1"]["predictor_r2"] is None and "has not been run" in text
+    assert all(r["ratio_model_over_law"] > 1.1 for r in arms["arm2"]["test"])
+    assert all(abs(r["ratio_model_over_law"] - 1) <= 0.1 for r in arms["arm2"]["controls"])
     A = json.load(open(results / "analysis.json"))
     assert f"{A['bioemu']['chi2_raw_median']:.1f}" in text
