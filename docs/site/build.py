@@ -251,7 +251,9 @@ def build():
         for k, detail in (
             ("E1", f"median χ² {f1(E['E1']['median_disordered'])} against {f1(E['E1']['median_folded'])}; "
                    f"one-sided p = {pv(E['E1']['p_one_sided'])}"),
-            ("E2", f"Spearman ρ = {E['E2']['spearman_rho']:+.2f}, p = {pv(E['E2']['p'])}, n = {E['E2']['n']}"),
+            ("E2", f"Spearman ρ = {E['E2']['spearman_rho']:+.2f}, p = {pv(E['E2']['p'])}, n = {E['E2']['n']}; "
+                   f"raw fit in {pct(E['E2']['share_fit_le_100'])} of proteins ≤ 100 residues and "
+                   f"{pct(E['E2']['share_fit_gt_100'])} of longer ones"),
             ("E3", f"{pct(E['E3']['share_phi_above_0.3'])} reach χ² ≈ 1 keeping φ > 0.3; "
                    f"{pct(E['E3']['share_phi_below_0.1'])} need φ < 0.1"),
             ("E4", f"median Rg ratio {E['E4']['median_rg_ratio_disordered']:.2f}, {pct(E['E4']['share_below_1'])} below 1; "
@@ -293,10 +295,10 @@ def build():
 <h2 id="map">The error map</h2>
 {fig("fig_error_map", "Figure 1 · raw fit by protein class and chain length",
      f"Reduced χ² of the uniform BioEmu-1 ensemble average against each SAXS profile, after fitting one scale factor and one constant background, on the {n_clean} profiles that pass data-quality checks. Left: by disorder class (bars are medians). Right: against chain length, coloured by class.",
-     "Points below the dashed line (χ² = 2) are profiles the raw ensemble describes. The median χ² is " + class_sentence() + ".")}
+     "Points below the dashed line (χ² = 2) are profiles the raw ensemble describes. The median χ² is " + class_sentence() + ". Among folded proteins only the smallest, up to 100 residues, fit more often; above that the error does not change with length.")}
 <div class="findings">
 <p><strong>The raw ensemble fits {pct(share_fit)} of profiles.</strong> Median reduced χ² is {f1(B['chi2_raw_median'])} (quartiles {f1(B['chi2_raw_q25'])}–{f1(B['chi2_raw_q75'])}). Expectation E1, that disordered proteins fit worse than folded ones, is {met('E1')} (p = {pv(E['E1']['p_one_sided'])}).</p>
-<p><strong>Error and chain length.</strong> Among folded proteins the raw χ² {'rises' if E['E2']['spearman_rho'] > 0 else 'does not rise'} with length (Spearman ρ = {E['E2']['spearman_rho']:+.2f}, p = {pv(E['E2']['p'])}); expectation E2 is {met('E2')}.</p>
+<p><strong>Error and chain length.</strong> Expectation E2, that the error of folded proteins rises with chain length, is {met('E2')}: the rank correlation is weak (Spearman ρ = {E['E2']['spearman_rho']:+.2f}, p = {pv(E['E2']['p'])}). What the data show is a step, not a slope: folded proteins of up to 100 residues fit {pct(E['E2']['share_fit_le_100'])} of the time (n = {E['E2']['n_le_100']}), longer ones {pct(E['E2']['share_fit_gt_100'])} (n = {E['E2']['n_gt_100']}), with no further trend above that.</p>
 <p><strong>Size, in the direction not expected.</strong> Expectation E4 predicted over-compaction of disordered proteins, the usual failure of models trained on folded structures. The data show the reverse: the ensemble radius of gyration is {rg_dis:.2f} times the measured value at the median for disordered proteins, above 1 in {pct(1 - E['E4']['share_below_1'])} of them, against {CLS['folded']['rg_ratio_median']:.2f} for folded proteins. Of the other models, {others_rg}: BioEmu-1 is the only one whose disordered ensembles are too extended, which makes them a direct target for new data.</p>
 </div>
 {fig("fig_rg", "Figure 2 · ensemble size against measured size",
@@ -313,7 +315,7 @@ def build():
 <div class="call"><p><strong>For the campaign.</strong> New SAXS data moves the model most on population cases, and least on calibration cases, which a consistent correction handles. Unresolved cases need a measurement that reports local structure, because SAXS says the ensemble is wrong without saying how. Expectation E3 is {met('E3')}: {pct(E['E3']['share_phi_above_0.3'])} of profiles reach χ² ≈ 1 while keeping more than 30% of the effective sample.</p></div>
 
 <h2 id="models">Other models on the same profiles</h2>
-<p>The same archive carries ensembles from other generators for the same entries, scored here identically and without reweighting. BioEmu-1 has the lowest median raw χ² of the {len(comps) + 1}; the single-structure predictors (AlphaFold2, ESMFold) cannot be reweighted, so their best fit is their raw fit.</p>
+<p>The same archive carries back-calculated curves from other generators for the same entries, scored here identically and without reweighting: {", ".join(MODEL_NAME[c["model"]] for c in comps)}. Five further folders are not used: Boltz-1x and ESMFlow are superseded by models already included, idpGAN and IDP-o are disorder-only generators represented here by idpSAM, and PepTron-base is the un-finetuned PepTron. BioEmu-1 has the lowest median raw χ² of the {len(comps) + 1}; the single-structure predictors (AlphaFold2, ESMFold) cannot be reweighted, so their best fit is their raw fit.</p>
 {fig("fig_models", "Figure 4 · raw fit of each model by class", "Median raw reduced χ² (bars: quartiles) of the unweighted ensemble of each model, by disorder class, on the profiles that pass quality checks.", "Lower is better. Differences within a class smaller than the quartile ranges are not read.") if comps else ""}
 {comp_html}
 

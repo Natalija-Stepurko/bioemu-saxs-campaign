@@ -58,8 +58,13 @@ def expectations(d: pd.DataFrame) -> dict:
                  "n_folded": len(f), "n_disordered": len(dis), "p_one_sided": float(u.pvalue),
                  "met": bool(dis["chi2_raw"].median() > f["chi2_raw"].median() and u.pvalue < 0.05)}
     rho = stats.spearmanr(f["length"], f["log_chi2_raw"])
+    small, large = f[f["length"] <= 100], f[f["length"] > 100]
     out["E2"] = {"statement": "among folded proteins raw chi2 rises with length",
                  "spearman_rho": float(rho.statistic), "p": float(rho.pvalue), "n": len(f),
+                 "share_fit_le_100": float((small["chi2_raw"] <= 2).mean()), "n_le_100": len(small),
+                 "share_fit_gt_100": float((large["chi2_raw"] <= 2).mean()), "n_gt_100": len(large),
+                 "median_chi2_le_100": float(small["chi2_raw"].median()),
+                 "median_chi2_gt_100": float(large["chi2_raw"].median()),
                  "met": bool(rho.statistic > 0 and rho.pvalue < 0.05)}
     reached = m["phi_at_chi2_1"].notna()
     out["E3"] = {"statement": "most entries reach chi2 ~1 with phi above 0.3; a minority need phi below 0.1",

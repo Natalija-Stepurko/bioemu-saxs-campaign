@@ -200,7 +200,8 @@ quartiles {b['chi2_raw_q25']:.1f}–{b['chi2_raw_q75']:.1f}). By class, the medi
 {cls['disordered']['chi2_raw_median']:.1f} for disordered (n = {cls['disordered']['n']}).
 Expectation E1 (disordered worse than folded) is {'met' if E['E1']['met'] else 'not met'}
 (one-sided p = {E['E1']['p_one_sided']:.2g}); E2 (error rising with length among folded proteins) is
-{'met' if E['E2']['met'] else 'not met'} (ρ = {E['E2']['spearman_rho']:+.2f}); E4 (over-compaction of
+{'met' if E['E2']['met'] else 'not met'} (ρ = {E['E2']['spearman_rho']:+.2f}; folded proteins of up to 100 residues fit
+{pct(E['E2']['share_fit_le_100'])} of the time, longer ones {pct(E['E2']['share_fit_gt_100'])}, with no trend above that); E4 (over-compaction of
 disordered proteins) is {'met' if E['E4']['met'] else 'not met'}: the median ensemble Rg is
 {E['E4']['median_rg_ratio_disordered']:.2f} times the measured value, and only {pct(E['E4']['share_below_1'])} of disordered
 entries are below 1, so the model's disordered ensembles are too {'compact' if E['E4']['median_rg_ratio_disordered'] < 1 else 'extended'},
