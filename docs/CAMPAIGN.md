@@ -41,11 +41,18 @@ weights become, not information gain; SAXS is low-dimensional, so distinct ensem
 curve; and a target fit that is not reached does not establish that compatible conformations are absent from
 BioEmu's distribution: it describes this finite ensemble, this forward model and this procedure.
 
-## 3. Arm 1, model improvement: high-error, reweightable monomers under one standard condition
+## 3. Arm 1, replication: high-error, reweightable monomers under one standard condition
 
-The ranking multiplies the model's error (log₁₀ raw χ²) by a reweighting weight (strongly reweightable 1.0,
-modestly reweightable 0.6, target fit not reached 0.3) and a tractability weight (chain ≤ 350 residues; folded or partly
-disordered). The arm takes the top reweightable entries:
+The design (§6) proposed a priority score, log₁₀ raw χ² × a reweighting weight × a tractability weight, to
+rank systems for measurement. A retrospective test (end of this section) shows that the score does not pick high-discrepancy
+profiles better than random choice when it is fed the quantities known before a measurement, and its weights were
+set by judgement, so it is not used to recommend measurements. Arm 1 takes the systems that meet stated
+eligibility rules: reweighting reaches χ² ≤ 2 (strongly or modestly reweightable), the measured mass matches a
+monomer, the chain has at most 350 residues, and the protein is folded or partly disordered.
+88 entries qualify. The 12 with the largest raw χ² are listed; that order is a
+sort by the size of the known discrepancy, which is what a replication can test, and not an estimate of what the
+measurement is worth. The final choice among eligible systems needs a feasibility review (construct availability,
+expression, deposited buffer).
 
 | SASBDB | length | class | raw χ² | best χ² | kind | Rg |
 |---|---|---|---|---|---|---|
@@ -67,7 +74,7 @@ concentration series) reduces condition heterogeneity and tests whether the disc
 common buffer and temperature can itself shift some ensembles, so a changed profile is read against the
 deposited one before it is read against the model. It adds no new region of sequence space. A novel-acquisition list (sequences without a SASBDB entry, chosen by the error predictor) is not offered: the predictor of the raw error from sequence-level features reaches R² = 0.05 in grouped cross-validation (class means alone 0.04), so its ranking of unmeasured sequences would be close to random. Only the replication list stands.
 
-The heuristic weights are a limitation: they were set by judgement, not fitted. On held-out folds of the existing pool, the rule fed with predicted quantities picks 0.52 strongly reweightable or target-not-reached entries per entry chosen (top 10) against 0.48 for random choice and 1.00 when the observed quantities are used; the predicted-error policy alone reaches 0.58. This is
+On held-out folds of the existing pool, the rule fed with predicted quantities picks 0.52 strongly reweightable or target-not-reached entries per entry chosen (top 10) against 0.48 for random choice and 1.00 when the observed quantities are used; the predicted-error policy alone reaches 0.58. This is
 retrospective, and a profile that already exists carries no new information for the model; the evaluation
 says only how far the rule can be trusted to rank unmeasured proteins from what is known about them.
 

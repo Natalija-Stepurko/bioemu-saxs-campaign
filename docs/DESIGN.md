@@ -162,6 +162,13 @@ beside the old ones in `results/`.
   highest-weight one at that minimum. The selection evaluation also reports the two components of the
   high-discrepancy target yield (strongly reweightable; target fit not reached) separately, and one
   strongly reweightable path, chosen in code as the entry with the median φ of its kind, is drawn on the page.
+- **Priority score not used to recommend (2026-10-09).** §6 proposed a ranked candidate list; the priority
+  score built for it (log₁₀ raw χ² × reweighting weight × tractability weight, weights set by judgement) was
+  tested retrospectively (`select_eval`) and does not pick high-discrepancy profiles better than random choice
+  when fed pre-measurement quantities. It is reported with its test and not used for selection: arm 1 takes
+  the systems that meet stated eligibility rules (reweighting reaches χ² ≤ 2, monomer by measured mass, at most
+  350 residues, folded or partly disordered), listed by raw χ² as a sort key, with the final choice left to a
+  feasibility review.
 
 ## 8. Conventions
 

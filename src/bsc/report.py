@@ -391,19 +391,6 @@ def fig_models(A: dict) -> None:
     save(fig, "fig_models")
 
 
-def fig_candidates(cand: pd.DataFrame) -> None:
-    top = cand.head(20).iloc[::-1]
-    fig, ax = figure(560, 470)
-    ax.barh(range(len(top)), top["priority"], color=top["disorder_class"].map(CLS_COL), height=0.65)
-    ax.set_yticks(range(len(top)))
-    ax.set_yticklabels([f"{r.label} · {int(r.length)} aa · {r.rg_direction.replace('model ', '')}"
-                        for r in top.itertuples()], fontsize=9.5)
-    ax.set_xlabel("priority: log₁₀ raw χ² × kind weight × tractability")
-    for cls, c in CLS_COL.items():
-        ax.scatter([], [], color=c, label=cls)
-    ax.legend(frameon=False, fontsize=9.5, loc="lower right")
-    fig.tight_layout()
-    save(fig, "fig_candidates")
 
 
 def fig_predict() -> None:
@@ -593,6 +580,10 @@ def f2(x) -> str:
     return "n/a" if x is None or not np.isfinite(x) else f"{x:.2f}"
 
 
+ARM1_MAX_LENGTH = 350      # residues; constructs above this are harder to express and to purify monomeric
+ARM1_LISTED = 12           # systems listed; the order is by observed raw chi2, a sort key, not a value of measuring
+
+
 def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFrame) -> dict:
     """The two arms of the campaign, from results only.
 
@@ -601,7 +592,10 @@ def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFram
     the disordered scaling-law Rg by more than 10% (a pre-acquisition quantity), spanning length and
     composition, with matched controls whose ratio is within 10% of 1."""
     from bsc import features
-    arm1 = cand[cand["resolvability"].isin([analyse.KIND_STRONG, analyse.KIND_MODEST])].head(12)
+    elig = cand[cand["resolvability"].isin([analyse.KIND_STRONG, analyse.KIND_MODEST])
+                & (cand["length"] <= ARM1_MAX_LENGTH)
+                & cand["disorder_class"].isin(["folded", "partly disordered"])]
+    arm1 = elig.sort_values("chi2_raw", ascending=False).head(ARM1_LISTED)
     m = d[(d["model"] == C.MODEL) & d["clean"]].copy()
     m["kind"] = m["resolvability"]
     e = ent.set_index("label")
@@ -639,6 +633,7 @@ def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFram
     P = json.load(open(C.RESULTS / "predict.json")) if (C.RESULTS / "predict.json").exists() else None
     predictive = bool(P and max(P["regression"]["ridge"]["r2"]["mean"], P["regression"]["hgb"]["r2"]["mean"]) >= 0.2)
     out = {"arm1": {"replication": json.loads(arm1.to_json(orient="records")),
+                    "n_eligible": int(len(elig)), "max_length": ARM1_MAX_LENGTH,
                     "novel_acquisition_possible": predictive,
                     "predictor_r2": None if P is None else {k: P["regression"][k]["r2"]["mean"]
                                                                for k in ("class_mean", "ridge", "hgb")}},
@@ -746,11 +741,18 @@ weights become, not information gain; SAXS is low-dimensional, so distinct ensem
 curve; and a target fit that is not reached does not establish that compatible conformations are absent from
 BioEmu's distribution: it describes this finite ensemble, this forward model and this procedure.
 
-## 3. Arm 1, model improvement: high-error, reweightable monomers under one standard condition
+## 3. Arm 1, replication: high-error, reweightable monomers under one standard condition
 
-The ranking multiplies the model's error (log₁₀ raw χ²) by a reweighting weight (strongly reweightable 1.0,
-modestly reweightable 0.6, target fit not reached 0.3) and a tractability weight (chain ≤ 350 residues; folded or partly
-disordered). The arm takes the top reweightable entries:
+The design (§6) proposed a priority score, log₁₀ raw χ² × a reweighting weight × a tractability weight, to
+rank systems for measurement. A retrospective test (end of this section) shows that the score does not pick high-discrepancy
+profiles better than random choice when it is fed the quantities known before a measurement, and its weights were
+set by judgement, so it is not used to recommend measurements. Arm 1 takes the systems that meet stated
+eligibility rules: reweighting reaches χ² ≤ 2 (strongly or modestly reweightable), the measured mass matches a
+monomer, the chain has at most {arms['arm1']['max_length']} residues, and the protein is folded or partly disordered.
+{arms['arm1']['n_eligible']} entries qualify. The {len(arm1)} with the largest raw χ² are listed; that order is a
+sort by the size of the known discrepancy, which is what a replication can test, and not an estimate of what the
+measurement is worth. The final choice among eligible systems needs a feasibility review (construct availability,
+expression, deposited buffer).
 
 | SASBDB | length | class | raw χ² | best χ² | kind | Rg |
 |---|---|---|---|---|---|---|
@@ -761,7 +763,7 @@ concentration series) reduces condition heterogeneity and tests whether the disc
 common buffer and temperature can itself shift some ensembles, so a changed profile is read against the
 deposited one before it is read against the model. It adds no new region of sequence space. {novel}
 
-The heuristic weights are a limitation: they were set by judgement, not fitted. {sel_sentence} This is
+{sel_sentence} This is
 retrospective, and a profile that already exists carries no new information for the model; the evaluation
 says only how far the rule can be trusted to rank unmeasured proteins from what is known about them.
 
@@ -890,7 +892,6 @@ def main() -> None:
     fig_resolvability(d, paths)
     if A["model_comparison"]:
         fig_models(A)
-    fig_candidates(cand)
     fig_predict()
     fig_predict_detail()
     fig_examples(A, ent)

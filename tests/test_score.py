@@ -150,8 +150,7 @@ def test_report_builds_from_analysis(tmp_path, monkeypatch):
     monkeypatch.setattr(report, "OUT", results / "figures")
     analyse.main()
     report.main()
-    for f in ("fig_error_map", "fig_rg", "fig_rg_robustness", "fig_resolvability", "fig_models",
-              "fig_candidates"):
+    for f in ("fig_error_map", "fig_rg", "fig_rg_robustness", "fig_resolvability", "fig_models"):
         assert (results / "figures" / f"{f}.png").stat().st_size > 10_000
     # without DENSS maps and the validation stages the examples and prediction figures are left alone
     assert not (results / "figures" / "fig_examples.png").exists()

@@ -19,8 +19,10 @@ disordered ensembles are too extended (median radius of gyration 1.21 times the 
 1.12–1.28), and the Cα coordinates of the sampled conformers give 1.35, so the extension is present in the
 conformers. The raw error is not predictable before measuring (R² = 0.05 in sequence-grouped
 cross-validation); ranking held-out entries by predicted error gives a high-discrepancy target yield of
-0.58 among the top ten against 0.48 for random choice, within the spread of a single random pick. The campaign proposal
-therefore has a replication arm under standardised conditions and a prospective test of the extension
+0.58 among the top ten against 0.48 for random choice, within the spread of a single random pick. The priority score
+proposed in the design does no better than random choice when fed pre-measurement quantities, so it is not
+used to recommend measurements. The campaign proposal therefore has a replication arm, systems chosen by
+stated eligibility rules, under standardised conditions and a prospective test of the extension
 bias with pre-specified model-based selection and scaling-law-matched controls.
 
 ![error map](results/figures/fig_error_map.png)
@@ -48,7 +50,7 @@ reversed, two not met. The additions made after the first run are listed, dated,
 | `bsc fetch` | downloads the two Zenodo archives, verifies their md5 against the record, records sha256, unpacks the SAXS data and the back-calculated curves of the chosen models |
 | `bsc score` | per entry × model: raw χ², the error-free NRMSD score, Guinier Rg (experiment and ensemble), reweighting path, data-quality flags |
 | `bsc coordrg` | Cα radius of gyration of the BioEmu-1 conformers for every clean disordered entry and 40 random folded ones; `-- --archive Predictions.tar.gz` extracts the missing ensembles in one pass |
-| `bsc analyse` | error map by class, the four expectations, the four kinds, model comparison, ranked candidates, bootstrap intervals, near-duplicate clusters, NRMSD orderings |
+| `bsc analyse` | error map by class, the four expectations, the four kinds, model comparison, the design's priority score (reported and tested, not used to select systems), bootstrap intervals, near-duplicate clusters, NRMSD orderings |
 | `bsc select_eval` | retrospective evaluation of the selection rule on held-out folds grouped by sequence cluster |
 | `bsc predict` | can the error be predicted before measuring: grouped, repeated cross-validation of baselines, linear models and small trees |
 | `bsc envelopes` | DENSS ab initio envelopes of the three worked examples and a ribbon rendering of the highest-weight conformer inside each (needs the DENSS environment and a Python with playwright, see below; skipped with a notice otherwise) |
