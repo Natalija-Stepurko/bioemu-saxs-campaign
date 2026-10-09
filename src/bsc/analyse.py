@@ -60,22 +60,16 @@ def kind(row: pd.Series, phi_threshold: float = PHI_THRESHOLD) -> str:
 resolvability = kind      # name used by the first run
 
 
-EXAMPLE_MAX_LENGTH = 300
-
-
 def choose_examples(d: pd.DataFrame) -> dict[str, str]:
-    """The worked example of each class (rule of 2026-10-09, DESIGN §7): among the clean entries of the
-    model under study with a chain of at most EXAMPLE_MAX_LENGTH residues, the one nearest the class
-    median in both raw error and size. Distance: the Euclidean norm of the deviations of log10 raw chi2
-    and of log Rg ratio from their class medians, each divided by its class standard deviation (medians
-    and deviations over every clean entry of the class with an Rg ratio). Ties: shorter chain, then label."""
-    m = d[(d["model"] == C.MODEL) & d["clean"]].dropna(subset=["chi2_raw", "rg_ratio"])
+    """The worked example of each class: the clean entry of the model under study whose raw chi2 is
+    closest to the class median (an even count leaves two entries equidistant; the shorter chain is
+    taken, then the alphabetically first label). A joint rule on raw chi2 and size ratio was tried and
+    not kept (DESIGN §7)."""
+    m = d[(d["model"] == C.MODEL) & d["clean"]]
     out = {}
     for cls in CLASS_ORDER:
         g = m[m["disorder_class"] == cls].copy()
-        lc, lr = np.log10(g["chi2_raw"]), np.log(g["rg_ratio"])
-        g["dev"] = np.hypot((lc - lc.median()) / lc.std(ddof=1), (lr - lr.median()) / lr.std(ddof=1)).round(9)
-        g = g[g["length"] <= EXAMPLE_MAX_LENGTH]
+        g["dev"] = (g["chi2_raw"] - g["chi2_raw"].median()).abs().round(9)
         out[cls] = str(g.sort_values(["dev", "length", "label"]).iloc[0]["label"])
     return out
 

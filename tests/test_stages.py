@@ -47,14 +47,13 @@ def test_density_levels_are_the_particle_and_the_protein_volume():
     assert envelopes.density_volumes(100.0, 400.0) == [400.0, 100.0]
 
 
-def test_examples_are_nearest_the_class_median_in_error_and_size():
+def test_examples_are_nearest_the_class_median_raw_chi2():
     from bsc import analyse
     rows = []
     for cls in ("folded", "partly disordered", "disordered"):
-        for i, (chi2, ratio, length) in enumerate([(2.0, 1.0, 120), (2.0, 1.0, 420), (8.0, 1.0, 100),
-                                                   (2.0, 1.5, 100), (1.0, 0.8, 90), (4.0, 1.25, 110)]):
+        for i, (chi2, length) in enumerate([(2.0, 120), (2.0, 90), (8.0, 100), (1.0, 80), (4.0, 110)]):
             rows.append({"model": "bioemu", "clean": True, "label": f"{cls[:3]}{i}", "disorder_class": cls,
-                         "chi2_raw": chi2, "rg_ratio": ratio, "length": length})
+                         "chi2_raw": chi2, "length": length})
     ex = analyse.choose_examples(pd.DataFrame(rows))
-    # the two entries at both medians tie; the one longer than 300 residues is not eligible
-    assert ex == {"folded": "fol0", "partly disordered": "par0", "disordered": "dis0"}
+    # median 2.0 is shared by two entries; the shorter chain is taken
+    assert ex == {"folded": "fol1", "partly disordered": "par1", "disordered": "dis1"}

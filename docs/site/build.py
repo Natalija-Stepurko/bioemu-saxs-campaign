@@ -16,8 +16,9 @@ from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
-import numpy as np
 import pandas as pd
+
+PIXEL_DENSITY = 3   # must match bsc.report.PIXEL_DENSITY; checked below
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = Path(os.environ.get("BSC_ROOT", ROOT)) / "results"
@@ -94,10 +95,10 @@ def png_width(p: Path) -> int:
 
 
 def fig(name, caption, what, read=None, cls="result"):
-    """A figure capped at its design width: the PNG carries two pixels per display pixel."""
+    """A figure capped at its design width: the PNG carries PIXEL_DENSITY pixels per display pixel."""
     p = RESULTS / "figures" / f"{name}.png"
     check(p.exists(), f"figure {name} exists")
-    w = png_width(p) // 2
+    w = png_width(p) // PIXEL_DENSITY
     check(w <= 860, f"figure {name} is at most 860 px wide")
     body = f'<p><strong>What it shows.</strong> {what}</p>'
     if read:
@@ -242,7 +243,7 @@ FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d=
 
 
 CSS = """
-:root{--paper:#F7F8F9;--panel:#FFFFFF;--ink:#16191D;--muted:#5B646E;--rule:#DDE1E4;--acc:#2F5D8A;--bioemu:#3A80CC;--band:#EEF1F2;
+:root{--paper:#F7F8F9;--panel:#FFFFFF;--ink:#16191D;--muted:#5B646E;--rule:#DDE1E4;--acc:#2F5D8A;--bioemu:#1F6FE5;--feas-bg:#FBF3E6;--feas-rule:#C08A3E;--feas-head:#7A4E12;--band:#EEF1F2;
   --sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 *{box-sizing:border-box}
@@ -293,6 +294,9 @@ p{margin:0 0 14px}
 @media (max-width:860px){.findings{grid-template-columns:minmax(0,1fr)}}
 .findings>p{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:3px;padding:14px 16px;margin:0;font-size:14px}
 .call{border-left:3px solid var(--acc);background:#EEF2F6;padding:14px 20px;margin:18px 0;border-radius:0 3px 3px 0}
+.feas{border:1px solid #EAD8BC;border-left:4px solid var(--feas-rule);background:var(--feas-bg);padding:12px 20px 6px;margin:18px 0;border-radius:0 3px 3px 0}
+.feas .feas-title{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--feas-head);font-weight:600;margin:0 0 6px}
+.feas ul{margin:0 0 6px;padding-left:20px}.feas li{font-size:14.5px;margin:0 0 6px}
 .scroll{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule)}
@@ -364,8 +368,10 @@ def build():
     singles = [m for m in SINGLE if m in comps]
     check(len(comps) == 6 and set(comps) == set(GENERATORS) | set(SINGLE), "six comparators")
     try:                                     # the page's BioEmu-1 colour is the figures' role colour
+        from bsc.report import PIXEL_DENSITY as FIG_DENSITY
         from bsc.report import ROLE_COL
         check(f"--bioemu:{ROLE_COL['bioemu']};" in CSS, "page BioEmu-1 colour matches the figure role colour")
+        check(FIG_DENSITY == PIXEL_DENSITY, "page and figures agree on the pixel density")
     except ImportError:
         pass
     RV = pd.read_csv(RESULTS / "resolvability.csv")
@@ -417,16 +423,13 @@ def build():
     rep = A["representative_path"]
     check(RV.loc[rep, "resolvability"] == KIND_STRONG, "the representative path is strongly reweightable")
 
-    # ---- worked examples: nearest the class median in raw chi2 and size ratio, chains <= 300 residues
+    # ---- worked examples: nearest the class median raw chi2
     for cls in CLASSES:
         lab = A["examples"][cls]
         ex = EX[lab]
-        g = RV[RV["disorder_class"] == cls].dropna(subset=["rg_ratio"])
-        check(ex["length"] <= 300, f"{lab}: chain of at most 300 residues")
-        lc, lr = np.log10(g["chi2_raw"]), np.log(g["rg_ratio"])
-        dist = np.hypot((np.log10(ex["chi2"]["raw"]) - lc.median()) / lc.std(ddof=1),
-                        (np.log(RV.loc[lab, "rg_ratio"]) - lr.median()) / lr.std(ddof=1))
-        check(dist < 0.5, f"{lab}: near the class median in raw chi2 and in size ratio (standardised distance < 0.5)")
+        g = RV[(RV["disorder_class"] == cls) & RV["clean"]]
+        dev = (g["chi2_raw"] - g["chi2_raw"].median()).abs()
+        check(abs(dev.loc[lab] - dev.min()) < 1e-9, f"{lab}: nearest the class median raw chi2")
         reached = RV.loc[lab, "resolvability"] in (KIND_RAW, KIND_MODEST, KIND_STRONG)
         check(ex["operating_reached"] == reached, f"{lab}: reweighted curve at the operating point iff chi2 <= 2 is reached")
         if reached and not ex["operating_is_raw"]:
@@ -440,7 +443,11 @@ def build():
               and abs(lv[1]["ca_inside"] - ex["ca_inside_envelope"]) < 1e-12,
               f"{lab}: two nested density levels; the protein level is the docking level")
     ex_f, ex_p, ex_d = (EX[A["examples"][c]] for c in CLASSES)
-    check(ex_d["rg_raw"] > 1.1 * ex_d["rg_exp"], "disordered example: the raw ensemble is clearly larger than measured")
+    lab_d = A["examples"]["disordered"]
+    ratio_d = RV.loc[lab_d, "rg_ratio"]
+    check(ex_d["rg_raw"] > ex_d["rg_operating"] > ex_d["rg_exp"] and ex_d["operating_reached"],
+          "disordered example: larger than measured raw; reweighting to chi2 <= 2 moves Rg toward the measured value")
+    check(1 < ratio_d < rg_dis, "disordered example: size ratio above 1 but below the class median (caption says so)")
 
     # ---- result 4: prediction and selection
     r2_best = max(P["regression"]["ridge"]["r2"]["mean"], P["regression"]["hgb"]["r2"]["mean"])
@@ -683,6 +690,7 @@ def build():
         "<p><strong>Residuals.</strong> (I<sub>model</sub> − I<sub>exp</sub>)/σ against q, with ±3 guides. A residual that wanders outside ±3 over a range of q is a shape error at that length scale (about 1/q); a flat band within ±3 is a fit at the noise level.</p>"
         f"<p><strong>Reweighted curve.</strong> {rew_sentence}</p>"
         f"<p><strong>Envelope.</strong> DENSS {cite('grant')} reconstructions from the measured curve alone (ten maps, aligned and averaged; Dmax from the SASBDB record), drawn as filled projections of two density levels of the averaged map: the isosurface enclosing the protein's expected volume at 1.7 Å³ per Da (darker) and the one enclosing the volume DENSS assigned to the particle (lighter). The conformer is the highest-weight one at the χ² minimum of the path, docked into the protein-volume level by principal axes; the share of its Cα atoms inside that level is given under each panel and, for both levels, in the table.{uniform_sentence}{breaks_sentence}</p>"
+        f"<p><strong>How typical the examples are.</strong> Each is the entry nearest its class median of raw χ². {lab_d} is not typical in size: its size ratio ({ratio_d:.2f}) is below the disordered median ({f2(rg_dis)}), so this column understates the class-wide excess. It is {ex_d['length']} residues long, and the drawn conformer has {ex_d['chain_breaks']} chain breaks.</p>"
         "<p><strong>What the envelope is.</strong> An illustration from an ensemble-averaged measurement, not evidence about any single conformation; for a disordered protein one conformer cannot fill it.</p>")
     pp = y["predicted priority"]
 
@@ -729,10 +737,10 @@ def build():
 {details("Class table and the chain-length test (E2)", class_table + fig("fig_length", "Raw χ² against chain length", f"Raw reduced χ² of every profile against chain length, coloured by class. Among folded proteins the rank correlation is weak (ρ = {E['E2']['spearman_rho']:+.2f}); chains of up to 100 residues meet χ² ≤ 2 more often ({pct(E['E2']['share_fit_le_100'])} against {pct(E['E2']['share_fit_gt_100'])})."))}
 
 <h2 id="examples">What a fit looks like</h2>
-<p class="lead">One protein per class, the one nearest its class median in both raw χ² and size ratio among chains of at most 300 residues, shows the fits on measured curves.</p>
+<p class="lead">One protein per class, the one nearest its class median of raw χ², shows the fits on measured curves.</p>
 {fig("fig_examples", "Figure 2 · one worked example per class",
      "Top: every measured point with its error band and three computed curves scaled to it, BioEmu-1 raw (solid), reweighted (dotted) and AlphaFold2 (dashed), with their χ² above each panel. Middle: residuals. Bottom: the ab initio envelope reconstructed from the measured curve, with the Cα trace of a BioEmu-1 conformer docked inside.",
-     f"In the disordered column the raw ensemble is larger than the protein in solution (Rg {ex_d['rg_raw']:.0f} Å against {ex_d['rg_exp']:.0f} Å measured), the size gap examined in the next section.")}
+     f"In the disordered column the raw ensemble is larger than the protein in solution (Rg {ex_d['rg_raw']:.0f} Å against {ex_d['rg_exp']:.0f} Å measured), and reweighting to χ² ≤ 2 moves it to {ex_d['rg_operating']:.0f} Å, toward the measured value.")}
 {details("How to read Figure 2", how_to_read + ex_table)}
 
 <h2 id="size">Disordered ensembles are systematically too extended</h2>
@@ -771,7 +779,12 @@ def build():
 <h3>Arm 2 · hypothesis test: are BioEmu-1's disordered ensembles systematically too extended?</h3>
 <p>The hypothesis came from this archive, so the arm is a prospective replication test with pre-specified model-based selection and new SAXS measurements. Test proteins are disordered proteins whose BioEmu-1 ensemble Rg exceeds the scaling-law Rg for disordered chains (1.927 N<sup>0.598</sup> Å {cite('kohn')}) by more than 10%, a quantity computed from the model and the sequence alone, drawn from the archive's disordered entries whose deposited profiles pass the quality checks, spanning chain length and net charge ({arm2['n_test_candidates']} of {arm2['n_disordered_pool']} disordered entries qualify). The scaling-law-matched controls are disordered proteins of the same length bins whose ensemble Rg is within 10% of the scaling law ({arm2['n_control_candidates']} qualify). In the archive their ratio of ensemble Rg to measured Rg is {f2(arm2['control_observed_median_ratio'])} at the median, against {f2(arm2['test_observed_median_ratio'])} for the test group, so the controls are not known to agree with experiment. Pre-specified outcome: the median Rg<sub>exp</sub>/Rg<sub>model</sub> across the test arm from Guinier fits of the new profiles. The bias is refuted if that median is at least 0.95; it is confirmed if it is at most 0.90 in the test arm and at least 0.95 in the controls.</p>
 {details("Test proteins and controls", '<div class="scroll"><table class="wide">' + arm2_head + '<tbody>' + arm2_rows(arm2["test"]) + '</tbody></table></div><p class="note">Controls</p><div class="scroll"><table class="wide">' + arm2_head + '<tbody>' + arm2_rows(arm2["controls"]) + '</tbody></table></div>')}
-<p>Measuring every protein in one common buffer and temperature is the design aim, but it may not be possible: some proteins may be insoluble, unstable or aggregate in that buffer. Each construct therefore passes a solubility and sample-quality gate before any SAXS: a solubility test in the standard buffer; the UV trace of the purification and of analytical SEC (a single symmetric A280 peak at the expected elution volume, and the A260/A280 ratio for nucleic-acid contamination); SDS-PAGE for a single band at the expected mass; and circular dichroism where the fold is in question, to confirm the expected folded or disordered secondary structure. On the SAXS data I watch for aggregation: a low-angle upturn, a non-linear Guinier region, Rg or I(0)/c rising with concentration, a molecular weight from I(0) above the monomer, and SEC-SAXS frames whose Rg is not constant across the peak; all of these are among the scripted quality criteria below. A protein that fails the gate in the standard buffer is measured in the nearest buffer in which it is monodisperse, or in its deposited buffer, with the deviation recorded, and is analysed separately, because its replication no longer controls the condition; one that fails in every buffer is dropped and replaced by the next eligible system.</p>
+<div class="feas" role="note"><p class="feas-title">Feasibility judgement</p><ul>
+<li>A single common buffer and temperature is the aim, but it may not hold for every protein: some may be insoluble, unstable or aggregate in it.</li>
+<li>Gate before any SAXS: solubility in the standard buffer; the A280 trace of purification and analytical SEC (one symmetric peak at the expected elution volume) with the A260/A280 ratio for nucleic acid; SDS-PAGE (one band at the expected mass); circular dichroism where the fold is in question.</li>
+<li>Aggregation signs on the SAXS data: a low-angle upturn, a non-linear Guinier region, Rg or I(0)/c rising with concentration, a mass from I(0) above the monomer, or Rg changing across the SEC peak; all are among the scripted quality criteria.</li>
+<li>Fallback: a protein that fails in the standard buffer is measured in the nearest buffer in which it is monodisperse, or in its deposited buffer, with the deviation recorded, and analysed separately; one that fails in every buffer is replaced by the next eligible system.</li>
+</ul></div>
 <p>Both arms use size-exclusion-coupled SAXS at three concentrations with a protein standard in every session, and {n_qc} scripted quality criteria (Guinier linearity, no low-angle upturn and Rg agreeing across concentrations, no radiation damage across frames, molecular weight from I(0) within 20% of the sequence mass, no negative intensities, a repeated deposited entry reproduced at χ² &lt; 2, I(0)/c constant across concentrations, and a constant Rg across the SEC peak). Entries whose target fit is not reached get hydrogen–deuterium exchange mass spectrometry on the same batch of protein. Every batch of twelve constructs re-runs this pipeline, so the error map is updated before the next batch is chosen.</p>
 
 <h2 id="models">How does BioEmu-1 compare with other ensemble generators?</h2>

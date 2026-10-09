@@ -170,16 +170,12 @@ beside the old ones in `results/`.
   same twelve the score ranks first, with the final choice left to a feasibility review. Arm 2 splits test and
   control proteins by a model-and-sequence quantity, within the archive's quality-checked disordered entries.
 
-- **Worked examples re-chosen (2026-10-09, later the same day).** The first rule (nearest the class median
-  raw χ²) gave examples that were typical in error but not in size (the disordered one had an Rg ratio of
-  1.09 against a class median of 1.21, and 475 residues). The examples are now, per class, the clean entry with
-  a chain of at most 300 residues nearest the class median in both log₁₀ raw χ² and log Rg ratio (distance:
-  the norm of the two deviations, each divided by its class standard deviation): SASDD43, SASDVZ8 and
-  SASDBY5. Where an example does not reach χ² ≤ 2 along the path, the reweighted curve shown is the one at the
-  χ² minimum, labelled as such. The envelope is drawn as filled projections of two density levels (protein
-  volume and particle volume) with the conformer's Cα trace; the ribbon rendering was withdrawn. The worked
-  examples are kept out of the coordinate-Rg class statistics, which use the disordered entries and the
-  seeded folded sample only.
+- **Worked-example rule (2026-10-10).** A joint rule (nearest the class median in both raw χ² and size
+  ratio, chains of at most 300 residues) was tried and not kept; the examples remain the entries nearest
+  their class median of raw χ² (SASDH84, SASDM65, SASDLK9). The disordered example's size ratio is below the
+  class median, which the figure's details state. The envelope is drawn as filled projections of two density
+  levels with the conformer's Cα trace (the ribbon rendering was withdrawn), and the worked examples are kept
+  out of the coordinate-Rg class statistics.
 
 - **Error in the reweighting residual, corrected (2026-10-10).** Inside the reweighting objective the
   constant background was fitted on the standardised data (a column of 1/σ) but added to the residual without
