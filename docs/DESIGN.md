@@ -154,6 +154,15 @@ beside the old ones in `results/`.
   initio envelope from the measured curve (stage `envelopes`, run in a separate environment because DENSS
   needs numpy < 2) and the highest-weight conformer docked by principal axes.
 
+- **Presentation changes that touch numbers (2026-10-09).** The fourth kind is renamed *target fit not
+  reached* (by the tested reweighting procedure); its logic and count are unchanged. The worked examples show
+  the reweighted curve at the operating point the kinds use, the first point along the reweighting path with
+  χ² ≤ 2, with φ and Rg recomputed there (φ 0.96, 0.90 and 0.79 for SASDH84, SASDM65 and SASDLK9); the χ²
+  minimum of each path is reported beside it, and the conformer drawn in the envelope is still the
+  highest-weight one at that minimum. The selection evaluation also reports the two components of the
+  high-discrepancy target yield (strongly reweightable; target fit not reached) separately, and one
+  strongly reweightable path, chosen in code as the entry with the median φ of its kind, is drawn on the page.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.

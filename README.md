@@ -8,19 +8,20 @@ campaign proposal: [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md)
 ## Result
 
 Scored without reweighting against 399 quality-filtered small-angle X-ray scattering (SAXS) profiles from
-SASBDB that have a BioEmu-1 ensemble, the ensemble reaches reduced χ² ≤ 2 for 37% of them (95% interval
-32–41%; median χ² 3.3): 2.3 for folded proteins, 4.3 for partly disordered and 8.9 for disordered. Under a
-second fit score that does not weight by the reported errors the three class medians overlap, while the
-ordering of the seven models in the PeptoneBench archive is unchanged, with BioEmu-1 first. Reweighting
-each ensemble towards its profile sorts the entries into 146 raw fits, 65 modestly reweightable, 91 strongly
-reweightable and 97 not fit along the path. One expectation came out reversed: BioEmu-1's disordered
-ensembles are too extended (median radius of gyration 1.21 times the measured value, interval 1.12–1.28),
-and the Cα coordinates of the sampled conformers give 1.35, so the excess is in the conformers. Two
-validation experiments test the campaign logic: the raw error is not predictable from sequence-level
-features (R² = 0.05 in grouped cross-validation), and the selection rule, fed with such predictions, picks
-informative profiles no better than chance on held-out folds (it does when fed the observed quantities).
-The campaign proposal therefore has a replication arm under one standard condition and a pre-specified
-test of the extension bias with matched controls chosen from the model alone.
+SASBDB that have a BioEmu-1 ensemble, 37% of the raw ensembles meet the χ² ≤ 2 threshold (146 of 399; 95%
+interval 32–41%). The median raw χ² is 2.3 for folded proteins, 4.3 for partly disordered and 8.9 for
+disordered; under NRMSD, a second score that does not weight by the reported errors, the three class
+medians are similar (0.030, 0.034, 0.031), while the ordering of the seven models in the PeptoneBench
+archive is unchanged, with BioEmu-1 first. Reweighting each ensemble towards its profile sorts the entries
+into 146 raw fits, 65 modestly reweightable, 91 strongly reweightable and 97 whose target fit is not
+reached by the tested procedure. One expectation came out in the opposite direction: BioEmu-1's
+disordered ensembles are too extended (median radius of gyration 1.21 times the measured value, interval
+1.12–1.28), and the Cα coordinates of the sampled conformers give 1.35, so the extension is present in the
+conformers. The raw error is not predictable before measuring (R² = 0.05 in sequence-grouped
+cross-validation); ranking held-out entries by predicted error gives a high-discrepancy target yield of
+0.58 among the top ten against 0.48 for random choice, within the spread of a single random pick. The campaign proposal
+therefore has a replication arm under standardised conditions and a prospective test of the extension
+bias with pre-specified model-based selection and scaling-law-matched controls.
 
 ![error map](results/figures/fig_error_map.png)
 
@@ -50,7 +51,7 @@ reversed, two not met. The additions made after the first run are listed, dated,
 | `bsc analyse` | error map by class, the four expectations, the four kinds, model comparison, ranked candidates, bootstrap intervals, near-duplicate clusters, NRMSD orderings |
 | `bsc select_eval` | retrospective evaluation of the selection rule on held-out folds grouped by sequence cluster |
 | `bsc predict` | can the error be predicted before measuring: grouped, repeated cross-validation of baselines, linear models and small trees |
-| `bsc envelopes` | DENSS ab initio envelopes of the three worked examples (needs the DENSS environment, see below; skipped with a notice otherwise) |
+| `bsc envelopes` | DENSS ab initio envelopes of the three worked examples and a ribbon rendering of the highest-weight conformer inside each (needs the DENSS environment and a Python with playwright, see below; skipped with a notice otherwise) |
 | `bsc report` | figures, `docs/CAMPAIGN.md` and the campaign arms from `results/` |
 
 `python3 docs/site/build.py` builds the project page from `results/`; it stops if the prose and the numbers
@@ -85,6 +86,19 @@ BSC_DENSS_ENV=/scratch/.venv-denss uv run bsc envelopes
 
 The reconstructions themselves (`results/denss/`) are not tracked; `results/denss_stats.json` keeps their
 fit statistics.
+
+### The ribbon rendering
+
+After the reconstructions, `bsc envelopes` docks the highest-weight conformer into each averaged map by
+principal axes, writes it as PDB with HELIX/SHEET records from DSSP (mdtraj), and renders the cartoon with the
+envelope isosurface in 3Dmol.js (loaded from cdnjs) inside headless Chromium. Chromium is driven by
+playwright from the interpreter named in `BSC_RENDER_PY` (default: the project interpreter, if it can import
+playwright); without one the step prints a notice and `bsc report` keeps the tracked `fig_examples.png`.
+
+```bash
+python3 -m venv /path/to/pw && /path/to/pw/bin/pip install playwright && /path/to/pw/bin/playwright install chromium
+BSC_RENDER_PY=/path/to/pw/bin/python uv run bsc envelopes
+```
 
 ## What is tracked and what is not
 
