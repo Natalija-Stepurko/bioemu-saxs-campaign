@@ -108,7 +108,53 @@ From the error map and the resolvability analysis, the proposal names:
 
 The proposal is the deliverable the error map exists for.
 
-## 7. Conventions
+## 7. Post hoc additions and renamings (2026-10-09)
+
+Added after the first full run and its results were seen. The four expectations and §1–§6 stay as
+written above; nothing below changes a pre-registered quantity, and every new quantity is written
+beside the old ones in `results/`.
+
+- **Renamed kinds.** The four labels along the reweighting path are now *raw fit*, *modestly
+  reweightable* (χ² ≤ 2 with φ ≥ 0.5), *strongly reweightable* (χ² ≤ 2 only with φ < 0.5) and *not fit
+  along the path* (formerly fits / calibration / population / unresolved). The logic and the counts
+  at the pre-specified threshold are unchanged; the counts at φ thresholds 0.3 and 0.7 are reported as a
+  sensitivity. The interpretation of the kinds is given as interpretation, with two cautions: φ measures
+  how concentrated the weights become, not information content, and SAXS is low-dimensional, so distinct
+  ensembles can give the same curve. The `by_class.csv` column `share_unresolved` became `share_not_fit`.
+- **Rigour on the size finding (B).** Bootstrap intervals (2,000 resamples) of the median Rg ratio per
+  class; a two-sided Wilcoxon on the log ratio for disordered entries beside the pre-registered one-sided
+  test; a sensitivity dropping the five most extreme ratios; Spearman of the ratio against length within
+  the disordered class; a near-duplicate check (5-mer Jaccard ≥ 0.5) with the statistics recomputed on one
+  value per cluster; and the radius of gyration computed from the Cα coordinates of the sampled conformers
+  (stage `coordrg`) for every clean disordered entry and 40 random folded ones, to tell whether the excess
+  size sits in the conformers or in the forward model.
+- **Robustness of the headline (C).** Bootstrap intervals for the raw-fit share overall and per class and
+  for each paired model comparison; a second fit score that does not weight by the reported errors (the
+  normalised root-mean-square deviation of ln I over the usable q range, defined in `saxs.nrmsd_log`),
+  applied to the raw and the reweighted curve, with the class and model orderings checked under it. The
+  model comparison names the ensemble generators as the primary comparison and the single-structure
+  predictors as reference baselines, and restricts its claim to the six comparators on the shared
+  entries; AF-CALVADOS is cited as a further method evaluated on this benchmark whose predictions were not
+  in the archive.
+- **Two validation experiments (D).** `select_eval`: a retrospective evaluation of the selection rule on
+  the 399 profiles as a pool, with random, predicted-error and predicted-priority policies against the
+  observed-priority ceiling on 5-fold splits grouped by sequence cluster. `predict`: predictors of
+  log10 raw χ² and of the kind from pre-acquisition features only, with baselines, linear models and small
+  gradient-boosted trees, grouped 5-fold cross-validation repeated five times, permutation importance and
+  a calibration check. Both are post hoc and retrospective; their outcome (not predictive; no better than
+  chance) is reported as found.
+- **Campaign in two arms (E).** Arm 1, model improvement by replication of high-error reweightable
+  monomers under one standard condition (no novel-acquisition list, because the error predictor is not
+  predictive); arm 2, a pre-specified test of the extension bias on disordered proteins chosen from the
+  model's own ensemble Rg against the scaling-law Rg, with matched controls. The headline became the
+  question form, the method diagram and the expectations table were moved before the results, and the
+  checkpoint is named as the archive records it (BioEmu at code commit ac7455d; checkpoint version not
+  recorded; re-sampling with v1.2 is the first follow-up).
+- **Worked examples.** One entry per class, the one nearest the class median raw χ², with a DENSS ab
+  initio envelope from the measured curve (stage `envelopes`, run in a separate environment because DENSS
+  needs numpy < 2) and the highest-weight conformer docked by principal axes.
+
+## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.
 - Every stage writes a parameter record with the inputs' checksums and the code commit.
