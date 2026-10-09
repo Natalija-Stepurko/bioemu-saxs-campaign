@@ -20,11 +20,19 @@ CLS_COL = {"folded": "#2F5D8A", "partly disordered": "#8A6FA8", "disordered": "#
 MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold": "AlphaFold2", "esmfold": "ESMFold", "boltz2": "Boltz-2",
               "idpfold": "IDPFold", "peptron": "PepTron", "boltz1x": "Boltz-1x", "esmflow": "ESMFlow",
               "idpsam": "idpSAM", "idpgan": "idpGAN", "idp-o": "IDP-o"}
-# one saturated colour for the model under study (the page accent); comparators in desaturated tones
-MODEL_COL = {"bioemu": "#2F5D8A", "peptron": "#8A6FA8", "boltz2": "#7A9E7E", "idpfold": "#B08968",
+# Role palette, used in every figure and on the page: one colour per role, none of them ink. The three
+# line roles are checked with the dataviz palette validator on the white figure surface (all pairs pass).
+ROLE_COL = {"data": "#3C4650",              # measured points: neutral, drawn semi-transparent
+            "bioemu": "#3A80CC",            # BioEmu-1 raw ensemble (and BioEmu-1 wherever it is named)
+            "reweighted": "#D9504A",        # BioEmu-1 reweighted towards the profile
+            "single_structure": "#1F9E8A"}  # AlphaFold2 / ESMFold reference, drawn dashed
+PAGE_ACCENT = "#2F5D8A"                     # links and headings on the page; not a figure role
+NEUTRAL_BAR = "#8A939B"
+# the model under study in its role colour; comparators in desaturated tones
+MODEL_COL = {"bioemu": ROLE_COL["bioemu"], "peptron": "#8A6FA8", "boltz2": "#7A9E7E", "idpfold": "#B08968",
              "idpsam": "#9A8FA3", "alphafold": "#8A939B", "esmfold": "#B9C0C6",
              "boltz1x": "#A9B8A3", "esmflow": "#C9CDD1", "idpgan": "#B5ADB9", "idp-o": "#C4BDC7"}
-ACCENT = MODEL_COL["bioemu"]
+ACCENT = PAGE_ACCENT
 SINGLE_STRUCTURE = ("alphafold", "esmfold")      # reference baselines, one structure each
 CLASS_ORDER = [c[0] for c in C.DISORDER_CLASSES]
 OUT = C.RESULTS / "figures"
@@ -32,7 +40,7 @@ OUT = C.RESULTS / "figures"
 
 PX_PER_IN = 80                   # figure inches -> CSS pixels at the display width
 DPI = 2 * PX_PER_IN               # PNGs carry two pixels per CSS pixel; the page reads the width back
-KIND_GREYS = ["#B9C0C6", "#8A939B", "#5B646E", "#16191D"]
+KIND_GREYS = ["#C3C9CF", "#959DA5", "#66707A", "#3A4148"]
 
 
 def style():
@@ -261,13 +269,13 @@ def fig_kinds(d: pd.DataFrame, paths: list[dict], A: dict) -> None:
     P = pd.DataFrame(paths)
     g = P[P["label"] == lab].sort_values("theta", ascending=False) if lab else P.iloc[:0]
     if len(g):
-        ax.plot(g["phi"], g["chi2"], color=CLS_COL[m.set_index("label").loc[lab, "disorder_class"]], lw=1.6,
+        ax.plot(g["phi"], g["chi2"], color=ROLE_COL["reweighted"], lw=1.6,
                 marker="o", ms=3)
         ax.axhline(2, color=MUTED, lw=0.8, ls="--")
         hit = g[g["chi2"] <= 2]
         if len(hit):
             ph = hit.iloc[0]
-            ax.plot([ph["phi"]], [ph["chi2"]], "o", ms=7, mfc="white", mec=INK, mew=1.2)
+            ax.plot([ph["phi"]], [ph["chi2"]], "o", ms=7, mfc="white", mec=ROLE_COL["reweighted"], mew=1.4)
             ax.annotate(f"χ² ≤ 2 at φ = {ph['phi']:.2f}", xy=(ph["phi"], ph["chi2"]), xytext=(0.6, 0.62),
                         textcoords="axes fraction", fontsize=9.5, arrowprops={"arrowstyle": "-", "color": MUTED, "lw": 0.8})
         ax.set_xscale("log")
@@ -376,8 +384,10 @@ def fig_models(A: dict) -> None:
         if mo not in rgd:
             continue
         ax.plot([1, rgd[mo]], [yy, yy], color=RULE, lw=1.2, zorder=1)
-        ax.scatter(rgd[mo], yy, s=42 if mo in strong else 28, color=MODEL_COL.get(mo, MUTED) if mo in strong else MUTED,
-                   alpha=1.0 if mo in strong else 0.6, lw=0, zorder=2)
+        dot = (MODEL_COL.get(mo, MUTED) if mo in strong
+               else ROLE_COL["single_structure"] if mo in SINGLE_STRUCTURE else MUTED)
+        ax.scatter(rgd[mo], yy, s=42 if mo in strong else 28, color=dot, alpha=1.0 if mo in strong else 0.6,
+                   lw=0, zorder=2)
         ax.text(rgd[mo] + (0.03 if rgd[mo] >= 1 else -0.03), yy, f"{rgd[mo]:.2f}", va="center", fontsize=9.5,
                 ha="left" if rgd[mo] >= 1 else "right", color=INK if mo in strong else MUTED, zorder=3,
                 bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.3})
@@ -424,7 +434,7 @@ def fig_predict() -> None:
     rnd_sd = S["random_single_draw_sd"][k]["strong_or_notfit"]
     bars = [("random", pol["random"]["strong_or_notfit"]["mean"], rnd_sd, RULE),
             ("predicted\nerror", pol["predicted error"]["strong_or_notfit"]["mean"],
-             pol["predicted error"]["strong_or_notfit"]["sd"], MODEL_COL["alphafold"]),
+             pol["predicted error"]["strong_or_notfit"]["sd"], NEUTRAL_BAR),
             ("acquisition\npolicy fed\npredictions", pol["predicted priority"]["strong_or_notfit"]["mean"],
              pol["predicted priority"]["strong_or_notfit"]["sd"], ACCENT),
             ("oracle\nranking", pol["observed priority (ceiling)"]["strong_or_notfit"]["mean"],
@@ -470,7 +480,7 @@ def fig_predict_detail() -> None:
     ax.set_title(f"Calibration · AUC {c['hgb']['auc']['mean']:.2f} ± {c['hgb']['auc']['sd']:.2f}", loc="left")
     ax = axes[1]
     imp = P["permutation_importance_hgb"][:8][::-1]
-    ax.barh(range(len(imp)), [i["mean"] for i in imp], xerr=[i["sd"] for i in imp], color=MODEL_COL["alphafold"],
+    ax.barh(range(len(imp)), [i["mean"] for i in imp], xerr=[i["sd"] for i in imp], color=NEUTRAL_BAR,
             height=0.6, error_kw={"lw": 0.8, "ecolor": INK})
     ax.set_yticks(range(len(imp)))
     ax.set_yticklabels([i["feature"].replace("_", " ") for i in imp], fontsize=9.5)
@@ -499,13 +509,14 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
         return None
     from PIL import Image
     e = ent.set_index("label")
-    W, H = 860, 625
+    W, H = 860, 670
     fig = plt.figure(figsize=(W / PX_PER_IN, H / PX_PER_IN))
     gs = fig.add_gridspec(2, 3, height_ratios=[2.2, 0.85], hspace=0.07, wspace=0.2,
-                          left=0.065, right=0.99, top=0.953, bottom=0.461)
-    gs3 = fig.add_gridspec(1, 3, wspace=0.06, left=0.03, right=0.99, top=0.382, bottom=0.117)
-    data_style = {"facecolors": "none", "edgecolors": "#3C4650", "alpha": 0.4, "linewidths": 0.5}
-    col = {"raw": INK, "operating": ACCENT, "alphafold": MODEL_COL["alphafold"]}
+                          left=0.065, right=0.99, top=0.957, bottom=0.4985)
+    gs3 = fig.add_gridspec(1, 3, wspace=0.04, left=0.01, right=0.99, top=0.445, bottom=0.088)
+    data_style = {"facecolors": "none", "edgecolors": ROLE_COL["data"], "alpha": 0.4, "linewidths": 0.5}
+    col = {"raw": ROLE_COL["bioemu"], "operating": ROLE_COL["reweighted"], "alphafold": ROLE_COL["single_structure"]}
+    dash = {"raw": "-", "operating": "-", "alphafold": (0, (4, 2))}
     out = {}
     for j, (cls, label) in enumerate(examples.items()):
         f = envelopes.example_fit(label)
@@ -524,23 +535,25 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
                 continue
             fit = f["curves"][name]["fit"]
             okf = fit > 0
-            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.5, zorder=3 + k)
-            axr.plot(q, (fit - I) / s, color=col[name], lw=0.7, alpha=0.9, zorder=3 + k)
+            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.4 if name == "alphafold" else 1.7,
+                    ls=dash[name], zorder=3 + k)
+            axr.plot(q, (fit - I) / s, color=col[name], lw=0.7, alpha=0.8, ls=dash[name] if name != "alphafold" else "-",
+                     zorder=3 + k)
         lines = [("raw", f"BioEmu-1 raw · χ² {f['curves']['raw']['chi2']:.2f}"),
                  ("operating", f"reweighted, φ {f['phi_operating']:.2f} · χ² {f['curves']['operating']['chi2']:.2f}"),
                  ("alphafold", f"AlphaFold2 · χ² {f['curves']['alphafold']['chi2']:.1f}")]
         for k, (name, txt) in enumerate(lines):
             yy = 0.05 + 0.08 * (3 - k)
-            ax.plot([0.03, 0.09], [yy, yy], color=col[name], lw=2, transform=ax.transAxes)
+            ax.plot([0.03, 0.09], [yy, yy], color=col[name], lw=2, ls=dash[name], transform=ax.transAxes)
             ax.text(0.11, yy, txt, transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
         ax.scatter([0.06], [0.05], s=9, transform=ax.transAxes, **{**data_style, "alpha": 0.6, "linewidths": 0.6})
         ax.text(0.11, 0.05, "measured, grey band ± σ", transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
         ax.set_ylim(y0, np.log(I[pos]).max() + 0.3)
         ax.set_title(f"{cls}: {label} · {int(e.loc[label, 'length'])} residues", loc="left", fontsize=10)
         plt.setp(ax.get_xticklabels(), visible=False)
-        axr.axhline(0, color=INK, lw=0.7)
+        axr.axhline(0, color=MUTED, lw=0.7, zorder=1)
         for g in (-3, 3):
-            axr.axhline(g, color=MUTED, lw=0.6, ls="--")
+            axr.axhline(g, color="#C3C9CF", lw=0.7, ls="--", zorder=1)
         lim = np.nanmax(np.abs(np.concatenate([(f["curves"][n]["fit"] - I) / s for n in f["curves"]])))
         axr.set_ylim(-min(lim * 1.05, 25), min(lim * 1.05, 25))
         axr.set_xlabel("q (Å⁻¹)")
@@ -554,7 +567,8 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
         ax3 = fig.add_subplot(gs3[0, j])
         ax3.imshow(np.asarray(Image.open(envelopes.ribbon_png(label)).convert("RGB")), interpolation="lanczos")
         ax3.set_axis_off()
-        fig.text(gs3[0, j].get_position(fig).x0 + 0.01, 0.073, f"{st.get('resolution_A', 0):.0f} Å envelope · "
+        ax3.set_anchor("S")          # images sit on their captions whatever their aspect
+        fig.text(gs3[0, j].get_position(fig).x0 + 0.02, 0.06, f"{st.get('resolution_A', 0):.0f} Å envelope · "
                  f"w = {f['top_weight']:.2f} · {100 * dk['inside']:.0f}% of Cα inside", fontsize=9.5, color=MUTED)
         out[label] = {"class": cls, "length": int(e.loc[label, "length"]),
                       "chi2": {k: float(v["chi2"]) for k, v in f["curves"].items()},
@@ -574,18 +588,18 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
                                                   "maps_accepted", "rg_per_map_mean") if k in st}}
     # density key: each swatch is the colour a level takes over the ones outside it, as composited
     rgb, x = np.ones(3), 0.03
-    fig.text(x, 0.026, "envelope density", fontsize=9.5, color=MUTED, va="center")
+    fig.text(x, 0.022, "envelope density", fontsize=9.5, color=MUTED, va="center")
     x += 0.115
     names = {"particle": "lowest: particle volume", "protein": "protein volume (1.7 Å³/Da)",
              "dense core": "highest: densest half"}
     for k, (name, colour, opacity) in enumerate(envelopes.DENSITY_LEVELS):
         rgb = rgb * (1 - opacity) + np.array(matplotlib.colors.to_rgb(colour)) * opacity
-        fig.add_artist(matplotlib.patches.Rectangle((x, 0.012), 0.022, 0.028, transform=fig.transFigure,
+        fig.add_artist(matplotlib.patches.Rectangle((x, 0.010), 0.022, 0.025, transform=fig.transFigure,
                                                     facecolor=rgb, edgecolor=RULE, lw=0.6))
-        fig.text(x + 0.028, 0.026, names[name], fontsize=9.5, color=INK, va="center")
+        fig.text(x + 0.028, 0.022, names[name], fontsize=9.5, color=INK, va="center")
         x += 0.235 if k < 2 else 0
         if k < 2:
-            fig.text(x - 0.022, 0.026, "→", fontsize=9.5, color=MUTED, va="center")
+            fig.text(x - 0.022, 0.022, "→", fontsize=9.5, color=MUTED, va="center")
     save(fig, "fig_examples")
     json.dump(out, open(C.RESULTS / "examples.json", "w"), indent=1)
     return out
