@@ -67,6 +67,10 @@ def test_policy_evaluation_on_a_toy_pool_with_a_known_answer():
     assert ceiling["strong_or_notfit"]["mean"] >= pol["predicted priority"]["strong_or_notfit"]["mean"] - 1e-9
     assert ceiling["phi_reduction_chi2_2"]["mean"] > rnd
     assert out["random_single_draw_sd"]["10"]["strong_or_notfit"] > 0
+    # the two components of the yield add up to it, policy by policy
+    for p in pol.values():
+        both = p["strongly_reweightable"]["mean"] + p["target_not_reached"]["mean"]
+        assert abs(both - p["strong_or_notfit"]["mean"]) < 1e-9
 
 
 def test_priority_rule_matches_the_candidate_ranking():

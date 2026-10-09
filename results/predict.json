@@ -31,7 +31,7 @@
   "rg_conformer_spread"
  ],
  "target_regression": "log10 raw chi2",
- "target_classification": "strongly reweightable or not fit along the path",
+ "target_classification": "strongly reweightable or target fit not reached",
  "positive_rate": 0.47117794486215536,
  "regression": {
   "constant": {

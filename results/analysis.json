@@ -24,7 +24,7 @@
   "phi_at_chi2_1_median": 0.240009298632099,
   "resolvability_counts": {
    "raw fit": 146,
-   "not fit along the path": 97,
+   "target fit not reached": 97,
    "strongly reweightable": 91,
    "modestly reweightable": 65
   },
@@ -38,13 +38,14 @@
   "raw fit",
   "modestly reweightable",
   "strongly reweightable",
-  "not fit along the path"
+  "target fit not reached"
  ],
  "examples": {
   "folded": "SASDH84",
   "partly disordered": "SASDM65",
   "disordered": "SASDLK9"
  },
+ "representative_path": "SASDAB4",
  "expectations": {
   "E1": {
    "statement": "raw chi2 worse for disordered than folded",
@@ -1485,19 +1486,19 @@
     "raw fit": 146,
     "modestly reweightable": 91,
     "strongly reweightable": 65,
-    "not fit along the path": 97
+    "target fit not reached": 97
    },
    "0.5": {
     "raw fit": 146,
     "modestly reweightable": 65,
     "strongly reweightable": 91,
-    "not fit along the path": 97
+    "target fit not reached": 97
    },
    "0.7": {
     "raw fit": 146,
     "modestly reweightable": 48,
     "strongly reweightable": 108,
-    "not fit along the path": 97
+    "target fit not reached": 97
    }
   }
  }

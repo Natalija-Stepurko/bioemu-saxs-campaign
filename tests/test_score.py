@@ -128,6 +128,8 @@ def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
     assert H["kind_counts_by_phi_threshold"]["0.5"] == {k: A["bioemu"]["resolvability_counts"].get(k, 0)
                                                         for k in analyse.KINDS}
     assert set(A["examples"]) == {"folded", "partly disordered", "disordered"}
+    rep = pd.read_csv(results / "resolvability.csv").query("model == 'bioemu'").set_index("label")
+    assert rep.loc[A["representative_path"], "resolvability"] == analyse.KIND_STRONG
     assert (results / "clusters.csv").exists()
 
 
