@@ -19,6 +19,11 @@ CLS_COL = {"folded": "#2F5D8A", "partly disordered": "#8A6FA8", "disordered": "#
 MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold": "AlphaFold2", "esmfold": "ESMFold", "boltz2": "Boltz-2",
               "idpfold": "IDPFold", "peptron": "PepTron", "boltz1x": "Boltz-1x", "esmflow": "ESMFlow",
               "idpsam": "idpSAM", "idpgan": "idpGAN", "idp-o": "IDP-o"}
+# one saturated colour for the model under study (the page accent); comparators in desaturated tones
+MODEL_COL = {"bioemu": "#2F5D8A", "peptron": "#8A6FA8", "boltz2": "#7A9E7E", "idpfold": "#B08968",
+             "idpsam": "#9A8FA3", "alphafold": "#8A939B", "esmfold": "#B9C0C6",
+             "boltz1x": "#A9B8A3", "esmflow": "#C9CDD1", "idpgan": "#B5ADB9", "idp-o": "#C4BDC7"}
+ACCENT = MODEL_COL["bioemu"]
 CLASS_ORDER = [c[0] for c in C.DISORDER_CLASSES]
 OUT = C.RESULTS / "figures"
 
@@ -136,7 +141,7 @@ def fig_models(A: dict, d: pd.DataFrame) -> None:
     for j, mo in enumerate(models):
         g = bc[bc["model"] == mo].set_index("disorder_class").reindex(CLASS_ORDER)
         x = np.arange(3) + (j - (len(models) - 1) / 2) * w
-        ax.bar(x, g["chi2_raw_median"], width=w * 0.92, color=plt.cm.tab10(j), label=MODEL_NAME.get(mo, mo))
+        ax.bar(x, g["chi2_raw_median"], width=w * 0.92, color=MODEL_COL.get(mo, MUTED), label=MODEL_NAME.get(mo, mo))
         ax.errorbar(x, g["chi2_raw_median"], yerr=[g["chi2_raw_median"] - g["chi2_raw_q25"],
                                                    g["chi2_raw_q75"] - g["chi2_raw_median"]],
                     fmt="none", ecolor=INK, lw=0.8, capsize=2)
