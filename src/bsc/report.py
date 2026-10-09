@@ -40,7 +40,8 @@ OUT = C.RESULTS / "figures"
 
 
 PX_PER_IN = 80                   # figure inches -> CSS pixels at the display width
-DPI = 2 * PX_PER_IN               # PNGs carry two pixels per CSS pixel; the page reads the width back
+PIXEL_DENSITY = 3                # PNG pixels per CSS pixel; the page divides the PNG width by this
+DPI = PIXEL_DENSITY * PX_PER_IN
 LINE_ALPHA = 0.9                 # one transparency for every line plot on the page
 RESIDUAL_LW = 0.8
 KIND_GREYS = ["#C3C9CF", "#959DA5", "#66707A", "#3A4148"]
@@ -60,13 +61,13 @@ def figure(width_px: int, height_px: int, **kw):
 
 
 def save(fig, name: str) -> None:
-    """PNG at two pixels per display pixel, quantised to a palette to keep the page small."""
+    """Full-colour PNG at PIXEL_DENSITY pixels per display pixel (no palette quantisation, which
+    roughens anti-aliased lines)."""
     from PIL import Image
     p = OUT / f"{name}.png"
     fig.savefig(p, dpi=DPI, facecolor="white")
     plt.close(fig)
-    im = Image.open(p).convert("RGB")
-    im.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(p, optimize=True)
+    Image.open(p).convert("RGB").save(p, optimize=True)
 
 
 def _strip(ax, groups: list[tuple[str, np.ndarray]], seed: int = 0, s: float = 12):

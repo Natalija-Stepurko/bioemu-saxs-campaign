@@ -18,6 +18,8 @@ from urllib.parse import quote
 
 import pandas as pd
 
+PIXEL_DENSITY = 3   # must match bsc.report.PIXEL_DENSITY; checked below
+
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = Path(os.environ.get("BSC_ROOT", ROOT)) / "results"
 OUT = Path(os.environ.get("BSC_PAGE_OUT", ROOT / "docs" / "index.html"))
@@ -93,10 +95,10 @@ def png_width(p: Path) -> int:
 
 
 def fig(name, caption, what, read=None, cls="result"):
-    """A figure capped at its design width: the PNG carries two pixels per display pixel."""
+    """A figure capped at its design width: the PNG carries PIXEL_DENSITY pixels per display pixel."""
     p = RESULTS / "figures" / f"{name}.png"
     check(p.exists(), f"figure {name} exists")
-    w = png_width(p) // 2
+    w = png_width(p) // PIXEL_DENSITY
     check(w <= 860, f"figure {name} is at most 860 px wide")
     body = f'<p><strong>What it shows.</strong> {what}</p>'
     if read:
@@ -366,8 +368,10 @@ def build():
     singles = [m for m in SINGLE if m in comps]
     check(len(comps) == 6 and set(comps) == set(GENERATORS) | set(SINGLE), "six comparators")
     try:                                     # the page's BioEmu-1 colour is the figures' role colour
+        from bsc.report import PIXEL_DENSITY as FIG_DENSITY
         from bsc.report import ROLE_COL
         check(f"--bioemu:{ROLE_COL['bioemu']};" in CSS, "page BioEmu-1 colour matches the figure role colour")
+        check(FIG_DENSITY == PIXEL_DENSITY, "page and figures agree on the pixel density")
     except ImportError:
         pass
     RV = pd.read_csv(RESULTS / "resolvability.csv")
