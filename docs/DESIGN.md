@@ -181,6 +181,19 @@ beside the old ones in `results/`.
   examples are kept out of the coordinate-Rg class statistics, which use the disordered entries and the
   seeded folded sample only.
 
+- **Error in the reweighting residual, corrected (2026-10-10).** Inside the reweighting objective the
+  constant background was fitted on the standardised data (a column of 1/σ) but added to the residual without
+  that scaling, so the objective and its gradient did not describe the fit being made. For 40 of the 399
+  clean BioEmu-1 profiles the optimiser never moved the weights; for the others it followed a distorted
+  objective. The residual now uses the scaled background, with tests on the gradient and on a case that
+  needs a background. Raw χ², NRMSD, every Rg result and the ordering of the models do not use reweighting
+  and are unchanged. Every reweighting-derived quantity was recomputed: the kinds (raw fit 146, modestly
+  reweightable 77, strongly reweightable 106, target fit not reached 70; before: 146, 65, 91, 97), E3, the
+  φ-threshold sensitivity, the comparators' best χ², the arm 1 eligibility list, the selection evaluation, the
+  kind classifier and the worked examples' reweighted curves. E3 remains not met, the raw error remains not
+  predictable from pre-measurement features, and the policies fed predictions remain within the spread of a
+  random pick.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.

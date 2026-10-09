@@ -25,10 +25,10 @@ entries are below 1, so the model's disordered ensembles are too extended. The e
 ## 2. What SAXS can and cannot resolve
 
 Reweighting each ensemble towards its profile sorts the entries into four kinds:
-146 raw fits; 65 modestly reweightable (χ² ≤ 2 while keeping at least half the
-effective sample); 91 strongly reweightable (χ² ≤ 2 only below that, which requires substantial population
-changes); 97 whose target fit is not reached by the tested reweighting procedure. Expectation E3 is
-not met: 10% of entries reach χ² ≈ 1 while
+146 raw fits; 77 modestly reweightable (χ² ≤ 2 while keeping at least half the
+effective sample); 106 strongly reweightable (χ² ≤ 2 only below that, which requires substantial population
+changes); 70 whose target fit is not reached by the tested reweighting procedure. Expectation E3 is
+not met: 12% of entries reach χ² ≈ 1 while
 keeping more than 30% of the effective sample.
 
 As interpretation: a **strongly reweightable** entry is one where the right conformers are present and
@@ -49,32 +49,32 @@ profiles better than random choice when it is fed the quantities known before a 
 set by judgement, so it is not used to recommend measurements. Arm 1 takes the systems that meet stated
 eligibility rules: reweighting reaches χ² ≤ 2 (strongly or modestly reweightable), the measured mass matches a
 monomer, the chain has at most 350 residues, and the protein is folded or partly disordered.
-88 entries qualify. The 12 with the largest observed raw χ² are listed, which is the
+101 entries qualify. The 12 with the largest observed raw χ² are listed, which is the
 size of the known discrepancy a replication can test and not an estimate of what the measurement is worth.
 They are the same 12 the score ranks first; what is dropped is its judgement-set weighting. The final choice among eligible systems needs a feasibility review (construct availability,
 expression, deposited buffer).
 
 | SASBDB | length | class | raw χ² | best χ² | kind | Rg |
 |---|---|---|---|---|---|---|
-| SASDCP8 | 211 | folded | 96.2 | 1.65 | strongly reweightable | model too compact |
+| SASDAG8 | 189 | folded | 156.2 | 1.91 | strongly reweightable | model too compact |
+| SASDJ84 | 215 | folded | 112.2 | 1.24 | strongly reweightable | model too compact |
+| SASDCP8 | 211 | folded | 96.2 | 1.63 | strongly reweightable | model too compact |
+| SASDPA8 | 200 | folded | 77.1 | 1.31 | strongly reweightable | model too compact |
 | SASDFK8 | 114 | partly disordered | 62.1 | 1.01 | strongly reweightable | model too extended |
-| SASDBW2 | 210 | folded | 45.2 | 1.29 | strongly reweightable | model too compact |
+| SASDBW2 | 210 | folded | 45.2 | 1.10 | strongly reweightable | model too compact |
 | SASDCD3 | 275 | folded | 38.0 | 0.96 | strongly reweightable | Rg agrees |
-| SASDDE3 | 122 | partly disordered | 37.3 | 1.36 | strongly reweightable | model too compact |
-| SASDC35 | 311 | folded | 24.2 | 0.77 | strongly reweightable | model too extended |
-| SASDE79 | 314 | folded | 23.6 | 1.15 | strongly reweightable | model too extended |
-| SASDDL7 | 128 | folded | 22.9 | 1.77 | strongly reweightable | model too compact |
-| SASDJX3 | 190 | partly disordered | 20.7 | 1.02 | strongly reweightable | model too compact |
-| SASDKU8 | 103 | partly disordered | 19.9 | 1.11 | strongly reweightable | model too compact |
-| SASDVL7 | 114 | partly disordered | 19.5 | 1.19 | strongly reweightable | model too compact |
-| SASDJX7 | 302 | folded | 19.4 | 1.07 | strongly reweightable | Rg agrees |
+| SASDDE3 | 122 | partly disordered | 37.3 | 1.18 | strongly reweightable | model too compact |
+| SASDEC9 | 257 | folded | 29.2 | 1.31 | strongly reweightable | model too extended |
+| SASDC35 | 311 | folded | 24.2 | 0.44 | strongly reweightable | model too extended |
+| SASDE79 | 314 | folded | 23.6 | 1.14 | strongly reweightable | model too extended |
+| SASDDL7 | 128 | folded | 22.9 | 1.75 | strongly reweightable | model too compact |
 
 Re-measuring deposited systems under standardised conditions (one buffer, one temperature, tags removed, a
 concentration series) reduces condition heterogeneity and tests whether the discrepancy is reproducible; one
 common buffer and temperature can itself shift some ensembles, so a changed profile is read against the
 deposited one before it is read against the model. It adds no new region of sequence space. A novel-acquisition list (sequences without a SASBDB entry, chosen by the error predictor) is not offered: the predictor of the raw error from sequence-level features reaches R² = 0.05 in grouped cross-validation (class means alone 0.04), so its ranking of unmeasured sequences would be close to random. Only the replication list stands.
 
-On held-out folds of the existing pool, the rule fed with predicted quantities picks 0.52 strongly reweightable or target-not-reached entries per entry chosen (top 10) against 0.48 for random choice and 1.00 when the observed quantities are used; the predicted-error policy alone reaches 0.58. This is
+On held-out folds of the existing pool, the rule fed with predicted quantities picks 0.44 strongly reweightable or target-not-reached entries per entry chosen (top 10) against 0.44 for random choice and 1.00 when the observed quantities are used; the predicted-error policy alone reaches 0.51. This is
 retrospective, and a profile that already exists carries no new information for the model; the evaluation
 says only how far the rule can be trusted to rank unmeasured proteins from what is known about them.
 

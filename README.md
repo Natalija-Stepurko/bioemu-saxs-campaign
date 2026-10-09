@@ -13,13 +13,13 @@ interval 32–41%). The median raw χ² is 2.3 for folded proteins, 4.3 for part
 disordered; under NRMSD, a second score that does not weight by the reported errors, the three class
 medians are similar (0.030, 0.034, 0.031), while the ordering of the seven models in the PeptoneBench
 archive is unchanged, with BioEmu-1 first. Reweighting each ensemble towards its profile sorts the entries
-into 146 raw fits, 65 modestly reweightable, 91 strongly reweightable and 97 whose target fit is not
+into 146 raw fits, 77 modestly reweightable, 106 strongly reweightable and 70 whose target fit is not
 reached by the tested procedure. One expectation came out in the opposite direction: BioEmu-1's
 disordered ensembles are too extended (median radius of gyration 1.21 times the measured value, interval
 1.12–1.28), and the Cα coordinates of the sampled conformers give 1.35, so the extension is present in the
 conformers. The raw error is not predictable before measuring (R² = 0.05 in sequence-grouped
 cross-validation); ranking held-out entries by predicted error gives a high-discrepancy target yield of
-0.58 among the top ten against 0.48 for random choice, within the spread of a single random pick. The priority score
+0.51 among the top ten against 0.44 for random choice, within the spread of a single random pick. The priority score
 proposed in the design does no better than random choice when fed pre-measurement quantities, so it is not
 used to recommend measurements. The campaign proposal therefore has a replication arm, systems chosen by
 stated eligibility rules, under standardised conditions and a prospective test of the extension

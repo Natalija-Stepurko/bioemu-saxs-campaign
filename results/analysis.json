@@ -20,13 +20,13 @@
   "chi2_raw_q75": 10.913767448686013,
   "share_raw_fit_chi2_2": 0.3659147869674185,
   "share_raw_fit_chi2_1": 0.020050125313283207,
-  "chi2_best_median": 1.137379694793206,
-  "phi_at_chi2_1_median": 0.240009298632099,
+  "chi2_best_median": 1.073163064990193,
+  "phi_at_chi2_1_median": 0.2610180936296029,
   "resolvability_counts": {
    "raw fit": 146,
-   "target fit not reached": 97,
-   "strongly reweightable": 91,
-   "modestly reweightable": 65
+   "strongly reweightable": 106,
+   "modestly reweightable": 77,
+   "target fit not reached": 70
   },
   "rg_ratio_median_by_class": {
    "disordered": 1.2094505920036063,
@@ -45,7 +45,7 @@
   "partly disordered": "SASDVZ8",
   "disordered": "SASDBY5"
  },
- "representative_path": "SASDAB4",
+ "representative_path": "SASDBT2",
  "expectations": {
   "E1": {
    "statement": "raw chi2 worse for disordered than folded",
@@ -71,8 +71,8 @@
   },
   "E3": {
    "statement": "most entries reach chi2 ~1 with phi above 0.3; a minority need phi below 0.1",
-   "share_reaching_chi2_1": 0.23057644110275688,
-   "share_phi_above_0.3": 0.09523809523809523,
+   "share_reaching_chi2_1": 0.2731829573934837,
+   "share_phi_above_0.3": 0.12030075187969924,
    "share_phi_below_0.1": 0.040100250626566414,
    "met": false
   },
@@ -275,12 +275,12 @@
    "chi2_raw_q25": 1.302861431,
    "chi2_raw_q75": 7.7128620983,
    "share_raw_fit": 0.4634146341,
-   "chi2_best_median": 1.1898797499,
-   "phi_at_chi2_1_median": 0.2285309,
-   "share_not_fit": 0.2398373984,
+   "chi2_best_median": 1.1202718974,
+   "phi_at_chi2_1_median": 0.269990709,
+   "share_not_fit": 0.1910569106,
    "rg_ratio_median": 0.9845179076,
    "nrmsd_raw_median": 0.0299567017,
-   "nrmsd_best_median": 0.027279252
+   "nrmsd_best_median": 0.02570405
   },
   {
    "model": "bioemu",
@@ -290,12 +290,12 @@
    "chi2_raw_q25": 2.0382465282,
    "chi2_raw_q75": 13.7416102864,
    "share_raw_fit": 0.2410714286,
-   "chi2_best_median": 1.0806219748,
-   "phi_at_chi2_1_median": 0.2294456013,
-   "share_not_fit": 0.2232142857,
+   "chi2_best_median": 1.0413566817,
+   "phi_at_chi2_1_median": 0.2526286696,
+   "share_not_fit": 0.1607142857,
    "rg_ratio_median": 0.978754111,
    "nrmsd_raw_median": 0.0341266204,
-   "nrmsd_best_median": 0.0251240229
+   "nrmsd_best_median": 0.0242772881
   },
   {
    "model": "bioemu",
@@ -305,12 +305,12 @@
    "chi2_raw_q25": 4.5501203132,
    "chi2_raw_q75": 25.1041228282,
    "share_raw_fit": 0.1219512195,
-   "chi2_best_median": 1.0896961368,
-   "phi_at_chi2_1_median": 0.2612986604,
-   "share_not_fit": 0.3170731707,
+   "chi2_best_median": 1.017866332,
+   "phi_at_chi2_1_median": 0.2962695011,
+   "share_not_fit": 0.1219512195,
    "rg_ratio_median": 1.209450592,
    "nrmsd_raw_median": 0.0307739052,
-   "nrmsd_best_median": 0.0212486853
+   "nrmsd_best_median": 0.0178981381
   },
   {
    "model": "boltz2",
@@ -320,12 +320,12 @@
    "chi2_raw_q25": 1.3976500342,
    "chi2_raw_q75": 11.5313752303,
    "share_raw_fit": 0.3815261044,
-   "chi2_best_median": 1.6466648944,
-   "phi_at_chi2_1_median": 0.366542893,
-   "share_not_fit": 0.4136546185,
+   "chi2_best_median": 1.4687205421,
+   "phi_at_chi2_1_median": 0.3637308064,
+   "share_not_fit": 0.3855421687,
    "rg_ratio_median": 0.9583285264,
    "nrmsd_raw_median": 0.0338281702,
-   "nrmsd_best_median": 0.0305284574
+   "nrmsd_best_median": 0.0301822341
   },
   {
    "model": "boltz2",
@@ -335,12 +335,12 @@
    "chi2_raw_q25": 3.9670611786,
    "chi2_raw_q75": 50.5799754565,
    "share_raw_fit": 0.1071428571,
-   "chi2_best_median": 6.3746770989,
-   "phi_at_chi2_1_median": 0.1303070704,
-   "share_not_fit": 0.7232142857,
+   "chi2_best_median": 5.0421567689,
+   "phi_at_chi2_1_median": 0.1144238081,
+   "share_not_fit": 0.6964285714,
    "rg_ratio_median": 0.834737765,
    "nrmsd_raw_median": 0.051225207,
-   "nrmsd_best_median": 0.0352201738
+   "nrmsd_best_median": 0.0366937455
   },
   {
    "model": "boltz2",
@@ -350,12 +350,12 @@
    "chi2_raw_q25": 32.7952033964,
    "chi2_raw_q75": 239.4251480859,
    "share_raw_fit": 0.0,
-   "chi2_best_median": 76.5651398872,
+   "chi2_best_median": 65.7359842503,
    "phi_at_chi2_1_median": null,
    "share_not_fit": 0.9512195122,
    "rg_ratio_median": 0.5159876613,
    "nrmsd_raw_median": 0.1041390251,
-   "nrmsd_best_median": 0.0896101794
+   "nrmsd_best_median": 0.0858365953
   },
   {
    "model": "esmfold",
@@ -410,12 +410,12 @@
    "chi2_raw_q25": 8.7133662161,
    "chi2_raw_q75": 116.7164577115,
    "share_raw_fit": 0.0656934307,
-   "chi2_best_median": 2.529233411,
-   "phi_at_chi2_1_median": 0.1112354534,
-   "share_not_fit": 0.5401459854,
+   "chi2_best_median": 1.7874132413,
+   "phi_at_chi2_1_median": 0.1152309493,
+   "share_not_fit": 0.4598540146,
    "rg_ratio_median": 1.180106905,
    "nrmsd_raw_median": 0.0633853597,
-   "nrmsd_best_median": 0.032828621
+   "nrmsd_best_median": 0.0317921991
   },
   {
    "model": "idpfold",
@@ -425,12 +425,12 @@
    "chi2_raw_q25": 3.2773851248,
    "chi2_raw_q75": 62.2911032373,
    "share_raw_fit": 0.1428571429,
-   "chi2_best_median": 1.4382528873,
-   "phi_at_chi2_1_median": 0.2279710267,
-   "share_not_fit": 0.380952381,
+   "chi2_best_median": 1.2627233551,
+   "phi_at_chi2_1_median": 0.2771085895,
+   "share_not_fit": 0.3492063492,
    "rg_ratio_median": 1.0620390774,
    "nrmsd_raw_median": 0.0505758805,
-   "nrmsd_best_median": 0.0278485141
+   "nrmsd_best_median": 0.0280960734
   },
   {
    "model": "idpfold",
@@ -440,12 +440,12 @@
    "chi2_raw_q25": 2.488410544,
    "chi2_raw_q75": 22.8090780673,
    "share_raw_fit": 0.1621621622,
-   "chi2_best_median": 1.1643229908,
-   "phi_at_chi2_1_median": 0.457754103,
-   "share_not_fit": 0.2702702703,
+   "chi2_best_median": 1.050209944,
+   "phi_at_chi2_1_median": 0.3248534986,
+   "share_not_fit": 0.0540540541,
    "rg_ratio_median": 0.999445379,
    "nrmsd_raw_median": 0.028710234,
-   "nrmsd_best_median": 0.0204549658
+   "nrmsd_best_median": 0.0179734501
   },
   {
    "model": "idpsam",
@@ -455,12 +455,12 @@
    "chi2_raw_q25": 75.8555658859,
    "chi2_raw_q75": 1689.658692709,
    "share_raw_fit": 0.0213675214,
-   "chi2_best_median": 257.4848719179,
-   "phi_at_chi2_1_median": 0.0730285719,
-   "share_not_fit": 0.9487179487,
+   "chi2_best_median": 256.8609026588,
+   "phi_at_chi2_1_median": 0.1042149915,
+   "share_not_fit": 0.9444444444,
    "rg_ratio_median": 0.4841891425,
    "nrmsd_raw_median": 0.1676700531,
-   "nrmsd_best_median": 0.1575671678
+   "nrmsd_best_median": 0.1552285794
   },
   {
    "model": "idpsam",
@@ -470,12 +470,12 @@
    "chi2_raw_q25": 93.6416051474,
    "chi2_raw_q75": 1035.4871130539,
    "share_raw_fit": 0.0097087379,
-   "chi2_best_median": 224.6392701475,
-   "phi_at_chi2_1_median": 0.1627758258,
+   "chi2_best_median": 215.0933168637,
+   "phi_at_chi2_1_median": 0.2181379004,
    "share_not_fit": 0.9417475728,
    "rg_ratio_median": 0.4456051427,
    "nrmsd_raw_median": 0.1658639354,
-   "nrmsd_best_median": 0.1584309966
+   "nrmsd_best_median": 0.1578563143
   },
   {
    "model": "idpsam",
@@ -485,12 +485,12 @@
    "chi2_raw_q25": 83.0797220575,
    "chi2_raw_q75": 503.4012839445,
    "share_raw_fit": 0.0,
-   "chi2_best_median": 135.5332771751,
+   "chi2_best_median": 132.5051874976,
    "phi_at_chi2_1_median": null,
    "share_not_fit": 0.95,
    "rg_ratio_median": 0.3965683146,
    "nrmsd_raw_median": 0.1803049671,
-   "nrmsd_best_median": 0.144210053
+   "nrmsd_best_median": 0.1318631061
   },
   {
    "model": "peptron",
@@ -500,12 +500,12 @@
    "chi2_raw_q25": 1.3024489469,
    "chi2_raw_q75": 8.5684050528,
    "share_raw_fit": 0.437751004,
-   "chi2_best_median": 1.2756557432,
-   "phi_at_chi2_1_median": 0.3666755239,
-   "share_not_fit": 0.3092369478,
+   "chi2_best_median": 1.2195152326,
+   "phi_at_chi2_1_median": 0.3593848128,
+   "share_not_fit": 0.297188755,
    "rg_ratio_median": 0.9725771743,
    "nrmsd_raw_median": 0.0322686888,
-   "nrmsd_best_median": 0.0277650931
+   "nrmsd_best_median": 0.0273645247
   },
   {
    "model": "peptron",
@@ -515,12 +515,12 @@
    "chi2_raw_q25": 2.3072001217,
    "chi2_raw_q75": 21.7653713065,
    "share_raw_fit": 0.2142857143,
-   "chi2_best_median": 1.2137686502,
-   "phi_at_chi2_1_median": 0.2598592758,
-   "share_not_fit": 0.3035714286,
+   "chi2_best_median": 1.1088101985,
+   "phi_at_chi2_1_median": 0.3801970349,
+   "share_not_fit": 0.2589285714,
    "rg_ratio_median": 0.925734504,
    "nrmsd_raw_median": 0.0365638009,
-   "nrmsd_best_median": 0.0249562769
+   "nrmsd_best_median": 0.0255487972
   },
   {
    "model": "peptron",
@@ -530,22 +530,52 @@
    "chi2_raw_q25": 5.1707496516,
    "chi2_raw_q75": 23.7600589034,
    "share_raw_fit": 0.0975609756,
-   "chi2_best_median": 1.4730153086,
-   "phi_at_chi2_1_median": 0.1823361062,
-   "share_not_fit": 0.4390243902,
+   "chi2_best_median": 1.1096154604,
+   "phi_at_chi2_1_median": 0.1415892834,
+   "share_not_fit": 0.2682926829,
    "rg_ratio_median": 1.0106790998,
    "nrmsd_raw_median": 0.0437050728,
-   "nrmsd_best_median": 0.0223976627
+   "nrmsd_best_median": 0.0205636944
   }
  ],
  "top_candidates": [
+  {
+   "label": "SASDAG8",
+   "length": 189,
+   "disorder_class": "folded",
+   "chi2_raw": 156.185879622,
+   "chi2_best": 1.9124376418,
+   "phi_at_chi2_2": 0.034641612,
+   "resolvability": "strongly reweightable",
+   "rg_exp": 22.9935482854,
+   "rg_model": 19.0029448415,
+   "rg_direction": "model too compact",
+   "mw_ratio": 1.4971202891,
+   "sasbdb_title": "Flexible Structure of Peptide-Bound Filamin A Mechanosensor Domain Pair 20-21.",
+   "priority": 2.1936417678
+  },
+  {
+   "label": "SASDJ84",
+   "length": 215,
+   "disorder_class": "folded",
+   "chi2_raw": 112.168196479,
+   "chi2_best": 1.2350694275,
+   "phi_at_chi2_2": 0.091175195,
+   "resolvability": "strongly reweightable",
+   "rg_exp": 26.942580073,
+   "rg_model": 22.1661598788,
+   "rg_direction": "model too compact",
+   "mw_ratio": 0.9189889371,
+   "sasbdb_title": "The extracellular juncture domains in the intimin passenger adopt a constitutively extended conformation inducing restraints to its sphere of action.",
+   "priority": 2.049869737
+  },
   {
    "label": "SASDCP8",
    "length": 211,
    "disorder_class": "folded",
    "chi2_raw": 96.2000962408,
-   "chi2_best": 1.6497493026,
-   "phi_at_chi2_2": 0.0942881061,
+   "chi2_best": 1.6302907872,
+   "phi_at_chi2_2": 0.1227381114,
    "resolvability": "strongly reweightable",
    "rg_exp": 22.9309132198,
    "rg_model": 19.8997982704,
@@ -555,12 +585,27 @@
    "priority": 1.9831755065
   },
   {
+   "label": "SASDPA8",
+   "length": 200,
+   "disorder_class": "folded",
+   "chi2_raw": 77.1142387141,
+   "chi2_best": 1.3103974609,
+   "phi_at_chi2_2": 0.1417705773,
+   "resolvability": "strongly reweightable",
+   "rg_exp": 23.7685653573,
+   "rg_model": 20.00397561,
+   "rg_direction": "model too compact",
+   "mw_ratio": 1.074249691,
+   "sasbdb_title": "Structural plasticity of NFU1 upon interaction with binding partners: insights into the mitochondrial [4Fe-4S] cluster pathway",
+   "priority": 1.8871345755
+  },
+  {
    "label": "SASDFK8",
    "length": 114,
    "disorder_class": "partly disordered",
    "chi2_raw": 62.0586381968,
-   "chi2_best": 1.0140893872,
-   "phi_at_chi2_2": 0.3218844645,
+   "chi2_best": 1.0060268652,
+   "phi_at_chi2_2": 0.329952843,
    "resolvability": "strongly reweightable",
    "rg_exp": 29.5951698135,
    "rg_model": 32.3576632188,
@@ -574,8 +619,8 @@
    "length": 210,
    "disorder_class": "folded",
    "chi2_raw": 45.2480010195,
-   "chi2_best": 1.2860223924,
-   "phi_at_chi2_2": 0.0904422118,
+   "chi2_best": 1.1021306138,
+   "phi_at_chi2_2": 0.080609149,
    "resolvability": "strongly reweightable",
    "rg_exp": 22.0816538132,
    "rg_model": 20.4672913321,
@@ -589,8 +634,8 @@
    "length": 275,
    "disorder_class": "folded",
    "chi2_raw": 37.958133243,
-   "chi2_best": 0.9634301025,
-   "phi_at_chi2_2": 0.2981576221,
+   "chi2_best": 0.9610820638,
+   "phi_at_chi2_2": 0.2986114624,
    "resolvability": "strongly reweightable",
    "rg_exp": 26.9814609698,
    "rg_model": 25.6825250299,
@@ -604,8 +649,8 @@
    "length": 122,
    "disorder_class": "partly disordered",
    "chi2_raw": 37.3166170787,
-   "chi2_best": 1.3612105662,
-   "phi_at_chi2_2": 0.1633054543,
+   "chi2_best": 1.1845022511,
+   "phi_at_chi2_2": 0.2660893891,
    "resolvability": "strongly reweightable",
    "rg_exp": 20.0502884375,
    "rg_model": 17.2984628061,
@@ -615,12 +660,27 @@
    "priority": 1.5719022661
   },
   {
+   "label": "SASDEC9",
+   "length": 257,
+   "disorder_class": "folded",
+   "chi2_raw": 29.2386098932,
+   "chi2_best": 1.3078382847,
+   "phi_at_chi2_2": 0.0435763642,
+   "resolvability": "strongly reweightable",
+   "rg_exp": 21.9700558544,
+   "rg_model": 24.2523137782,
+   "rg_direction": "model too extended",
+   "mw_ratio": 0.9531288668,
+   "sasbdb_title": "Structural insights into the mechanism of c-di-GMP-bound YcgR regulating flagellar motility in <i>Escherichia coli</i>.",
+   "priority": 1.4659567209
+  },
+  {
    "label": "SASDC35",
    "length": 311,
    "disorder_class": "folded",
    "chi2_raw": 24.2001816666,
-   "chi2_best": 0.7704394328,
-   "phi_at_chi2_2": 0.0690670672,
+   "chi2_best": 0.443204182,
+   "phi_at_chi2_2": 0.1356694957,
    "resolvability": "strongly reweightable",
    "rg_exp": 29.6269388698,
    "rg_model": 35.9823926996,
@@ -634,8 +694,8 @@
    "length": 314,
    "disorder_class": "folded",
    "chi2_raw": 23.5679903776,
-   "chi2_best": 1.1468699036,
-   "phi_at_chi2_2": 0.3231242586,
+   "chi2_best": 1.1429990008,
+   "phi_at_chi2_2": 0.3226664316,
    "resolvability": "strongly reweightable",
    "rg_exp": 31.5003431101,
    "rg_model": 35.1807570626,
@@ -649,8 +709,8 @@
    "length": 128,
    "disorder_class": "folded",
    "chi2_raw": 22.9440367915,
-   "chi2_best": 1.7729089322,
-   "phi_at_chi2_2": 0.0218657265,
+   "chi2_best": 1.7528293325,
+   "phi_at_chi2_2": 0.0214134187,
    "resolvability": "strongly reweightable",
    "rg_exp": 17.2626062061,
    "rg_model": 16.0228302959,
@@ -660,12 +720,27 @@
    "priority": 1.3606698304
   },
   {
+   "label": "SASDJK6",
+   "length": 209,
+   "disorder_class": "disordered",
+   "chi2_raw": 162.3814794768,
+   "chi2_best": 1.6008209867,
+   "phi_at_chi2_2": 0.0429456209,
+   "resolvability": "strongly reweightable",
+   "rg_exp": 38.2126804836,
+   "rg_model": 52.7067396299,
+   "rg_direction": "model too extended",
+   "mw_ratio": 1.5717487006,
+   "sasbdb_title": "Order from disorder in the sarcomere: FATZ forms a fuzzy but tight complex and phase-separated condensates with \u03b1-actinin.",
+   "priority": 1.3263218964
+  },
+  {
    "label": "SASDJX3",
    "length": 190,
    "disorder_class": "partly disordered",
    "chi2_raw": 20.7058671015,
-   "chi2_best": 1.023932648,
-   "phi_at_chi2_2": 0.421079987,
+   "chi2_best": 1.0225747473,
+   "phi_at_chi2_2": 0.3819309705,
    "resolvability": "strongly reweightable",
    "rg_exp": 29.754457106,
    "rg_model": 25.5337658066,
@@ -679,8 +754,8 @@
    "length": 103,
    "disorder_class": "partly disordered",
    "chi2_raw": 19.9473577457,
-   "chi2_best": 1.1141395073,
-   "phi_at_chi2_2": 0.0455971319,
+   "chi2_best": 1.1115914674,
+   "phi_at_chi2_2": 0.0468233256,
    "resolvability": "strongly reweightable",
    "rg_exp": 29.6770992351,
    "rg_model": 19.9684050479,
@@ -694,8 +769,8 @@
    "length": 114,
    "disorder_class": "partly disordered",
    "chi2_raw": 19.5254712291,
-   "chi2_best": 1.1931506884,
-   "phi_at_chi2_2": 0.0804651781,
+   "chi2_best": 1.2000248874,
+   "phi_at_chi2_2": 0.0774674194,
    "resolvability": "strongly reweightable",
    "rg_exp": 19.7530902062,
    "rg_model": 17.14402079,
@@ -709,8 +784,8 @@
    "length": 302,
    "disorder_class": "folded",
    "chi2_raw": 19.4465068443,
-   "chi2_best": 1.0682784004,
-   "phi_at_chi2_2": 0.3263272619,
+   "chi2_best": 1.0647435268,
+   "phi_at_chi2_2": 0.3657176024,
    "resolvability": "strongly reweightable",
    "rg_exp": 26.1464513977,
    "rg_model": 27.1715762627,
@@ -724,8 +799,8 @@
    "length": 388,
    "disorder_class": "partly disordered",
    "chi2_raw": 336.0669401656,
-   "chi2_best": 1.8281774131,
-   "phi_at_chi2_2": 0.0863257042,
+   "chi2_best": 1.491646079,
+   "phi_at_chi2_2": 0.1248867678,
    "resolvability": "strongly reweightable",
    "rg_exp": 31.3072106272,
    "rg_model": 28.5869693208,
@@ -739,8 +814,8 @@
    "length": 137,
    "disorder_class": "folded",
    "chi2_raw": 18.1125881587,
-   "chi2_best": 0.9943515914,
-   "phi_at_chi2_2": 0.2715104097,
+   "chi2_best": 0.9919589487,
+   "phi_at_chi2_2": 0.2398747767,
    "resolvability": "strongly reweightable",
    "rg_exp": 18.9559063985,
    "rg_model": 21.2512812836,
@@ -754,8 +829,8 @@
    "length": 177,
    "disorder_class": "partly disordered",
    "chi2_raw": 15.8472929335,
-   "chi2_best": 1.0017070476,
-   "phi_at_chi2_2": 0.1209035006,
+   "chi2_best": 0.99864977,
+   "phi_at_chi2_2": 0.1208904902,
    "resolvability": "strongly reweightable",
    "rg_exp": 22.1232231221,
    "rg_model": 30.0789278316,
@@ -769,8 +844,8 @@
    "length": 169,
    "disorder_class": "disordered",
    "chi2_raw": 69.4984922116,
-   "chi2_best": 0.8322373012,
-   "phi_at_chi2_2": 0.3764221705,
+   "chi2_best": 0.8152747468,
+   "phi_at_chi2_2": 0.3625611337,
    "resolvability": "strongly reweightable",
    "rg_exp": 33.0817807556,
    "rg_model": 40.5034396838,
@@ -784,8 +859,8 @@
    "length": 165,
    "disorder_class": "partly disordered",
    "chi2_raw": 12.6269456967,
-   "chi2_best": 1.2300482269,
-   "phi_at_chi2_2": 0.2932021516,
+   "chi2_best": 1.0682894917,
+   "phi_at_chi2_2": 0.3171351648,
    "resolvability": "strongly reweightable",
    "rg_exp": 21.5382231539,
    "rg_model": 24.363902234,
@@ -795,12 +870,27 @@
    "priority": 1.1012983127
   },
   {
+   "label": "SASDC26",
+   "length": 410,
+   "disorder_class": "folded",
+   "chi2_raw": 133.3085785661,
+   "chi2_best": 1.1245564524,
+   "phi_at_chi2_2": 0.0889808003,
+   "resolvability": "strongly reweightable",
+   "rg_exp": 31.6052421343,
+   "rg_model": 27.504485108,
+   "rg_direction": "model too compact",
+   "mw_ratio": 0.8698716557,
+   "sasbdb_title": "Structural and functional dissection of the DH and PH domains of oncogenic Bcr-Abl tyrosine kinase.",
+   "priority": 1.0624290488
+  },
+  {
    "label": "SASDR22",
    "length": 156,
    "disorder_class": "partly disordered",
    "chi2_raw": 11.4900393647,
-   "chi2_best": 1.0030951593,
-   "phi_at_chi2_2": 0.2288817479,
+   "chi2_best": 1.0029831334,
+   "phi_at_chi2_2": 0.2614739985,
    "resolvability": "strongly reweightable",
    "rg_exp": 27.0646811384,
    "rg_model": 22.797918045,
@@ -814,8 +904,8 @@
    "length": 201,
    "disorder_class": "folded",
    "chi2_raw": 9.6461725497,
-   "chi2_best": 1.2037285634,
-   "phi_at_chi2_2": 0.3198540049,
+   "chi2_best": 1.2006837217,
+   "phi_at_chi2_2": 0.321606762,
    "resolvability": "strongly reweightable",
    "rg_exp": 21.212890858,
    "rg_model": 19.7868478278,
@@ -823,96 +913,6 @@
    "mw_ratio": 0.9919059564,
    "sasbdb_title": "Structure of the photoreceptor synaptic assembly of the extracellular matrix protein pikachurin with the orphan receptor GPR179",
    "priority": 0.9843550263
-  },
-  {
-   "label": "SASDBK6",
-   "length": 133,
-   "disorder_class": "folded",
-   "chi2_raw": 9.368473814,
-   "chi2_best": 1.0897633204,
-   "phi_at_chi2_2": 0.2086404859,
-   "resolvability": "strongly reweightable",
-   "rg_exp": 18.9907311201,
-   "rg_model": 17.5058555919,
-   "rg_direction": "model too compact",
-   "mw_ratio": 1.1469760613,
-   "sasbdb_title": "The C-terminal region of the human p23 chaperone modulates its structure and function.",
-   "priority": 0.9716688472
-  },
-  {
-   "label": "SASDJH6",
-   "length": 51,
-   "disorder_class": "disordered",
-   "chi2_raw": 40.7198404012,
-   "chi2_best": 0.9970805446,
-   "phi_at_chi2_2": 0.483582114,
-   "resolvability": "strongly reweightable",
-   "rg_exp": 18.8770003053,
-   "rg_model": 16.8676750888,
-   "rg_direction": "model too compact",
-   "mw_ratio": 1.5686538149,
-   "sasbdb_title": "Structural Characterization of Plant Metallothionein",
-   "priority": 0.9658836403
-  },
-  {
-   "label": "SASDPY2",
-   "length": 283,
-   "disorder_class": "folded",
-   "chi2_raw": 9.2409054324,
-   "chi2_best": 1.057610077,
-   "phi_at_chi2_2": 0.0708364237,
-   "resolvability": "strongly reweightable",
-   "rg_exp": 24.5150639716,
-   "rg_model": 34.3993595082,
-   "rg_direction": "model too extended",
-   "mw_ratio": 1.0589627923,
-   "sasbdb_title": "Biochemical and structural insights into SARS-CoV-2 polyprotein processing by Mpro.",
-   "priority": 0.9657145259
-  },
-  {
-   "label": "SASDDM6",
-   "length": 264,
-   "disorder_class": "folded",
-   "chi2_raw": 8.8492286646,
-   "chi2_best": 1.0278315058,
-   "phi_at_chi2_2": 0.4181974762,
-   "resolvability": "strongly reweightable",
-   "rg_exp": 21.3765598831,
-   "rg_model": 22.2867222213,
-   "rg_direction": "Rg agrees",
-   "mw_ratio": 0.8246353545,
-   "sasbdb_title": "The X-ray structure of human calbindin-D28K: an improved model.",
-   "priority": 0.9469054174
-  },
-  {
-   "label": "SASDC53",
-   "length": 98,
-   "disorder_class": "disordered",
-   "chi2_raw": 37.0959039092,
-   "chi2_best": 0.9972553398,
-   "phi_at_chi2_2": 0.4105100792,
-   "resolvability": "strongly reweightable",
-   "rg_exp": 26.8685167729,
-   "rg_model": 21.3290219984,
-   "rg_direction": "model too compact",
-   "mw_ratio": 1.0035022228,
-   "sasbdb_title": "The Two-State Prehensile Tail of the Antibacterial Toxin Colicin N.",
-   "priority": 0.9415955748
-  },
-  {
-   "label": "SASDAW6",
-   "length": 134,
-   "disorder_class": "folded",
-   "chi2_raw": 8.7128625345,
-   "chi2_best": 1.7080642773,
-   "phi_at_chi2_2": 0.0283210818,
-   "resolvability": "strongly reweightable",
-   "rg_exp": 17.9487984265,
-   "rg_model": 16.455646004,
-   "rg_direction": "model too compact",
-   "mw_ratio": 0.9678982711,
-   "sasbdb_title": "Structural bases for the interaction of frataxin with the central components of iron-sulphur cluster assembly.",
-   "priority": 0.9401608621
   }
  ],
  "thresholds": {
@@ -1406,7 +1406,7 @@
       0.0253176781472712,
       0.0398603545962321
      ],
-     "nrmsd_best_median": 0.0212486852596676,
+     "nrmsd_best_median": 0.0178981381453668,
      "chi2_raw_median": 8.888180348544271
     },
     "folded": {
@@ -1416,7 +1416,7 @@
       0.0282576270869458,
       0.0334372482356494
      ],
-     "nrmsd_best_median": 0.02727925198860915,
+     "nrmsd_best_median": 0.02570404999565955,
      "chi2_raw_median": 2.339921817112088
     },
     "partly disordered": {
@@ -1426,7 +1426,7 @@
       0.029141877877273,
       0.037108712539601824
      ],
-     "nrmsd_best_median": 0.02512402286938885,
+     "nrmsd_best_median": 0.024277288109385002,
      "chi2_raw_median": 4.339804819099893
     }
    },
@@ -1484,21 +1484,21 @@
   "kind_counts_by_phi_threshold": {
    "0.3": {
     "raw fit": 146,
-    "modestly reweightable": 91,
-    "strongly reweightable": 65,
-    "target fit not reached": 97
+    "modestly reweightable": 107,
+    "strongly reweightable": 76,
+    "target fit not reached": 70
    },
    "0.5": {
     "raw fit": 146,
-    "modestly reweightable": 65,
-    "strongly reweightable": 91,
-    "target fit not reached": 97
+    "modestly reweightable": 77,
+    "strongly reweightable": 106,
+    "target fit not reached": 70
    },
    "0.7": {
     "raw fit": 146,
-    "modestly reweightable": 48,
-    "strongly reweightable": 108,
-    "target fit not reached": 97
+    "modestly reweightable": 55,
+    "strongly reweightable": 128,
+    "target fit not reached": 70
    }
   }
  }

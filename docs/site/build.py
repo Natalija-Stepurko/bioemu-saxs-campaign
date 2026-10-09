@@ -575,6 +575,8 @@ def build():
                  + f2(rg_dis) + '.</p>')
 
     arm1 = ARMS["arm1"]["replication"]
+    check(len(arm1) == 12 and {r["label"] for r in arm1} == set(CAND.head(len(arm1))["label"]),
+          "arm 1 lists the same twelve systems the priority score ranks first")
     check(all(0.6 < r["mw_ratio"] < 1.6 for r in arm1), "arm 1 candidates are monomers by measured mass")
     check(all(r["length"] <= ARMS["arm1"]["max_length"] and r["disorder_class"] != "disordered"
               and r["resolvability"] in ("strongly reweightable", "modestly reweightable") for r in arm1),
