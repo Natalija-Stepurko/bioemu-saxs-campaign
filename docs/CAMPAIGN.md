@@ -135,6 +135,13 @@ condition, with the selection made from the model alone.
 - **Buffer.** Matched buffer from the final SEC step, with the exact dialysate recorded; BioEmu does not
   model pH or ionic strength, so buffer is held at one standard condition (20 mM HEPES pH 7.4, 150 mM NaCl,
   2 mM TCEP) and recorded with each dataset.
+- **Solubility and sample-quality gate.** One common buffer and temperature is the design aim, but it may
+  not be possible for every protein: some may be insoluble, unstable or aggregate in that buffer. Each
+  construct therefore passes a gate before any SAXS: a solubility test in the standard buffer; the UV trace
+  of the purification and of analytical SEC (a single symmetric A280 peak at the expected elution volume, and
+  the A260/A280 ratio for nucleic-acid contamination); SDS-PAGE (a single band at the expected mass, for
+  purity and identity); and circular dichroism where the fold is in question, to confirm the expected
+  secondary-structure content (folded or disordered).
 - **Standards and controls.** A protein standard (bovine serum albumin or glucose isomerase) in every
   session for absolute scale; water for intensity calibration; a buffer-only frame bracketing each
   sample; a repeat of one previously measured SASBDB entry per batch as a cross-site control.
@@ -154,6 +161,13 @@ Every dataset passes or fails on recorded values:
 5. Buffer subtraction sanity: no negative intensities within the usable range; the high-q plateau is
    flat.
 6. Reproducibility: the cross-site control reproduces its deposited profile with χ² < 2 after scaling.
+7. No concentration dependence: I(0)/c agrees within 5% across the three concentrations (Rg is covered by
+   criterion 2).
+8. SEC-SAXS peak homogeneity: Rg from the frames across the elution peak is constant within 3%.
+
+Several criteria watch for aggregation on the SAXS data themselves: a low-angle upturn and a non-linear
+Guinier region (1, 2), Rg or I(0)/c rising with concentration (2, 7), a molecular weight from I(0) above the
+monomer (4), and frames across the SEC peak that do not give a constant Rg (8).
 
 Datasets that fail are repeated once; a second failure retires the construct and triggers the
 contingency below.
@@ -169,7 +183,10 @@ contingency below.
 - **Arm 2 success:** the pre-specified outcome is reached with at least eight test and six control profiles
   passing QC, whichever way it falls.
 - **Contingencies.** Poor expression → switch to a homologue from the same family with a deposited
-  SASBDB entry. Aggregation at SEC → lower concentration and add 5% glycerol; if that fails, retire.
+  SASBDB entry. A construct that fails the solubility and sample-quality gate, or aggregates, in the
+  standard buffer → measured in the nearest buffer in which it is monodisperse (or in its deposited buffer),
+  with the deviation recorded, and analysed separately, because its replication no longer controls the
+  condition; one that fails in every buffer is dropped and replaced by the next eligible system.
   Beamtime loss → a laboratory SAXS instrument for the smallest, most concentrated samples, accepting
   the lower q range and recording it. Ambiguous SAXS (target fit not reached) → HDX-MS first, SAXS second.
 
