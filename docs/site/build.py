@@ -241,7 +241,7 @@ FAVICON = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d=
 
 
 CSS = """
-:root{--paper:#F7F8F9;--panel:#FFFFFF;--ink:#16191D;--muted:#5B646E;--rule:#DDE1E4;--acc:#2F5D8A;--band:#EEF1F2;
+:root{--paper:#F7F8F9;--panel:#FFFFFF;--ink:#16191D;--muted:#5B646E;--rule:#DDE1E4;--acc:#2F5D8A;--bioemu:#3A80CC;--band:#EEF1F2;
   --sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 *{box-sizing:border-box}
@@ -308,7 +308,7 @@ details.more .inner{padding:4px 14px 12px}details.more .inner>p{margin:10px 0}
 details.more .result{border:0;padding:0}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:4px 0 16px}
 @media (max-width:760px){.tiles{grid-template-columns:minmax(0,1fr)}}
-.tile{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--acc);border-radius:3px;padding:12px 14px}
+.tile{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--bioemu);border-radius:3px;padding:12px 14px}
 .tile .v{font-size:26px;font-weight:640;letter-spacing:-.01em;line-height:1.1}
 .nb{white-space:nowrap}
 .tile .l{font-size:14px;margin:4px 0 2px}.tile .s{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.45}
@@ -362,6 +362,11 @@ def build():
     gens = [m for m in GENERATORS if m in comps]
     singles = [m for m in SINGLE if m in comps]
     check(len(comps) == 6 and set(comps) == set(GENERATORS) | set(SINGLE), "six comparators")
+    try:                                     # the page's BioEmu-1 colour is the figures' role colour
+        from bsc.report import ROLE_COL
+        check(f"--bioemu:{ROLE_COL['bioemu']};" in CSS, "page BioEmu-1 colour matches the figure role colour")
+    except ImportError:
+        pass
     RV = pd.read_csv(RESULTS / "resolvability.csv")
     RV = RV[RV["model"] == "bioemu"].set_index("label")
 
@@ -684,7 +689,7 @@ def build():
 <h2 id="examples">What a fit looks like</h2>
 <p class="lead">One entry per class, the one nearest its class median of raw χ², shows what the numbers above mean on a measured curve.</p>
 {fig("fig_examples", "Figure 2 · one worked example per class",
-     f"Top: ln I(q) of every measured point (open circles) with the measurement error as a grey band from ln(I − σ) to ln(I + σ) (clipped at the panel floor where I − σ ≤ 0), and three computed curves scaled to the data: the raw BioEmu-1 ensemble (black), the ensemble reweighted to the operating point that the four kinds use, the first point along the reweighting path with χ² ≤ 2 (blue; labelled with χ² and φ there), and the AlphaFold2 single structure (grey). Middle: residual (I<sub>model</sub> − I<sub>exp</sub>)/σ with ±3 guides. Bottom: the highest-weight conformer at the χ² minimum of the path, drawn as a ribbon (helices in blue, outlined in white) inside an ab initio envelope reconstructed from the measured curve alone with DENSS {cite('grant')} (ten maps, aligned and averaged), docked by principal axes. The shading shows three density levels of the averaged map, each the isosurface enclosing a set volume: the volume DENSS assigned to the particle (palest), the protein's expected volume at 1.7 Å³ per Da (middle; the level used for docking and for the Cα share under each panel) and the densest half of that volume (darkest), so darker shading marks higher electron density. The χ² minimum of each path lies lower ({ex_f['chi2_minimum']:.2f}, {ex_p['chi2_minimum']:.2f} and {ex_d['chi2_minimum']:.2f}) but needs φ of {ex_f['phi_minimum']:.3f}, {ex_p['phi_minimum']:.3f} and {ex_d['phi_minimum']:.3f}, a few conformers carrying most of the weight, which overfits; for {exd} it brings Rg to {ex_d['rg_minimum']:.1f} Å against {ex_d['rg_exp']:.1f} Å measured. Gaps in the {exd} ribbon are {ex_d['chain_breaks']} breaks in the sampled chain (consecutive Cα more than 4.2 Å apart).",
+     f"Top: ln I(q) of every measured point (open circles) with the measurement error as a grey band from ln(I − σ) to ln(I + σ) (clipped at the panel floor where I − σ ≤ 0), and three computed curves scaled to the data: the raw BioEmu-1 ensemble (blue), the ensemble reweighted to the operating point that the four kinds use, the first point along the reweighting path with χ² ≤ 2 (terracotta; labelled with χ² and φ there), and the AlphaFold2 single structure (green, dashed). Middle: residual (I<sub>model</sub> − I<sub>exp</sub>)/σ with ±3 guides. Bottom: the highest-weight conformer at the χ² minimum of the path, drawn as a ribbon coloured from amber at the N terminus to terracotta at the C terminus (helices a shade darker) inside an ab initio envelope reconstructed from the measured curve alone with DENSS {cite('grant')} (ten maps, aligned and averaged), docked by principal axes. The shading shows three density levels of the averaged map, each the isosurface enclosing a set volume: the volume DENSS assigned to the particle (palest), the protein's expected volume at 1.7 Å³ per Da (middle; the level used for docking and for the Cα share under each panel) and the densest half of that volume (darkest), so darker shading marks higher electron density. The χ² minimum of each path lies lower ({ex_f['chi2_minimum']:.2f}, {ex_p['chi2_minimum']:.2f} and {ex_d['chi2_minimum']:.2f}) but needs φ of {ex_f['phi_minimum']:.3f}, {ex_p['phi_minimum']:.3f} and {ex_d['phi_minimum']:.3f}, a few conformers carrying most of the weight, which overfits; for {exd} it brings Rg to {ex_d['rg_minimum']:.1f} Å against {ex_d['rg_exp']:.1f} Å measured. Gaps in the {exd} ribbon are {ex_d['chain_breaks']} breaks in the sampled chain (consecutive Cα more than 4.2 Å apart).",
      f"A residual that wanders outside ±3 over a range of q is a shape error at that length scale (about 1/q); a flat band within ±3 is a fit at the noise level. All three examples are modestly reweightable: χ² ≤ 2 is reached keeping φ = {ex_f['phi_operating']:.2f}, {ex_p['phi_operating']:.2f} and {ex_d['phi_operating']:.2f} of the effective sample. For the folded {exf} the single structure fits as well as the ensemble. For the partly disordered {exp_} and the disordered {exd} the single structure misses (χ² {ex_p['chi2']['alphafold']:.0f} and {ex_d['chi2']['alphafold']:.0f}). For {exd} the raw ensemble is too large at low q (Rg {ex_d['rg_raw']:.1f} Å against {ex_d['rg_exp']:.1f} Å measured); at the operating point Rg is {ex_d['rg_operating']:.1f} Å, so meeting χ² ≤ 2 removes part of the size excess. The envelope is an illustration from an ensemble-averaged measurement, not evidence about any single conformation: for the disordered protein only {pct(ex_d['ca_inside_envelope'])} of the conformer's Cα atoms fall inside the protein-volume level ({pct(ex_d['ca_inside_support_surface'])} inside the palest, particle level).")}
 {details("Numbers behind Figure 2", ex_table)}
 

@@ -119,12 +119,15 @@ RAW_FIT_CHI2 = 2.0             # the operating point of the kinds: the first poi
 # volume DENSS assigned (at least 1.5 times the protein volume), the protein's expected volume (the
 # level used for docking and for the C-alpha counts) and its densest half. Colours are a muted ramp of
 # the page accent; each level is rendered as its own opaque layer and blended at its opacity, outer first
-DENSITY_LEVELS = (("particle", "#BFD0E2", 0.40), ("protein", "#86A5C8", 0.45),
-                  ("dense core", "#4A7299", 0.50))
+DENSITY_LEVELS = (("particle", "#D3DAE2", 0.45), ("protein", "#A9B6C4", 0.50),
+                  ("dense core", "#7A8A9C", 0.55))
 OUTER_MIN_FACTOR, CORE_FRACTION = 1.5, 0.5
-RIBBON_HALO = 0.75             # opacity of the white outline drawn under the ribbon
+RIBBON_HALO = 0.6              # opacity of the thin white outline drawn under the ribbon
 CA_BREAK_A = 4.2               # consecutive C-alpha atoms further apart than this: a break in the chain
-HELIX_COLOUR, COIL_COLOUR = "#2F5D8A", "#3A4048"
+# the chain: a muted warm ramp N -> C (amber to terracotta) that contrasts with the grey-blue envelope
+RIBBON_RAMP = ((0xE2, 0xA6, 0x4E), (0xB3, 0x48, 0x34))
+HELIX_SHADE = 0.82
+RENDER_SCALE = 2               # layers are rendered at twice the composited size and downsampled
 THREE_DMOL = "https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js"
 
 
@@ -329,8 +332,17 @@ const v = $3Dmol.createViewer(document.getElementById('v'), {backgroundColor: 'w
 v.setProjection('orthographic');
 const m = v.addModel(pdb, 'pdb');
 if (__RIBBON__) {
-  m.setStyle({}, {cartoon: {color: '__COIL__', thickness: 0.5}});
-  m.setStyle({ss: 'h'}, {cartoon: {color: '__HELIX__'}});
+  // one warm ramp from the N to the C terminus, helices a shade darker; no part of the chain in ink
+  const resi = m.selectedAtoms({}).map(a => a.resi);
+  const r0 = Math.min(...resi), r1 = Math.max(...resi);
+  const c0 = __RAMP0__, c1 = __RAMP1__;
+  const cf = a => {
+    const t = (a.resi - r0) / Math.max(1, r1 - r0);
+    const k = a.ss === 'h' ? __HELIX_SHADE__ : 1.0;
+    const c = c0.map((x, i) => Math.round(k * (x + (c1[i] - x) * t)));
+    return (c[0] << 16) | (c[1] << 8) | c[2];
+  };
+  m.setStyle({}, {cartoon: {colorfunc: cf, thickness: __THICK__, width: __WIDTH__}});
 } else {
   m.setStyle({}, {});
 }
@@ -345,12 +357,13 @@ v.zoomTo(); v.zoom(__ZOOM__); v.render(); window.renderDone = true;
 </script></body></html>"""
 
 SHOOT = """import sys
+SCALE = __SCALE__
 from playwright.sync_api import sync_playwright
 w, h, jobs = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3:]
 with sync_playwright() as p:
     b = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader",
                                 "--ignore-gpu-blocklist"])
-    pg = b.new_page(viewport={"width": w, "height": h}, device_scale_factor=1)
+    pg = b.new_page(viewport={"width": w, "height": h}, device_scale_factor=SCALE)
     for html, png in zip(jobs[::2], jobs[1::2]):
         pg.goto("file://" + html)
         pg.wait_for_function("window.renderDone === true", timeout=120000)
@@ -448,12 +461,18 @@ def render_density_ribbon(pdb: str, surfaces: list[dict], png: Path, size=(1800,
              "f": s["faces"].ravel().astype(int).tolist(), "color": s["color"], "opacity": 1.0}
             for s in surfaces]
     script = png.with_name("render_layers.py")
-    script.write_text(SHOOT)
+    script.write_text(SHOOT.replace("__SCALE__", str(RENDER_SCALE)))
+    # cartoon dimensions grow with the scene so the chain stays legible when a large disordered
+    # particle is framed into the same panel width as a small folded one
+    extent = float((hi - lo).max())
+    thick, width = max(0.6, extent / 100.0), max(1.4, extent / 90.0)
 
     def page(name: str, layer_surf: list, ribbon: bool, zoom: float) -> tuple[str, str]:
         subs = {"__LIB__": THREE_DMOL, "__PDB__": json.dumps(pdb), "__SURF__": json.dumps(layer_surf),
-                "__W__": str(size[0]), "__H__": str(size[1]), "__COIL__": COIL_COLOUR,
-                "__HELIX__": HELIX_COLOUR, "__ZOOM__": f"{zoom:.3f}", "__BOX__": json.dumps(box),
+                "__W__": str(size[0]), "__H__": str(size[1]), "__RAMP0__": json.dumps(list(RIBBON_RAMP[0])),
+                "__RAMP1__": json.dumps(list(RIBBON_RAMP[1])), "__HELIX_SHADE__": f"{HELIX_SHADE}",
+                "__THICK__": f"{thick:.2f}", "__WIDTH__": f"{width:.2f}",
+                "__ZOOM__": f"{zoom:.3f}", "__BOX__": json.dumps(box),
                 "__RIBBON__": "true" if ribbon else "false"}
         html = RENDER_HTML
         for k, v in subs.items():
@@ -472,8 +491,9 @@ def render_density_ribbon(pdb: str, surfaces: list[dict], png: Path, size=(1800,
     whole = page("whole", surf, True, 1.0)
     if not shoot([whole]):
         return False
-    w, h = ink_extent(Path(whole[1]), size)
-    zoom = fill / max(w / size[0], h / size[1])
+    big = (size[0] * RENDER_SCALE, size[1] * RENDER_SCALE)
+    w, h = ink_extent(Path(whole[1]), big)
+    zoom = fill / max(w / big[0], h / big[1])
     jobs = [page(f"level{i}", [s], False, zoom) for i, s in enumerate(surf)]
     jobs.append(page("ribbon", [], True, zoom))
     if not shoot(jobs):
@@ -483,8 +503,8 @@ def render_density_ribbon(pdb: str, surfaces: list[dict], png: Path, size=(1800,
         return np.asarray(Image.open(p).convert("RGBA")).astype(float) / 255.0
 
     img = composite([(rgba(j[1]), s["opacity"]) for j, s in zip(jobs[:-1], surfaces, strict=True)],
-                    rgba(jobs[-1][1]))
-    Image.fromarray(np.round(255 * np.clip(img, 0, 1)).astype(np.uint8)).save(png)
+                    rgba(jobs[-1][1]), halo_px=2 * RENDER_SCALE)
+    Image.fromarray(np.round(255 * np.clip(img, 0, 1)).astype(np.uint8)).resize(size, Image.LANCZOS).save(png)
     if autocrop(png):
         print(f"  {png.name}: the rendering touches the frame", flush=True)
     return True
