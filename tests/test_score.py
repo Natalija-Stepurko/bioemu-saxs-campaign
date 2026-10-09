@@ -128,6 +128,8 @@ def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
     assert H["kind_counts_by_phi_threshold"]["0.5"] == {k: A["bioemu"]["resolvability_counts"].get(k, 0)
                                                         for k in analyse.KINDS}
     assert set(A["examples"]) == {"folded", "partly disordered", "disordered"}
+    rep = pd.read_csv(results / "resolvability.csv").query("model == 'bioemu'").set_index("label")
+    assert rep.loc[A["representative_path"], "resolvability"] == analyse.KIND_STRONG
     assert (results / "clusters.csv").exists()
 
 
@@ -148,8 +150,7 @@ def test_report_builds_from_analysis(tmp_path, monkeypatch):
     monkeypatch.setattr(report, "OUT", results / "figures")
     analyse.main()
     report.main()
-    for f in ("fig_error_map", "fig_rg", "fig_rg_robustness", "fig_resolvability", "fig_models",
-              "fig_candidates"):
+    for f in ("fig_error_map", "fig_rg", "fig_rg_robustness", "fig_resolvability", "fig_models"):
         assert (results / "figures" / f"{f}.png").stat().st_size > 10_000
     # without DENSS maps and the validation stages the examples and prediction figures are left alone
     assert not (results / "figures" / "fig_examples.png").exists()

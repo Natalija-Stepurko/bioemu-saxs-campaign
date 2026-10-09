@@ -17,10 +17,11 @@ from bsc import config as C
 from bsc import robust
 
 CLASS_ORDER = [c[0] for c in C.DISORDER_CLASSES]
-# the four kinds along the reweighting path (renamed after the first run, DESIGN §7; the logic is
-# unchanged: raw chi2 <= 2; else chi2 <= 2 reached with phi >= threshold; else reached; else never)
+# the four kinds along the reweighting path (renamed after the first run and again on 2026-10-09,
+# DESIGN §7; the logic is unchanged: raw chi2 <= 2; else chi2 <= 2 reached with phi >= threshold;
+# else reached; else never)
 KIND_RAW, KIND_MODEST = "raw fit", "modestly reweightable"
-KIND_STRONG, KIND_NOTFIT = "strongly reweightable", "not fit along the path"
+KIND_STRONG, KIND_NOTFIT = "strongly reweightable", "target fit not reached"
 KINDS = [KIND_RAW, KIND_MODEST, KIND_STRONG, KIND_NOTFIT]
 PHI_THRESHOLD = 0.5
 PHI_SENSITIVITY = (0.3, 0.5, 0.7)
@@ -45,7 +46,7 @@ def kind(row: pd.Series, phi_threshold: float = PHI_THRESHOLD) -> str:
     raw fit                   raw chi2 <= 2: the prior ensemble already describes the data
     modestly reweightable     chi2 <= 2 reached while keeping phi >= threshold (0.5)
     strongly reweightable     chi2 <= 2 reached only with phi < threshold
-    not fit along the path    chi2 <= 2 never reached along the path
+    target fit not reached    chi2 <= 2 never reached along the path
     """
     if row["chi2_raw"] <= 2:
         return KIND_RAW
@@ -70,6 +71,16 @@ def choose_examples(d: pd.DataFrame) -> dict[str, str]:
         g["dev"] = (g["chi2_raw"] - g["chi2_raw"].median()).abs().round(9)
         out[cls] = str(g.sort_values(["dev", "length", "label"]).iloc[0]["label"])
     return out
+
+
+def choose_representative_path(d: pd.DataFrame) -> str | None:
+    """The one reweighting path drawn on the page: the strongly reweightable clean entry whose phi at
+    chi2 = 2 is closest to the median of that kind (ties: shorter chain, then label)."""
+    m = d[(d["model"] == C.MODEL) & d["clean"] & (d["kind"] == KIND_STRONG)].copy()
+    if m.empty:
+        return None
+    m["dev"] = (m["phi_at_chi2_2"] - m["phi_at_chi2_2"].median()).abs().round(9)
+    return str(m.sort_values(["dev", "length", "label"]).iloc[0]["label"])
 
 
 def ci(values, stat=np.median, seed_offset: int = 0) -> list[float]:
@@ -349,6 +360,7 @@ def main() -> None:
         },
         "kinds": KINDS,
         "examples": choose_examples(d),
+        "representative_path": choose_representative_path(d),
         "expectations": expectations(d),
         "rg_ratio_disordered_by_model": {
             m: float(g["rg_ratio"].median())

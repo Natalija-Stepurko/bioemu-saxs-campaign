@@ -4,8 +4,9 @@ The 399 clean profiles are treated as a pool. On each held-out fold (5-fold, gro
 cluster), three acquisition policies rank the held-out entries from quantities known before
 measuring (features.build, fitted on the training folds) and the top k are "acquired". The objective
 is what those profiles would have done to the ensemble: the mean observed phi-reduction (1 − phi at
-the chi2 target, 1 when the target is never reached) and the share of entries that are strongly
-reweightable or not fit along the path. Policies: random; largest predicted raw error; the
+the chi2 target, 1 when the target is never reached) and the high-discrepancy target yield, the share
+of entries that are strongly reweightable or whose target fit is not reached along the path, with
+each of those two components separately. Policies: random; largest predicted raw error; the
 campaign's priority rule with predicted quantities in place of the observed ones. The same rule with
 the observed quantities is the ceiling.
 
@@ -42,12 +43,15 @@ def priority(log_chi2: np.ndarray, kind_weight: np.ndarray, tract: np.ndarray) -
 
 def objectives(table: pd.DataFrame) -> pd.DataFrame:
     """Observed outcomes per entry: phi-reduction at chi2 = 1 and at chi2 = 2 (1 when never reached),
-    and the strongly-reweightable-or-not-fit indicator."""
+    the high-discrepancy indicator (strongly reweightable or target fit not reached) and its two
+    components separately."""
     out = pd.DataFrame(index=table.index)
     for t in (1, 2):
         phi = table[f"phi_at_chi2_{t}"].to_numpy(float)
         out[f"phi_reduction_chi2_{t}"] = np.where(np.isfinite(phi), 1 - phi, 1.0)
     out["strong_or_notfit"] = table["kind"].isin(predict.POSITIVE_KINDS).astype(float)
+    out["strongly_reweightable"] = (table["kind"] == analyse.KIND_STRONG).astype(float)
+    out["target_not_reached"] = (table["kind"] == analyse.KIND_NOTFIT).astype(float)
     return out
 
 
@@ -129,7 +133,7 @@ def main() -> None:
     for k, pol in out["policies"].items():
         line = "; ".join(f"{p}: {v['phi_reduction_chi2_1']['mean']:.2f} / {v['strong_or_notfit']['mean']:.2f}"
                          for p, v in pol.items())
-        print(f"  top {k} (phi-reduction at chi2=1 / share strongly reweightable or not fit) {line}",
+        print(f"  top {k} (phi-reduction at chi2=1 / high-discrepancy share) {line}",
               flush=True)
 
 

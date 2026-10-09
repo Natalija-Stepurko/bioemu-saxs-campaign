@@ -154,6 +154,23 @@ beside the old ones in `results/`.
   initio envelope from the measured curve (stage `envelopes`, run in a separate environment because DENSS
   needs numpy < 2) and the highest-weight conformer docked by principal axes.
 
+- **Presentation changes that touch numbers (2026-10-09).** The fourth kind is renamed *target fit not
+  reached* (by the tested reweighting procedure); its logic and count are unchanged. The worked examples show
+  the reweighted curve at the operating point the kinds use, the first point along the reweighting path with
+  χ² ≤ 2, with φ and Rg recomputed there (φ 0.96, 0.90 and 0.79 for SASDH84, SASDM65 and SASDLK9); the χ²
+  minimum of each path is reported beside it, and the conformer drawn in the envelope is still the
+  highest-weight one at that minimum. The selection evaluation also reports the two components of the
+  high-discrepancy target yield (strongly reweightable; target fit not reached) separately, and one
+  strongly reweightable path, chosen in code as the entry with the median φ of its kind, is drawn on the page.
+- **Priority score not used to recommend (2026-10-09).** §6 proposed a ranked candidate list; the priority
+  score built for it (log₁₀ raw χ² × reweighting weight × tractability weight, weights set by judgement) was
+  tested retrospectively (`select_eval`) and does not pick high-discrepancy profiles better than random choice
+  when fed pre-measurement quantities. It is reported with its test and not used for selection: arm 1 takes
+  the systems that meet stated eligibility rules (reweighting reaches χ² ≤ 2, monomer by measured mass, at most
+  350 residues, folded or partly disordered) and lists the twelve with the largest observed raw χ², the
+  same twelve the score ranks first, with the final choice left to a feasibility review. Arm 2 splits test and
+  control proteins by a model-and-sequence quantity, within the archive's quality-checked disordered entries.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.

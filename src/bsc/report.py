@@ -12,7 +12,7 @@ import pandas as pd
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from bsc import analyse, saxs, score  # noqa: E402
+from bsc import analyse, envelopes  # noqa: E402
 from bsc import config as C  # noqa: E402
 
 INK, MUTED, RULE = "#16191D", "#5B646E", "#DDE1E4"
@@ -30,60 +30,120 @@ CLASS_ORDER = [c[0] for c in C.DISORDER_CLASSES]
 OUT = C.RESULTS / "figures"
 
 
+PX_PER_IN = 80                   # figure inches -> CSS pixels at the display width
+DPI = 2 * PX_PER_IN               # PNGs carry two pixels per CSS pixel; the page reads the width back
+KIND_GREYS = ["#B9C0C6", "#8A939B", "#5B646E", "#16191D"]
+
+
 def style():
-    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10, "axes.edgecolor": RULE,
-                         "axes.labelcolor": INK, "xtick.color": MUTED, "ytick.color": MUTED,
-                         "axes.spines.top": False, "axes.spines.right": False, "figure.dpi": 150})
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10.5, "axes.titlesize": 10.5,
+                         "axes.labelsize": 10.5, "xtick.labelsize": 9.5, "ytick.labelsize": 9.5,
+                         "legend.fontsize": 9.5, "axes.edgecolor": RULE, "axes.labelcolor": INK,
+                         "xtick.color": MUTED, "ytick.color": MUTED, "axes.spines.top": False,
+                         "axes.spines.right": False, "figure.dpi": DPI, "savefig.dpi": DPI})
+
+
+def figure(width_px: int, height_px: int, **kw):
+    """A figure sized for its display width, so 10 pt text renders at about 11 px on the page."""
+    return plt.subplots(figsize=(width_px / PX_PER_IN, height_px / PX_PER_IN), **kw)
+
+
+def save(fig, name: str) -> None:
+    """PNG at two pixels per display pixel, quantised to a palette to keep the page small."""
+    from PIL import Image
+    p = OUT / f"{name}.png"
+    fig.savefig(p, dpi=DPI, facecolor="white")
+    plt.close(fig)
+    im = Image.open(p).convert("RGB")
+    im.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(p, optimize=True)
+
+
+def _strip(ax, groups: list[tuple[str, np.ndarray]], seed: int = 0, s: float = 12):
+    for i, (cls, v) in enumerate(groups):
+        x = i + np.random.default_rng(seed + i).uniform(-0.22, 0.22, len(v))
+        ax.scatter(x, v, s=s, color=CLS_COL[cls], alpha=0.6, lw=0)
 
 
 def fig_error_map(d: pd.DataFrame, A: dict) -> None:
-    """Raw chi2 of BioEmu-1 by disorder class and length: the error map."""
+    """Result 1: raw chi2 by class (left) and the error-free NRMSD score by class (right)."""
     m = d[(d["model"] == C.MODEL) & d["clean"]]
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [1.1, 1.6]})
+    fig, axes = figure(720, 300, ncols=2)
     ax = axes[0]
-    for i, cls in enumerate(CLASS_ORDER):
-        v = np.log10(m.loc[m["disorder_class"] == cls, "chi2_raw"])
-        x = i + np.random.default_rng(i).uniform(-0.22, 0.22, len(v))
-        ax.scatter(x, v, s=14, color=CLS_COL[cls], alpha=0.65, lw=0)
-        ax.hlines(v.median(), i - 0.3, i + 0.3, color=INK, lw=2)
-        ax.text(i, 3.55, f"n = {len(v)}", ha="center", fontsize=9, color=MUTED)
-    ax.axhline(np.log10(2), color=RULE, lw=1, ls="--")
-    ax.text(2.45, np.log10(2) + 0.04, "χ² = 2", fontsize=8.5, color=MUTED, ha="right")
+    groups = [(c, np.log10(m.loc[m["disorder_class"] == c, "chi2_raw"].to_numpy())) for c in CLASS_ORDER]
+    _strip(ax, groups)
+    for i, (_, v) in enumerate(groups):
+        med = np.median(v)
+        ax.hlines(med, i - 0.3, i + 0.3, color=INK, lw=2)
+        ax.text(i + 0.33, med, f"{10 ** med:.1f}", va="center", fontsize=9.5, color=INK)
+    ax.axhline(np.log10(2), color=MUTED, lw=0.8, ls="--")
+    ax.text(2.58, np.log10(2) - 0.06, "χ² = 2", fontsize=9.5, color=MUTED, ha="right", va="top")
     ax.set_xticks(range(3))
-    ax.set_xticklabels(CLASS_ORDER)
-    ax.set_ylabel("raw reduced χ² (log10)")
-    ax.set_title("Unweighted ensemble against each profile", fontsize=10, loc="left")
-    ax.set_ylim(-0.6, 3.7)
+    ax.set_xticklabels([f"{c}\nn = {len(v)}" for c, v in groups])
+    ax.set_xlim(-0.5, 2.6)
+    ax.set_ylim(-0.6, 3.4)
+    ax.set_yticks([0, 1, 2, 3])
+    ax.set_yticklabels(["1", "10", "100", "1000"])
+    ax.set_ylabel("raw reduced χ² (log scale)")
+    ax.set_title("Reduced χ², weighted by the reported errors", loc="left")
     ax = axes[1]
+    nr = A["headline_robustness"].get("nrmsd", {}).get("by_class")
+    if nr and "nrmsd_raw" in m:
+        groups = [(c, m.loc[m["disorder_class"] == c, "nrmsd_raw"].dropna().to_numpy()) for c in CLASS_ORDER]
+        _strip(ax, groups, seed=10)
+        for i, cls in enumerate(CLASS_ORDER):
+            st = nr[cls]
+            ax.hlines(st["nrmsd_raw_median"], i - 0.3, i + 0.3, color=INK, lw=2)
+            ax.vlines(i + 0.36, *st["nrmsd_raw_ci95"], color=INK, lw=1.6)
+        ax.set_yscale("log")
+        ax.set_ylim(0.005, 0.35)
+        ax.set_yticks([0.01, 0.03, 0.1, 0.3])
+        ax.set_yticklabels(["0.01", "0.03", "0.1", "0.3"])
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.set_xticks(range(3))
+        ax.set_xticklabels([f"{c}\nn = {len(v)} · {nr[c]['nrmsd_raw_median']:.3f}" for c, v in groups])
+        ax.set_xlim(-0.5, 2.55)
+        ax.set_ylabel("NRMSD of ln I (log scale)")
+        ax.set_title("NRMSD, no error weighting (bar: 95% interval)", loc="left")
+    else:
+        ax.text(0.5, 0.5, "NRMSD not computed", ha="center", va="center", transform=ax.transAxes, color=MUTED)
+        ax.set_axis_off()
+    fig.tight_layout(w_pad=2.5)
+    save(fig, "fig_error_map")
+
+
+def fig_length(d: pd.DataFrame, A: dict) -> None:
+    """E2: raw chi2 against chain length, coloured by class."""
+    m = d[(d["model"] == C.MODEL) & d["clean"]]
+    fig, ax = figure(560, 300)
     for cls in CLASS_ORDER:
         g = m[m["disorder_class"] == cls]
-        ax.scatter(g["length"], np.log10(g["chi2_raw"]), s=14, color=CLS_COL[cls], alpha=0.7, lw=0, label=cls)
-    ax.axhline(np.log10(2), color=RULE, lw=1, ls="--")
+        ax.scatter(g["length"], np.log10(g["chi2_raw"]), s=12, color=CLS_COL[cls], alpha=0.7, lw=0, label=cls)
+    ax.axhline(np.log10(2), color=MUTED, lw=0.8, ls="--")
     ax.set_xscale("log")
     ax.set_xticks([20, 50, 100, 200, 500])
     ax.set_xticklabels(["20", "50", "100", "200", "500"])
     ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax.set_yticks([0, 1, 2, 3])
+    ax.set_yticklabels(["1", "10", "100", "1000"])
     ax.set_xlabel("chain length (residues)")
-    ax.set_ylabel("raw reduced χ² (log10)")
-    ax.set_ylim(-0.6, 3.7)
-    ax.legend(frameon=False, fontsize=9, loc="upper left")
+    ax.set_ylabel("raw reduced χ² (log scale)")
+    ax.set_ylim(-0.6, 3.4)
+    ax.legend(frameon=False, loc="upper left")
     e2 = A["expectations"]["E2"]
-    ax.set_title(f"By chain length (folded: ρ = {e2['spearman_rho']:+.2f}, p = {e2['p']:.2g})", fontsize=10,
-                 loc="left")
+    ax.set_title(f"Folded proteins: Spearman ρ = {e2['spearman_rho']:+.2f}, p = {e2['p']:.2g}", loc="left")
     fig.tight_layout()
-    fig.savefig(OUT / "fig_error_map.png")
-    plt.close(fig)
+    save(fig, "fig_length")
 
 
 def fig_rg(d: pd.DataFrame) -> None:
     """Ensemble Rg against experimental Guinier Rg."""
     m = d[(d["model"] == C.MODEL) & d["clean"]].dropna(subset=["rg_exp", "rg_model"])
-    fig, ax = plt.subplots(figsize=(5.2, 5))
+    fig, ax = figure(480, 420)
     lim = [0.8 * min(m["rg_exp"].min(), m["rg_model"].min()), 1.1 * max(m["rg_exp"].max(), m["rg_model"].max())]
-    ax.plot(lim, lim, color=RULE, lw=1)
+    ax.plot(lim, lim, color=MUTED, lw=0.8)
     for cls in CLASS_ORDER:
         g = m[m["disorder_class"] == cls]
-        ax.scatter(g["rg_exp"], g["rg_model"], s=16, color=CLS_COL[cls], alpha=0.75, lw=0, label=cls)
+        ax.scatter(g["rg_exp"], g["rg_model"], s=14, color=CLS_COL[cls], alpha=0.75, lw=0, label=cls)
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(lim)
@@ -95,364 +155,336 @@ def fig_rg(d: pd.DataFrame) -> None:
         axis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_xlabel("experimental Rg (Å, Guinier)")
     ax.set_ylabel("BioEmu-1 ensemble Rg (Å)")
-    ax.legend(frameon=False, fontsize=9, loc="upper left")
-    ax.set_title("Ensemble size against measured size; above the line: too extended", fontsize=10, loc="left")
+    ax.legend(frameon=False, loc="upper left")
+    ax.set_title("Above the diagonal: ensemble larger than measured", loc="left")
     fig.tight_layout()
-    fig.savefig(OUT / "fig_rg.png")
-    plt.close(fig)
+    save(fig, "fig_rg")
+
+
+def fig_rg_robustness(d: pd.DataFrame, A: dict) -> None:
+    """Result 2: Rg ratio per class from the curves (left) and curve against Cα coordinates (right)."""
+    R = A["rg_robustness"]
+    m = d[(d["model"] == C.MODEL) & d["clean"]].dropna(subset=["rg_ratio"])
+    fig, axes = figure(720, 340, ncols=2, gridspec_kw={"width_ratios": [1.05, 1]})
+    yt = [0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5]
+
+    def frame(ax):
+        ax.set_yscale("log")
+        ax.set_yticks(yt)
+        ax.set_yticklabels([str(t) for t in yt])
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.set_ylim(0.58, 2.7)
+        ax.axhline(1, color=MUTED, lw=0.8, ls="--")
+
+    ax = axes[0]
+    frame(ax)
+    xl = []
+    for i, cls in enumerate(CLASS_ORDER):
+        g = m[m["disorder_class"] == cls]
+        x = i + np.random.default_rng(i).uniform(-0.22, 0.22, len(g))
+        ax.scatter(x, g["rg_ratio"], s=12 if cls != "disordered" else 18, color=CLS_COL[cls], alpha=0.55, lw=0)
+        st = R["curve_rg_ratio_by_class"][cls]
+        ax.plot([i - 0.3, i + 0.3], [st["median"]] * 2, color=INK, lw=2)
+        ax.plot([i + 0.36, i + 0.36], st["ci95"], color=INK, lw=1.6)
+        xl.append(f"{cls}\nn = {st['n']} · {st['median']:.2f}")
+    ax.set_xticks(range(3))
+    ax.set_xticklabels(xl, fontsize=9.5)
+    ax.set_xlim(-0.5, 2.55)
+    ax.plot([-0.42, -0.22], [2.42, 2.42], color=MUTED, lw=0.8, ls="--")
+    ax.text(-0.18, 2.42, "ratio 1: predicted size matches experiment", fontsize=9.5, color=MUTED, va="center")
+    ax.annotate("Expected: over-compaction\nObserved: extension", xy=(2, R["curve_rg_ratio_by_class"]["disordered"]["median"]),
+                xytext=(0.62, 1.9), fontsize=9.5, color=INK, ha="left", va="center",
+                arrowprops={"arrowstyle": "-|>", "color": MUTED, "lw": 0.8})
+    ax.set_ylabel("ensemble Rg / experimental Rg")
+    ax.set_title("From the scattering curves (bar: 95% interval)", loc="left")
+    ax = axes[1]
+    cr = R.get("coordinate_rg", {}).get("by_class", {})
+    p = C.RESULTS / "coord_rg.csv"
+    if cr and p.exists():
+        frame(ax)
+        tab = pd.read_csv(p)
+        tab = tab[tab["label"].isin(m["label"])]
+        pos, ticks, labels = 0.0, [], []
+        for cls in ("folded", "disordered"):
+            if cls not in cr:
+                continue
+            g = tab[tab["disorder_class"] == cls]
+            for col, nm, key in (("ratio_curve_exp", "curve", "curve_over_exp"),
+                                 ("ratio_coord_exp", "Cα coords", "coord_over_exp")):
+                x = pos + np.random.default_rng(int(10 * pos)).uniform(-0.22, 0.22, len(g))
+                ax.scatter(x, g[col], s=14, color=CLS_COL[cls], alpha=0.55 if nm == "curve" else 0.35, lw=0,
+                           marker="o" if nm == "curve" else "D")
+                ax.plot([pos - 0.3, pos + 0.3], [cr[cls][f"{key}_median"]] * 2, color=INK, lw=2)
+                ax.plot([pos + 0.36, pos + 0.36], cr[cls][f"{key}_ci95"], color=INK, lw=1.6)
+                ticks.append(pos)
+                labels.append(f"{cls}\n{nm}\n{cr[cls][f'{key}_median']:.2f}")
+                pos += 1.0
+            pos += 0.5
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(labels, fontsize=9.5)
+        ax.set_xlim(-0.5, pos - 0.6)
+        ax.set_title(f"Curve and conformer coordinates ({cr['disordered']['n']} + {cr['folded']['n']})", loc="left")
+    else:
+        ax.text(0.5, 0.5, "coordinate Rg not computed\n(run `bsc coordrg`)", ha="center", va="center",
+                transform=ax.transAxes, color=MUTED)
+        ax.set_axis_off()
+    fig.tight_layout(w_pad=2.0)
+    save(fig, "fig_rg_robustness")
+
+
+def fig_kinds(d: pd.DataFrame, paths: list[dict], A: dict) -> None:
+    """Result 3: the four kinds as one stacked bar, and one representative reweighting path."""
+    m = d[(d["model"] == C.MODEL) & d["clean"]]
+    counts = m["resolvability"].value_counts().reindex(analyse.KINDS, fill_value=0)
+    n = int(counts.sum())
+    fig, axes = figure(720, 220, ncols=2, gridspec_kw={"width_ratios": [1.6, 1]})
+    ax = axes[0]
+    left = 0.0
+    names = ["raw fit", "modestly\nreweightable", "strongly\nreweightable", "target fit\nnot reached"]
+    for k, (kind, c, nm) in enumerate(zip(analyse.KINDS, KIND_GREYS, names, strict=True)):
+        w = counts[kind] / n
+        ax.barh(0, w, left=left, color=c, height=0.5, edgecolor="white", lw=2)
+        ax.text(left + w / 2, 0, f"{counts[kind]}\n{100 * w:.0f}%", ha="center", va="center", fontsize=9.5,
+                color=INK if k < 2 else "white")
+        if k == 1:      # the narrow segment's name goes below the bar so neighbouring names do not collide
+            ax.text(left + w / 2, -0.33, nm, ha="center", va="top", fontsize=9.5, color=INK)
+        else:
+            ax.text(left + w / 2, 0.33, nm, ha="center", va="bottom", fontsize=9.5, color=INK)
+        left += w
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-1.0, 0.75)
+    ax.set_axis_off()
+    ax.text(0, -0.82, f"{n} profiles · kinds read where the path first reaches χ² ≤ 2; φ threshold 0.5",
+            fontsize=9.5, color=MUTED, va="top")
+    ax = axes[1]
+    lab = A.get("representative_path")
+    P = pd.DataFrame(paths)
+    g = P[P["label"] == lab].sort_values("theta", ascending=False) if lab else P.iloc[:0]
+    if len(g):
+        ax.plot(g["phi"], g["chi2"], color=CLS_COL[m.set_index("label").loc[lab, "disorder_class"]], lw=1.6,
+                marker="o", ms=3)
+        ax.axhline(2, color=MUTED, lw=0.8, ls="--")
+        hit = g[g["chi2"] <= 2]
+        if len(hit):
+            ph = hit.iloc[0]
+            ax.plot([ph["phi"]], [ph["chi2"]], "o", ms=7, mfc="white", mec=INK, mew=1.2)
+            ax.annotate(f"χ² ≤ 2 at φ = {ph['phi']:.2f}", xy=(ph["phi"], ph["chi2"]), xytext=(0.6, 0.62),
+                        textcoords="axes fraction", fontsize=9.5, arrowprops={"arrowstyle": "-", "color": MUTED, "lw": 0.8})
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(1.05, max(0.005, 0.7 * g["phi"].min()))
+        ax.set_xlabel("φ kept (← more reweighting)")
+        ax.set_ylabel("reduced χ²")
+        ax.set_title(f"{lab}, strongly reweightable", loc="left")
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+        yt = [t for t in (1, 1.5, 2, 3, 5, 10, 20, 50, 100) if g["chi2"].min() * 0.8 <= t <= g["chi2"].max() * 1.2]
+        ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(yt))
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FixedFormatter([f"{t:g}" for t in yt]))
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    else:
+        ax.set_axis_off()
+    fig.tight_layout(w_pad=1.5)
+    save(fig, "fig_kinds")
 
 
 def fig_resolvability(d: pd.DataFrame, paths: list[dict]) -> None:
-    """Reweighting paths (chi2 against effective sample fraction) and the class breakdown."""
+    """Every reweighting path (chi2 against effective sample fraction) and the kinds by class."""
     m = d[(d["model"] == C.MODEL) & d["clean"]].set_index("label")
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [1.6, 1]})
+    fig, axes = figure(720, 300, ncols=2, gridspec_kw={"width_ratios": [1.5, 1]})
     ax = axes[0]
     P = pd.DataFrame(paths)
     for lab, g in P.groupby("label"):
         if lab not in m.index:
             continue
         g = g.sort_values("phi", ascending=False)
-        ax.plot(g["phi"], g["chi2"], color=CLS_COL[m.loc[lab, "disorder_class"]], alpha=0.25, lw=0.9)
-    ax.axhline(2, color=RULE, lw=1, ls="--")
+        ax.plot(g["phi"], g["chi2"], color=CLS_COL[m.loc[lab, "disorder_class"]], alpha=0.25, lw=0.8)
+    ax.axhline(2, color=MUTED, lw=0.8, ls="--")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(1.05, 0.005)
     ax.set_ylim(0.5, 300)
-    ax.set_xlabel("effective sample fraction φ kept  (← more reweighting)")
+    for axis in (ax.xaxis, ax.yaxis):
+        axis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+        axis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax.set_xlabel("φ kept (← more reweighting)")
     ax.set_ylabel("reduced χ²")
-    ax.set_title("How far each ensemble must be reweighted to fit", fontsize=10, loc="left")
+    ax.set_title("Every path, coloured by class", loc="left")
     ax = axes[1]
-    order = analyse.KINDS
     tab = (m.groupby(["disorder_class", "resolvability"]).size().unstack(fill_value=0)
-           .reindex(index=CLASS_ORDER, columns=order, fill_value=0))
+           .reindex(index=CLASS_ORDER, columns=analyse.KINDS, fill_value=0))
     share = tab.div(tab.sum(axis=1), axis=0)
     left = np.zeros(3)
-    greys = ["#B9C0C6", "#8A939B", "#5B646E", "#16191D"]
-    for col, c in zip(order, greys, strict=True):
-        ax.barh(range(3), share[col], left=left, color=c, label=col, height=0.6)
+    for col, c in zip(analyse.KINDS, KIND_GREYS, strict=True):
+        ax.barh(range(3), share[col], left=left, color=c, label=col, height=0.6, edgecolor="white", lw=1.5)
         left += share[col].to_numpy()
     ax.set_yticks(range(3))
-    ax.set_yticklabels(CLASS_ORDER)
+    ax.set_yticklabels(["folded", "partly\ndisordered", "disordered"])
     ax.set_xlim(0, 1)
     ax.set_xlabel("share of entries")
-    ax.legend(frameon=False, fontsize=8, ncol=2, loc="lower center", bbox_to_anchor=(0.5, 1.0))
+    ax.legend(frameon=False, fontsize=9.5, ncol=2, loc="lower center", bbox_to_anchor=(0.4, 1.0))
     ax.invert_yaxis()
     fig.tight_layout()
-    fig.savefig(OUT / "fig_resolvability.png")
-    plt.close(fig)
+    save(fig, "fig_resolvability")
 
 
-def fig_models(A: dict, d: pd.DataFrame) -> None:
-    """Raw chi2 by class for every model in the archive."""
+def fig_models(A: dict) -> None:
+    """Model comparison: median raw chi2 by class per model (left) and the disordered Rg ratio (right);
+    BioEmu-1 and PepTron emphasised, single-structure predictors grouped below."""
     comps = [r["model"] for r in A["model_comparison"]]
-    models = [C.MODEL] + [m for m in comps if m not in SINGLE_STRUCTURE] + [m for m in comps if m in SINGLE_STRUCTURE]
+    gens = sorted([m for m in comps if m not in SINGLE_STRUCTURE and m != "peptron"])
+    rows = [C.MODEL] + (["peptron"] if "peptron" in comps else []) + gens + [None] + \
+        [m for m in SINGLE_STRUCTURE if m in comps]
+    ypos, y = {}, 0.0
+    for mo in rows:
+        if mo is None:
+            y += 0.6
+            continue
+        ypos[mo] = y
+        y += 1
     bc = pd.DataFrame(A["by_class"])
-    fig, ax = plt.subplots(figsize=(7.5, 4))
-    w = 0.8 / len(models)
-    for j, mo in enumerate(models):
-        g = bc[bc["model"] == mo].set_index("disorder_class").reindex(CLASS_ORDER)
-        x = np.arange(3) + (j - (len(models) - 1) / 2) * w
-        name = MODEL_NAME.get(mo, mo) + (" (single structure)" if mo in SINGLE_STRUCTURE else "")
-        ax.bar(x, g["chi2_raw_median"], width=w * 0.92, color=MODEL_COL.get(mo, MUTED), label=name,
-               hatch="///" if mo in SINGLE_STRUCTURE else None, edgecolor="white", lw=0)
-        ax.errorbar(x, g["chi2_raw_median"], yerr=[g["chi2_raw_median"] - g["chi2_raw_q25"],
-                                                   g["chi2_raw_q75"] - g["chi2_raw_median"]],
-                    fmt="none", ecolor=INK, lw=0.8, capsize=2)
-    ax.set_yscale("log")
-    ax.set_xticks(range(3))
-    ax.set_xticklabels(CLASS_ORDER)
-    ax.set_ylabel("median raw reduced χ² (bars: quartiles)")
-    ax.axhline(2, color=RULE, lw=1, ls="--")
-    ax.legend(frameon=False, fontsize=8.5, ncol=3)
-    ax.set_title("Unweighted ensembles of each model against the same profiles", fontsize=10, loc="left")
-    fig.tight_layout()
-    fig.savefig(OUT / "fig_models.png")
-    plt.close(fig)
-
-
-def fig_candidates(cand: pd.DataFrame) -> None:
-    top = cand.head(20).iloc[::-1]
-    fig, ax = plt.subplots(figsize=(7.5, 6))
-    cols = top["disorder_class"].map(CLS_COL)
-    ax.barh(range(len(top)), top["priority"], color=cols, height=0.65)
-    ax.set_yticks(range(len(top)))
-    ax.set_yticklabels([f"{r.label}  ·  {int(r.length)} aa  ·  {r.rg_direction}" for r in top.itertuples()],
-                       fontsize=8.5)
-    ax.set_xlabel("measurement priority (log10 raw χ² × resolvability × tractability)")
-    ax.set_title("Top candidates for new measurements", fontsize=10, loc="left")
-    for cls, c in CLS_COL.items():
-        ax.scatter([], [], color=c, label=cls)
-    ax.legend(frameon=False, fontsize=8.5, loc="lower right")
-    fig.tight_layout()
-    fig.savefig(OUT / "fig_candidates.png")
-    plt.close(fig)
-
-
-def fig_rg_robustness(d: pd.DataFrame, A: dict) -> None:
-    """Rg-ratio distributions per class, curve-derived and coordinate-derived, with bootstrap
-    intervals of the median; disordered points coloured by chain length."""
-    R = A["rg_robustness"]
-    m = d[(d["model"] == C.MODEL) & d["clean"]].dropna(subset=["rg_ratio"])
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.6), gridspec_kw={"width_ratios": [1.25, 1]})
-    cmap = plt.cm.viridis
-    norm = matplotlib.colors.LogNorm(vmin=50, vmax=600)
+    rgd = A["rg_ratio_disordered_by_model"]
+    fig, axes = figure(720, 300, ncols=2, sharey=True, gridspec_kw={"width_ratios": [1.45, 1]})
+    strong = {C.MODEL, "peptron"}
+    marker = {"folded": "o", "partly disordered": "s", "disordered": "^"}
     ax = axes[0]
-    xlabels = []
-    for i, cls in enumerate(CLASS_ORDER):
-        g = m[m["disorder_class"] == cls]
-        x = i + np.random.default_rng(i).uniform(-0.22, 0.22, len(g))
-        if cls == "disordered":
-            sc = ax.scatter(x, g["rg_ratio"], s=20, c=g["length"], cmap=cmap, norm=norm, lw=0, alpha=0.9)
-        else:
-            ax.scatter(x, g["rg_ratio"], s=12, color=CLS_COL[cls], alpha=0.45, lw=0)
-        st = R["curve_rg_ratio_by_class"][cls]
-        ax.plot([i - 0.32, i + 0.32], [st["median"]] * 2, color=INK, lw=2)
-        ax.plot([i + 0.36, i + 0.36], st["ci95"], color=INK, lw=1.6)
-        xlabels.append(f"{cls}\nn = {st['n']}\n{st['median']:.2f} [{st['ci95'][0]:.2f}, {st['ci95'][1]:.2f}]")
-    ax.axhline(1, color=RULE, lw=1, ls="--")
-    ax.set_xticks(range(3))
-    ax.set_xticklabels(xlabels, fontsize=8.5)
-    ax.set_yscale("log")
-    ax.set_yticks([0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5])
-    ax.set_yticklabels(["0.6", "0.8", "1.0", "1.2", "1.5", "2.0", "2.5"])
-    ax.set_ylabel("ensemble Rg / experimental Rg (from the curves)")
-    ax.set_ylim(0.58, 2.6)
-    ax.set_title("Curve-derived ratio, every clean entry (bars: median and 95% interval)", fontsize=10, loc="left")
-    cb = fig.colorbar(sc, ax=ax, pad=0.01, fraction=0.05, ticks=[50, 100, 200, 400])
-    cb.ax.set_yticklabels(["50", "100", "200", "400"])
-    cb.ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-    cb.set_label("chain length (disordered)", fontsize=8.5)
-    cb.ax.tick_params(labelsize=8)
+    for mo, yy in ypos.items():
+        g = bc[bc["model"] == mo].set_index("disorder_class")
+        vals = [g.loc[c, "chi2_raw_median"] for c in CLASS_ORDER if c in g.index]
+        ax.plot([min(vals), max(vals)], [yy, yy], color=RULE, lw=1.2, zorder=1)
+        for cls in CLASS_ORDER:
+            if cls in g.index:
+                ax.scatter(g.loc[cls, "chi2_raw_median"], yy, marker=marker[cls], s=42 if mo in strong else 28,
+                           color=CLS_COL[cls], alpha=1.0 if mo in strong else 0.45, lw=0, zorder=2,
+                           label=cls if mo == C.MODEL else None)
+    ax.axvline(2, color=MUTED, lw=0.8, ls="--")
+    ax.set_xscale("log")
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    ax.set_xlabel("median raw reduced χ² (log scale)")
+    ax.set_yticks(list(ypos.values()))
+    ax.set_yticklabels([MODEL_NAME.get(mo, mo) for mo in ypos])
+    for t, mo in zip(ax.get_yticklabels(), ypos, strict=True):
+        t.set_color(INK if mo in strong else MUTED)
+        t.set_fontweight("bold" if mo in strong else "normal")
+    ax.invert_yaxis()
+    ax.legend(frameon=False, fontsize=9.5, loc="lower right", handletextpad=0.2)
+    if SINGLE_STRUCTURE[0] in ypos:
+        ax.text(ax.get_xlim()[0], ypos[SINGLE_STRUCTURE[0]] - 0.8, " single-structure predictors", fontsize=9.5,
+                color=MUTED, va="center")
+    ax.set_title("Raw fit by class", loc="left")
     ax = axes[1]
-    cr = R.get("coordinate_rg", {}).get("by_class", {})
-    p = C.RESULTS / "coord_rg.csv"
-    if cr and p.exists():
-        tab = pd.read_csv(p)
-        tab = tab[tab["label"].isin(m["label"])]
-        pos = 0
-        ticks, labels = [], []
-        for cls in ("folded", "disordered"):
-            if cls not in cr:
-                continue
-            g = tab[tab["disorder_class"] == cls]
-            for col, nm in (("ratio_curve_exp", "curve"), ("ratio_coord_exp", "Cα coordinates")):
-                x = pos + np.random.default_rng(int(10 * pos)).uniform(-0.25, 0.25, len(g))
-                if cls == "disordered":
-                    ax.scatter(x, g[col], s=18, c=g["length"], cmap=cmap, norm=norm, lw=0, alpha=0.9)
-                else:
-                    ax.scatter(x, g[col], s=12, color=CLS_COL[cls], alpha=0.5, lw=0)
-                key = "curve_over_exp" if nm == "curve" else "coord_over_exp"
-                ax.plot([pos - 0.35, pos + 0.35], [cr[cls][f"{key}_median"]] * 2, color=INK, lw=2)
-                ax.plot([pos + 0.4, pos + 0.4], cr[cls][f"{key}_ci95"], color=INK, lw=1.6)
-                ticks.append(pos)
-                lo, hi = cr[cls][f"{key}_ci95"]
-                labels.append(f"{cls}\n{nm}\n{cr[cls][f'{key}_median']:.2f} [{lo:.2f}, {hi:.2f}]")
-                pos += 1.4
-            pos += 0.4
-        ax.axhline(1, color=RULE, lw=1, ls="--")
-        ax.set_xticks(ticks)
-        ax.set_xticklabels(labels, fontsize=7.5)
-        ax.set_yscale("log")
-        ax.set_yticks([0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5])
-        ax.set_yticklabels(["0.6", "0.8", "1.0", "1.2", "1.5", "2.0", "2.5"])
-        ax.set_ylim(0.58, 2.9)
-        ax.set_ylabel("model Rg / experimental Rg")
-        n_d = cr.get("disordered", {}).get("n", 0)
-        n_f = cr.get("folded", {}).get("n", 0)
-        ax.set_title(f"From conformer coordinates ({n_d} disordered, {n_f} folded)", fontsize=10, loc="left")
-    else:
-        ax.text(0.5, 0.5, "coordinate Rg not computed\n(run `bsc coordrg`)", ha="center", va="center",
-                transform=ax.transAxes, color=MUTED)
-        ax.set_axis_off()
-    fig.tight_layout()
-    fig.savefig(OUT / "fig_rg_robustness.png")
-    plt.close(fig)
+    for mo, yy in ypos.items():
+        if mo not in rgd:
+            continue
+        ax.plot([1, rgd[mo]], [yy, yy], color=RULE, lw=1.2, zorder=1)
+        ax.scatter(rgd[mo], yy, s=42 if mo in strong else 28, color=MODEL_COL.get(mo, MUTED) if mo in strong else MUTED,
+                   alpha=1.0 if mo in strong else 0.6, lw=0, zorder=2)
+        ax.text(rgd[mo] + (0.03 if rgd[mo] >= 1 else -0.03), yy, f"{rgd[mo]:.2f}", va="center", fontsize=9.5,
+                ha="left" if rgd[mo] >= 1 else "right", color=INK if mo in strong else MUTED, zorder=3,
+                bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.3})
+    ax.axvline(1, color=MUTED, lw=0.8)
+    ax.axvline(1.1, color=MUTED, lw=0.8, ls="--")
+    ax.text(1.12, -0.55, "1.1", fontsize=9.5, color=MUTED, va="center")
+    ax.set_xlim(0.2, 1.5)
+    ax.set_xlabel("disordered: median Rg ratio")
+    ax.set_title("Size of disordered ensembles", loc="left")
+    fig.tight_layout(w_pad=1.0)
+    save(fig, "fig_models")
+
+
 
 
 def fig_predict() -> None:
-    """D2: out-of-fold prediction of the error and the kind; D1: the selection-rule evaluation."""
+    """Result 4: held-out prediction of the raw error (A) and the high-discrepancy target yield of
+    each acquisition policy among the top 10 (B)."""
     pp, sp = C.RESULTS / "predict.json", C.RESULTS / "select_eval.json"
     if not (pp.exists() and sp.exists()):
         print("  fig_predict: predict.json or select_eval.json missing; skipped", flush=True)
         return
     P, S = json.load(open(pp)), json.load(open(sp))
     oof = pd.read_csv(C.RESULTS / "predict_oof.csv")
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8.6))
-    ax = axes[0, 0]
+    fig, axes = figure(720, 320, ncols=2, gridspec_kw={"width_ratios": [1, 1.15]})
+    ax = axes[0]
     best = P["best_regressor"]
     for cls in CLASS_ORDER:
         g = oof[oof["disorder_class"] == cls]
-        ax.scatter(g[f"pred_{best}"], g["y_log10_chi2"], s=12, color=CLS_COL[cls], alpha=0.7, lw=0, label=cls)
-    lim = [oof["y_log10_chi2"].min() - 0.1, oof["y_log10_chi2"].max() + 0.1]
-    ax.plot(lim, lim, color=RULE, lw=1)
-    ax.set_xlabel(f"predicted log₁₀ raw χ² ({'ridge' if best == 'ridge' else 'boosted trees'}, out of fold)")
+        ax.scatter(g[f"pred_{best}"], g["y_log10_chi2"], s=11, color=CLS_COL[cls], alpha=0.65, lw=0, label=cls)
+    lo, hi = oof["y_log10_chi2"].min() - 0.1, oof["y_log10_chi2"].max() + 0.1
+    ax.plot([lo, hi], [lo, hi], color=MUTED, lw=0.8)
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    ax.set_aspect("equal")
+    ax.set_xlabel("predicted log₁₀ raw χ² (held out)")
     ax.set_ylabel("observed log₁₀ raw χ²")
-    r = P["regression"]
-    ax.set_title(f"a · R² = {r[best]['r2']['mean']:.2f} ± {r[best]['r2']['sd']:.2f} "
-                 f"(class mean {r['class_mean']['r2']['mean']:.2f})", fontsize=10, loc="left")
-    ax.legend(frameon=False, fontsize=8.5, loc="upper left")
-    ax = axes[0, 1]
+    r2 = P["regression"][best]["r2"]["mean"]
+    ax.set_title(f"A · the model explains {100 * r2:.0f}% of held-out variation", loc="left")
+    ax.legend(frameon=False, fontsize=9.5, loc="lower right", handletextpad=0.1)
+    ax = axes[1]
+    k = str(S["top_k"][0])
+    pol = S["policies"][k]
+    rnd_sd = S["random_single_draw_sd"][k]["strong_or_notfit"]
+    bars = [("random", pol["random"]["strong_or_notfit"]["mean"], rnd_sd, RULE),
+            ("predicted\nerror", pol["predicted error"]["strong_or_notfit"]["mean"],
+             pol["predicted error"]["strong_or_notfit"]["sd"], MODEL_COL["alphafold"]),
+            ("acquisition\npolicy fed\npredictions", pol["predicted priority"]["strong_or_notfit"]["mean"],
+             pol["predicted priority"]["strong_or_notfit"]["sd"], ACCENT),
+            ("oracle\nranking", pol["observed priority (ceiling)"]["strong_or_notfit"]["mean"],
+             pol["observed priority (ceiling)"]["strong_or_notfit"]["sd"], "white")]
+    xs = [0, 1, 2, 3.5]
+    for x, (nm, v, e, c) in zip(xs, bars, strict=True):
+        ax.bar(x, v, width=0.68, color=c, edgecolor=INK if nm.startswith("oracle") else "none", lw=1,
+               hatch="///" if nm.startswith("oracle") else None)
+        ax.errorbar(x, v, yerr=e, fmt="none", ecolor=INK, lw=0.9, capsize=3)
+        ax.text(x, v + e + 0.03, f"{v:.2f}", ha="center", fontsize=9.5, color=INK)
+    ax.axvline(2.75, color=MUTED, lw=0.8, ls=":")
+    ax.text(3.5, 1.22, "uses measured\nSAXS; not\ndeployable", ha="center", fontsize=9.5, color=MUTED, va="center")
+    ax.axhline(S["pool_mean"]["strong_or_notfit"], color=MUTED, lw=0.8, ls="--")
+    ax.text(2.8, S["pool_mean"]["strong_or_notfit"] + 0.02, "pool", ha="left", va="bottom", fontsize=9.5, color=MUTED)
+    ax.set_xticks(xs)
+    ax.set_xticklabels([b[0] for b in bars], fontsize=9.5)
+    ax.set_ylim(0, 1.42)
+    ax.set_xlim(-0.6, 4.2)
+    ax.set_ylabel(f"high-discrepancy target yield, top {k}")
+    ax.set_title("B · what each policy picks, held-out folds", loc="left")
+    fig.tight_layout(w_pad=1.5)
+    save(fig, "fig_predict")
+
+
+def fig_predict_detail() -> None:
+    """Calibration of the tree classifier and permutation importance of the features (details)."""
+    pp = C.RESULTS / "predict.json"
+    if not pp.exists():
+        return
+    P = json.load(open(pp))
+    fig, axes = figure(720, 300, ncols=2)
+    ax = axes[0]
     cal = P["calibration_hgb"]
-    ax.plot([0, 1], [0, 1], color=RULE, lw=1)
+    ax.plot([0, 1], [0, 1], color=MUTED, lw=0.8)
     ax.plot([c["mean_predicted"] for c in cal], [c["observed_rate"] for c in cal], "o-", color=ACCENT, ms=5)
     for c in cal:
-        ax.text(c["mean_predicted"], c["observed_rate"] + 0.03, f"n={c['n']}", ha="center", fontsize=7.5, color=MUTED)
+        ax.text(c["mean_predicted"], c["observed_rate"] + 0.04, f"n={c['n']}", ha="center", fontsize=9.5, color=MUTED)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel("predicted P(strongly reweightable or not fit)\nquintile means, boosted trees, out of fold")
-    ax.set_ylabel("observed share")
+    ax.set_xlabel("predicted probability (quintile means)")
+    ax.set_ylabel("observed high-discrepancy share")
     c = P["classification"]
-    ax.set_title(f"b · AUC trees {c['hgb']['auc']['mean']:.2f} ± {c['hgb']['auc']['sd']:.2f}, "
-                 f"logistic {c['logistic']['auc']['mean']:.2f}\n    Brier {c['hgb']['brier']['mean']:.3f} "
-                 f"against {c['rate']['brier']['mean']:.3f} for the base rate", fontsize=10, loc="left")
-    ax = axes[1, 0]
-    imp = P["permutation_importance_hgb"][:10][::-1]
+    ax.set_title(f"Calibration · AUC {c['hgb']['auc']['mean']:.2f} ± {c['hgb']['auc']['sd']:.2f}", loc="left")
+    ax = axes[1]
+    imp = P["permutation_importance_hgb"][:8][::-1]
     ax.barh(range(len(imp)), [i["mean"] for i in imp], xerr=[i["sd"] for i in imp], color=MODEL_COL["alphafold"],
             height=0.6, error_kw={"lw": 0.8, "ecolor": INK})
     ax.set_yticks(range(len(imp)))
-    ax.set_yticklabels([i["feature"].replace("_", " ") for i in imp], fontsize=8.5)
+    ax.set_yticklabels([i["feature"].replace("_", " ") for i in imp], fontsize=9.5)
     ax.axvline(0, color=INK, lw=0.8)
-    ax.set_xlabel("permutation importance (drop in held-out R², trees)")
-    ax.set_title("c · which features the tree model used", fontsize=10, loc="left")
-    ax = axes[1, 1]
-    pols = ["random", "predicted error", "predicted priority", "observed priority (ceiling)"]
-    short = ["random", "predicted\nerror", "predicted\npriority", "observed priority\n(ceiling)"]
-    cols = [RULE, MODEL_COL["idpsam"], ACCENT, INK]
-    w = 0.38
-    for j, k in enumerate(S["top_k"]):
-        pol = S["policies"][str(k)]
-        x = np.arange(len(pols)) + (j - 0.5) * w
-        v = [pol[p]["strong_or_notfit"]["mean"] for p in pols]
-        e = [pol[p]["strong_or_notfit"]["sd"] for p in pols]
-        ax.bar(x, v, width=w * 0.92, color=cols, alpha=1.0 if j == 0 else 0.55, edgecolor="none")
-        ax.errorbar(x, v, yerr=e, fmt="none", ecolor=INK, lw=0.8, capsize=2)
-        for xi, vi in zip(x, v, strict=True):
-            ax.text(xi, vi + 0.03, f"{vi:.2f}", ha="center", fontsize=7.5, color=MUTED)
-    sd = S["random_single_draw_sd"][str(S["top_k"][0])]["strong_or_notfit"]
-    pm = S["pool_mean"]["strong_or_notfit"]
-    ax.axhspan(pm - sd, pm + sd, color=RULE, alpha=0.5, lw=0)
-    ax.axhline(pm, color=MUTED, lw=1, ls="--")
-    ax.set_xticks(range(len(pols)))
-    ax.set_xticklabels(short, fontsize=8)
-    ax.set_ylim(0, 1.34)
-    ax.set_ylabel("share strongly reweightable or not fit\namong the selected entries")
-    handles = [matplotlib.patches.Patch(color=MUTED, label=f"top {S['top_k'][0]}"),
-               matplotlib.patches.Patch(color=MUTED, alpha=0.55, label=f"top {S['top_k'][1]}"),
-               matplotlib.patches.Patch(color=RULE, alpha=0.5, label="pool mean ± sd of one random pick of 10")]
-    ax.legend(handles=handles, frameon=False, fontsize=8, loc="upper left")
-    ax.set_title("d · what each acquisition policy picks, held-out folds", fontsize=10, loc="left")
+    ax.set_xlabel("drop in held-out R² when permuted")
+    ax.set_title("Permutation importance (trees)", loc="left")
     fig.tight_layout()
-    fig.savefig(OUT / "fig_predict.png")
-    plt.close(fig)
-
-
-# ---- worked examples (A3) -------------------------------------------------------------------------
-POROD_A3_PER_DA = 1.7          # protein volume from mass, for the isovalue that encloses the expected volume
-ENSEMBLES = C.DATA / "Predictions" / "PeptoneDB-SAXS-ensembles"
-
-
-def example_fit(label: str) -> dict | None:
-    """Data, raw and reweighted BioEmu-1 curves and the AlphaFold2 curve for one entry, each scaled to
-    the data, with chi2, Rg and the weights at the chi2 minimum of the path."""
-    exp = score.read_experiment(label)
-    keep = (exp["sigma"] > 0).to_numpy()
-    q, I, s = (exp[c].to_numpy()[keep] for c in ("q", "I", "sigma"))
-    curves = score.read_prediction(C.MODEL, label)
-    af = score.read_prediction("alphafold", label)
-    if curves is None:
-        return None
-    ok = np.isfinite(curves).all(axis=1)
-    idx = np.flatnonzero(ok)
-    curves = curves[ok][:, keep]
-    raw = saxs.ensemble_curve(curves)
-    path, ws = saxs.reweighting_curve(curves, I, s, C.THETA_GRID, return_weights=True)
-    i_best = int(np.argmin([p["chi2"] for p in path]))
-    w = ws[i_best]
-    rew = saxs.ensemble_curve(curves, w)
-    out = {"label": label, "q": q, "I": I, "sigma": s, "curves": {}, "phi_reweighted": saxs.kish_fraction(w),
-           "top_conformer": int(idx[int(np.argmax(w))]), "top_weight": float(w.max()),
-           "rg_raw": saxs.guinier(q, raw, 0.01 * raw + 1e-9, C.GUINIER_QRG_MAX)["rg"],
-           "rg_reweighted": saxs.guinier(q, rew, 0.01 * rew + 1e-9, C.GUINIER_QRG_MAX)["rg"],
-           "rg_exp": saxs.guinier(q, I, s, C.GUINIER_QRG_MAX)["rg"]}
-    for name, m in (("raw", raw), ("reweighted", rew), ("alphafold", af[0][keep] if af is not None else None)):
-        if m is None:
-            continue
-        c, b = saxs.scale_and_background(m, I, s)
-        out["curves"][name] = {"fit": c * m + b, "chi2": saxs.chi2(m, I, s)}
-    return out
-
-
-def principal_frame(x: np.ndarray, weights: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
-    """Centroid and rotation (columns: principal axes, longest first, right-handed)."""
-    wts = np.ones(len(x)) if weights is None else weights
-    c = (wts[:, None] * x).sum(0) / wts.sum()
-    cov = ((x - c) * wts[:, None]).T @ (x - c) / wts.sum()
-    vals, vecs = np.linalg.eigh(cov)
-    R = vecs[:, ::-1]
-    if np.linalg.det(R) < 0:
-        R[:, 2] *= -1
-    return c, R
-
-
-def envelope_mesh(mrc_path, volume_A3: float, upsample: int = 3):
-    """Marching-cubes mesh of the averaged DENSS map at the isovalue enclosing `volume_A3`."""
-    import mrcfile
-    from scipy import ndimage
-    from skimage import measure
-    with mrcfile.open(mrc_path) as m:
-        rho = np.asarray(m.data, float)
-        vox = float(m.voxel_size.x)
-    rho = np.clip(ndimage.zoom(rho, upsample, order=3), 0, None)
-    vox /= upsample
-    frac = min(0.95, volume_A3 / (rho.size * vox**3))
-    iso = float(np.quantile(rho, 1 - frac))
-    verts, faces, _, _ = measure.marching_cubes(rho, level=iso, spacing=(vox, vox, vox))
-    return verts, faces, rho, vox, iso
-
-
-def dock_trace(label: str, conformer: int, verts: np.ndarray, rho: np.ndarray, vox: float, iso: float):
-    """C-alpha trace of one conformer superposed on the envelope by principal axes. The four proper
-    axis-sign choices and the mirror image of the envelope (SAXS does not fix handedness) are tried;
-    the one placing most C-alpha atoms inside the isosurface is kept."""
-    import mdtraj as md
-    tr = md.load(str(ENSEMBLES / C.MODEL / f"{label}.xtc"), top=str(ENSEMBLES / C.MODEL / f"{label}.pdb"))
-    ca = 10.0 * tr.xyz[conformer][tr.topology.select("name CA")]
-    inside = np.argwhere(rho > iso) * vox
-    c_map, R_map = principal_frame(inside, rho[rho > iso])
-    c_ca, R_ca = principal_frame(ca)
-    x_frame = (ca - c_ca) @ R_ca
-    best = None
-    for mirror in (1, -1):
-        for sx, sy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-            S = np.diag([sx, sy, sx * sy])
-            cand = x_frame @ S
-            M = np.array([mirror, 1, 1])
-            # back to the map grid to count atoms inside
-            grid = ((cand * M) @ R_map.T + c_map) / vox
-            ijk = np.clip(np.round(grid).astype(int), 0, np.array(rho.shape) - 1)
-            score_in = float(np.mean(rho[ijk[:, 0], ijk[:, 1], ijk[:, 2]] > iso))
-            if best is None or score_in > best[0]:
-                best = (score_in, cand, M)
-    score_in, cand, M = best
-
-    class Place:
-        """Map-frame coordinates -> displayed frame, and displayed trace -> map grid indices."""
-
-        def __call__(self, v):
-            return ((v - c_map) @ R_map) * M
-
-        def grid(self, x):
-            g = ((x * M) @ R_map.T + c_map) / vox
-            return np.clip(np.round(g).astype(int), 0, np.array(rho.shape) - 1)
-
-    place = Place()
-    return cand, place(verts), score_in, place
+    save(fig, "fig_predict_detail")
 
 
 def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
-    """One column per class: the fit of three curves to the data with residuals, and the DENSS
-    envelope with the highest-weight BioEmu-1 conformer docked inside."""
-    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    """Figure 2: one column per class. The measured profile (every point, with its error as a band),
+    the raw and reweighted BioEmu-1 curves and the AlphaFold2 curve; residuals; and the ribbon of the
+    highest-weight conformer inside the DENSS envelope, rendered by `bsc envelopes`."""
     stats_path = C.RESULTS / "denss_stats.json"
     if not stats_path.exists():
         print("  fig_examples: no results/denss_stats.json (run `bsc envelopes`); tracked figure kept", flush=True)
@@ -460,98 +492,82 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
     stats = json.load(open(stats_path))
     examples = A["examples"]
     need = [C.RESULTS / stats[lab]["avg_map"] for lab in examples.values() if lab in stats]
-    if len(need) < len(examples) or not all(p.exists() for p in need) or not C.SAXS_DIR.exists():
-        print("  fig_examples: DENSS maps or input curves missing; tracked figure kept", flush=True)
+    ribbons = [envelopes.ribbon_png(lab) for lab in examples.values()]
+    if (len(need) < len(examples) or not all(p.exists() for p in need + ribbons) or not C.SAXS_DIR.exists()):
+        print("  fig_examples: DENSS maps, ribbon renderings or input curves missing; tracked figure kept", flush=True)
         return None
+    from PIL import Image
     e = ent.set_index("label")
-    fig = plt.figure(figsize=(12, 9.6))
-    gs = fig.add_gridspec(2, 3, height_ratios=[2.3, 0.9], hspace=0.08, wspace=0.28,
-                          left=0.06, right=0.99, top=0.95, bottom=0.40)
-    gs3 = fig.add_gridspec(1, 3, wspace=0.08, left=0.04, right=0.97, top=0.31, bottom=0.0)
-    col = {"raw": INK, "reweighted": ACCENT, "alphafold": MODEL_COL["alphafold"]}
-    lab_txt = {"raw": "BioEmu-1 raw ensemble", "reweighted": "reweighted at the χ² minimum",
-               "alphafold": "AlphaFold2 single structure"}
+    W, H = 860, 590
+    fig = plt.figure(figsize=(W / PX_PER_IN, H / PX_PER_IN))
+    gs = fig.add_gridspec(2, 3, height_ratios=[2.2, 0.85], hspace=0.07, wspace=0.2,
+                          left=0.065, right=0.99, top=0.95, bottom=0.43)
+    gs3 = fig.add_gridspec(1, 3, wspace=0.06, left=0.03, right=0.99, top=0.345, bottom=0.065)
+    col = {"raw": INK, "operating": ACCENT, "alphafold": MODEL_COL["alphafold"]}
     out = {}
     for j, (cls, label) in enumerate(examples.items()):
-        f = example_fit(label)
+        f = envelopes.example_fit(label)
         st = stats[label]
         ax = fig.add_subplot(gs[0, j])
         axr = fig.add_subplot(gs[1, j], sharex=ax)
         q, I, s = f["q"], f["I"], f["sigma"]
         pos = I > 0
-        thin = slice(None, None, max(1, len(q) // 60))
-        ax.errorbar(q[thin], np.log(np.clip(I[thin], 1e-12, None)), yerr=(s / np.clip(I, 1e-12, None))[thin],
-                    fmt="o", mfc="none", mec=INK, ecolor=MUTED, ms=3.2, mew=0.7, lw=0.6, capsize=0, zorder=1)
-        ax.scatter(q[pos], np.log(I[pos]), s=1.5, color=INK, alpha=0.12, lw=0, zorder=0)
-        y0 = np.log(I[pos]).min() - 0.5
-        for k, name in enumerate(("raw", "reweighted", "alphafold")):
+        y0 = np.log(I[pos]).min() - 0.35 * np.ptp(np.log(I[pos]))
+        lo = np.where(I - s > 0, np.log(np.clip(I - s, 1e-30, None)), y0)
+        hi = np.log(np.clip(I + s, 1e-30, None))
+        ax.fill_between(q, np.maximum(lo, y0), np.maximum(hi, y0), color="#CBD2D8", lw=0, zorder=0)
+        ax.scatter(q[pos], np.log(I[pos]), s=7, facecolors="none", edgecolors=INK, linewidths=0.5, zorder=1)
+        for k, name in enumerate(("alphafold", "raw", "operating")):
             if name not in f["curves"]:
                 continue
             fit = f["curves"][name]["fit"]
             okf = fit > 0
-            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.4 if name != "raw" else 1.2, zorder=3 - k)
-            ax.text(0.97, 0.90 - 0.09 * k, f"χ² = {f['curves'][name]['chi2']:.2f}", transform=ax.transAxes,
-                    ha="right", va="top", color=col[name], fontsize=9.5)
-            axr.plot(q, (fit - I) / s, color=col[name], lw=0.8, alpha=0.9, zorder=3 - k)
-        ax.set_ylim(y0, np.log(I[pos]).max() + 0.4)
-        ax.set_title(f"{cls}: {label} · {int(e.loc[label, 'length'])} residues", fontsize=10, loc="left")
-        ax.set_ylabel("ln I(q)")
+            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.5, zorder=3 + k)
+            axr.plot(q, (fit - I) / s, color=col[name], lw=0.7, alpha=0.9, zorder=3 + k)
+        lines = [("raw", f"BioEmu-1 raw · χ² {f['curves']['raw']['chi2']:.2f}"),
+                 ("operating", f"reweighted, φ {f['phi_operating']:.2f} · χ² {f['curves']['operating']['chi2']:.2f}"),
+                 ("alphafold", f"AlphaFold2 · χ² {f['curves']['alphafold']['chi2']:.1f}")]
+        for k, (name, txt) in enumerate(lines):
+            yy = 0.05 + 0.08 * (3 - k)
+            ax.plot([0.03, 0.09], [yy, yy], color=col[name], lw=2, transform=ax.transAxes)
+            ax.text(0.11, yy, txt, transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
+        ax.scatter([0.06], [0.05], s=9, facecolors="none", edgecolors=INK, linewidths=0.6, transform=ax.transAxes)
+        ax.text(0.11, 0.05, "measured, grey band ± σ", transform=ax.transAxes, va="center", fontsize=9.5, color=INK)
+        ax.set_ylim(y0, np.log(I[pos]).max() + 0.3)
+        ax.set_title(f"{cls}: {label} · {int(e.loc[label, 'length'])} residues", loc="left", fontsize=10)
         plt.setp(ax.get_xticklabels(), visible=False)
-        axr.axhline(0, color=INK, lw=0.8)
+        axr.axhline(0, color=INK, lw=0.7)
         for g in (-3, 3):
-            axr.axhline(g, color=RULE, lw=0.8, ls="--")
+            axr.axhline(g, color=MUTED, lw=0.6, ls="--")
         lim = np.nanmax(np.abs(np.concatenate([(f["curves"][n]["fit"] - I) / s for n in f["curves"]])))
         axr.set_ylim(-min(lim * 1.05, 25), min(lim * 1.05, 25))
-        axr.set_ylabel("(I$_{model}$ − I$_{exp}$)/σ", fontsize=8)
         axr.set_xlabel("q (Å⁻¹)")
         if j == 0:
-            for name in ("raw", "reweighted", "alphafold"):
-                ax.plot([], [], color=col[name], lw=1.4, label=lab_txt[name])
-            ax.plot([], [], "o", mfc="none", mec=INK, ms=3.5, label="experiment", lw=0)
-            ax.legend(frameon=False, fontsize=8, loc="lower left")
-        # envelope with the docked top-weight conformer: an inner surface enclosing the protein's
-        # expected volume and a fainter outer surface at the volume DENSS assigned to the particle
-        ax3 = fig.add_subplot(gs3[0, j], projection="3d")
-        volume = POROD_A3_PER_DA * 1000.0 * float(e.loc[label, "mw_seq_kda"])
+            ax.set_ylabel("ln I(q)")
+            axr.set_ylabel("residual / σ")
+        # the ribbon rendering, with the docking statistics recomputed here
+        volume = envelopes.POROD_A3_PER_DA * 1000.0 * float(e.loc[label, "mw_seq_kda"])
         support = float(st.get("support_volume_mean_A3", volume))
-        verts, faces, rho, vox, iso = envelope_mesh(C.RESULTS / st["avg_map"], volume)
-        trace, vshow, inside, place = dock_trace(label, f["top_conformer"], verts, rho, vox, iso)
-        ax3.add_collection3d(Poly3DCollection(vshow[faces], alpha=0.30, facecolor="#9DB4CC", edgecolor="none"))
-        pts = [vshow, trace]
-        if support > 1.3 * volume:
-            v2, f2, _, _, iso2 = envelope_mesh(C.RESULTS / st["avg_map"], support)
-            v2 = place(v2)
-            ax3.add_collection3d(Poly3DCollection(v2[f2], alpha=0.10, facecolor="#9DB4CC", edgecolor="none"))
-            pts.append(v2)
-            inside_outer = float(np.mean(rho[tuple(place.grid(trace).T)] > iso2))
-        else:
-            inside_outer = inside
-        ax3.plot(trace[:, 0], trace[:, 1], trace[:, 2], color=INK, lw=1.0, zorder=5)
-        ax3.scatter(trace[:1, 0], trace[:1, 1], trace[:1, 2], color=ACCENT, s=14, zorder=6)
-        allp = np.vstack(pts)
-        lo, hi = allp.min(axis=0), allp.max(axis=0)
-        span = (hi - lo) * 1.04
-        ax3.set_xlim(lo[0] - 0.02 * span[0], hi[0] + 0.02 * span[0])
-        ax3.set_ylim(lo[1] - 0.02 * span[1], hi[1] + 0.02 * span[1])
-        ax3.set_zlim(lo[2] - 0.02 * span[2], hi[2] + 0.02 * span[2])
-        ax3.set_box_aspect(tuple(span / span.max()), zoom=1.45)
-        ax3.view_init(elev=16, azim=-62)
+        dk = envelopes.docked_example(label, f["top_conformer"], C.RESULTS / st["avg_map"], volume, support)
+        ax3 = fig.add_subplot(gs3[0, j])
+        ax3.imshow(np.asarray(Image.open(envelopes.ribbon_png(label)).convert("RGB")), interpolation="lanczos")
         ax3.set_axis_off()
-        ax3.text2D(0.0, 1.08, f"DENSS envelope · {st['n_maps']} maps · {st.get('resolution_A', 0):.0f} Å · "
-                   f"Dmax {st['dmax_A']:.0f} Å\ntop conformer (w = {f['top_weight']:.2f}): "
-                   f"{100 * inside:.0f}% of Cα inside the inner envelope",
-                   transform=ax3.transAxes, fontsize=8.2, color=MUTED, va="top")
+        fig.text(gs3[0, j].get_position(fig).x0 + 0.01, 0.018, f"{st.get('resolution_A', 0):.0f} Å envelope · "
+                 f"w = {f['top_weight']:.2f} · {100 * dk['inside']:.0f}% of Cα inside", fontsize=9.5, color=MUTED)
         out[label] = {"class": cls, "length": int(e.loc[label, "length"]),
                       "chi2": {k: float(v["chi2"]) for k, v in f["curves"].items()},
+                      "chi2_minimum": f["chi2_minimum"], "phi_operating": float(f["phi_operating"]),
+                      "phi_minimum": float(f["phi_minimum"]), "operating_is_raw": f["operating_is_raw"],
+                      "operating_reached": f["operating_reached"],
                       "rg_exp": float(f["rg_exp"]), "rg_raw": float(f["rg_raw"]),
-                      "rg_reweighted": float(f["rg_reweighted"]), "phi_reweighted": float(f["phi_reweighted"]),
+                      "rg_operating": float(f["rg_operating"]), "rg_minimum": float(f["rg_minimum"]),
                       "top_conformer": f["top_conformer"], "top_weight": f["top_weight"],
-                      "ca_inside_envelope": inside, "ca_inside_support_surface": inside_outer,
+                      "ca_inside_envelope": dk["inside"], "ca_inside_support_surface": dk["inside_outer"],
+                      "chain_breaks": dk["chain_breaks"], "n_points": int(len(q)), "n_points_positive": int(pos.sum()),
                       "isovalue_volume_A3": volume, "support_volume_A3": support,
                       "denss": {k: st[k] for k in ("dmax_A", "n_maps", "chi2_median", "resolution_A",
                                                   "maps_accepted", "rg_per_map_mean") if k in st}}
-    fig.savefig(OUT / "fig_examples.png")
-    plt.close(fig)
+    save(fig, "fig_examples")
     json.dump(out, open(C.RESULTS / "examples.json", "w"), indent=1)
     return out
 
@@ -564,6 +580,10 @@ def f2(x) -> str:
     return "n/a" if x is None or not np.isfinite(x) else f"{x:.2f}"
 
 
+ARM1_MAX_LENGTH = 350      # residues; constructs above this are harder to express and to purify monomeric
+ARM1_LISTED = 12           # systems listed; the order is by observed raw chi2, a sort key, not a value of measuring
+
+
 def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFrame) -> dict:
     """The two arms of the campaign, from results only.
 
@@ -572,7 +592,10 @@ def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFram
     the disordered scaling-law Rg by more than 10% (a pre-acquisition quantity), spanning length and
     composition, with matched controls whose ratio is within 10% of 1."""
     from bsc import features
-    arm1 = cand[cand["resolvability"].isin([analyse.KIND_STRONG, analyse.KIND_MODEST])].head(12)
+    elig = cand[cand["resolvability"].isin([analyse.KIND_STRONG, analyse.KIND_MODEST])
+                & (cand["length"] <= ARM1_MAX_LENGTH)
+                & cand["disorder_class"].isin(["folded", "partly disordered"])]
+    arm1 = elig.sort_values("chi2_raw", ascending=False).head(ARM1_LISTED)
     m = d[(d["model"] == C.MODEL) & d["clean"]].copy()
     m["kind"] = m["resolvability"]
     e = ent.set_index("label")
@@ -610,6 +633,7 @@ def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFram
     P = json.load(open(C.RESULTS / "predict.json")) if (C.RESULTS / "predict.json").exists() else None
     predictive = bool(P and max(P["regression"]["ridge"]["r2"]["mean"], P["regression"]["hgb"]["r2"]["mean"]) >= 0.2)
     out = {"arm1": {"replication": json.loads(arm1.to_json(orient="records")),
+                    "n_eligible": int(len(elig)), "max_length": ARM1_MAX_LENGTH,
                     "novel_acquisition_possible": predictive,
                     "predictor_r2": None if P is None else {k: P["regression"][k]["r2"]["mean"]
                                                                for k in ("class_mean", "ridge", "hgb")}},
@@ -667,7 +691,7 @@ def write_campaign(A: dict, cand: pd.DataFrame, arms: dict) -> None:
         k = str(S["top_k"][0])
         pol = S["policies"][k]
         sel_sentence = (f"On held-out folds of the existing pool, the rule fed with predicted quantities picks "
-                        f"{pol['predicted priority']['strong_or_notfit']['mean']:.2f} strongly reweightable or not-fit "
+                        f"{pol['predicted priority']['strong_or_notfit']['mean']:.2f} strongly reweightable or target-not-reached "
                         f"entries per entry chosen (top {k}) against {pol['random']['strong_or_notfit']['mean']:.2f} for "
                         f"random choice and {pol['observed priority (ceiling)']['strong_or_notfit']['mean']:.2f} when the "
                         f"observed quantities are used; the predicted-error policy alone reaches "
@@ -702,47 +726,61 @@ entries are below 1, so the model's disordered ensembles are too extended. {coor
 
 Reweighting each ensemble towards its profile sorts the entries into four kinds:
 {res.get(analyse.KIND_RAW, 0)} raw fits; {res.get(analyse.KIND_MODEST, 0)} modestly reweightable (χ² ≤ 2 while keeping at least half the
-effective sample); {res.get(analyse.KIND_STRONG, 0)} strongly reweightable (χ² ≤ 2 only below that); {res.get(analyse.KIND_NOTFIT, 0)}
-not fit along the path. Expectation E3 is
+effective sample); {res.get(analyse.KIND_STRONG, 0)} strongly reweightable (χ² ≤ 2 only below that, which requires substantial population
+changes); {res.get(analyse.KIND_NOTFIT, 0)} whose target fit is not reached by the tested reweighting procedure. Expectation E3 is
 {'met' if E['E3']['met'] else 'not met'}: {pct(E['E3']['share_phi_above_0.3'])} of entries reach χ² ≈ 1 while
 keeping more than 30% of the effective sample.
 
 As interpretation: a **strongly reweightable** entry is one where the right conformers are present and
-mis-weighted, so a profile of it carries a usable fine-tuning signal; a **not-fit** entry needs a
-different measurement or a different model, because SAXS says the ensemble is wrong without saying how
+mis-weighted, so a profile of it carries a usable fine-tuning signal; an entry whose **target fit is not
+reached** needs a different measurement or a different model, because SAXS says the ensemble is wrong without saying how
 (NMR relaxation or chemical shifts, HDX-MS, single-molecule FRET on labelled constructs); a **modestly
 reweightable** entry needs a small, consistent correction, often of the Rg scale, for which repeat
 measurements at several concentrations matter more than new systems. φ measures how concentrated the
-weights become, not information content; and SAXS is low-dimensional, so distinct ensembles can give the
-same curve.
+weights become, not information gain; SAXS is low-dimensional, so distinct ensembles can give the same
+curve; and a target fit that is not reached does not establish that compatible conformations are absent from
+BioEmu's distribution: it describes this finite ensemble, this forward model and this procedure.
 
-## 3. Arm 1, model improvement: high-error, reweightable monomers under one standard condition
+## 3. Arm 1, replication: high-error, reweightable monomers under one standard condition
 
-The ranking multiplies the model's error (log₁₀ raw χ²) by a reweighting weight (strongly reweightable 1.0,
-modestly reweightable 0.6, not fit 0.3) and a tractability weight (chain ≤ 350 residues; folded or partly
-disordered). The arm takes the top reweightable entries:
+The design (§6) proposed a priority score, log₁₀ raw χ² × a reweighting weight × a tractability weight, to
+rank systems for measurement. A retrospective test (end of this section) shows that the score does not pick high-discrepancy
+profiles better than random choice when it is fed the quantities known before a measurement, and its weights were
+set by judgement, so it is not used to recommend measurements. Arm 1 takes the systems that meet stated
+eligibility rules: reweighting reaches χ² ≤ 2 (strongly or modestly reweightable), the measured mass matches a
+monomer, the chain has at most {arms['arm1']['max_length']} residues, and the protein is folded or partly disordered.
+{arms['arm1']['n_eligible']} entries qualify. The {len(arm1)} with the largest observed raw χ² are listed, which is the
+size of the known discrepancy a replication can test and not an estimate of what the measurement is worth.
+They are the same {len(arm1)} the score ranks first; what is dropped is its judgement-set weighting. The final choice among eligible systems needs a feasibility review (construct availability,
+expression, deposited buffer).
 
 | SASBDB | length | class | raw χ² | best χ² | kind | Rg |
 |---|---|---|---|---|---|---|
 {rows1}
 
-Re-measuring deposited systems controls conditions (one buffer, one temperature, tags removed, a
-concentration series), which removes the condition mismatch that is part of the raw error; it adds no new
-region of sequence space. {novel}
+Re-measuring deposited systems under standardised conditions (one buffer, one temperature, tags removed, a
+concentration series) reduces condition heterogeneity and tests whether the discrepancy is reproducible; one
+common buffer and temperature can itself shift some ensembles, so a changed profile is read against the
+deposited one before it is read against the model. It adds no new region of sequence space. {novel}
 
-The heuristic weights are a limitation: they were set by judgement, not fitted. {sel_sentence} This is
+{sel_sentence} This is
 retrospective, and a profile that already exists carries no new information for the model; the evaluation
 says only how far the rule can be trusted to rank unmeasured proteins from what is known about them.
 
 ## 4. Arm 2, hypothesis test: are BioEmu-1's disordered ensembles too extended?
 
-The pre-registered expectation E4 predicted over-compaction; the archive shows the opposite. A measurement
-campaign can test this on proteins chosen before any SAXS curve is seen. The test arm takes disordered
+The pre-registered expectation E4 predicted over-compaction; the archive shows the opposite. The hypothesis
+came from this archive, so this arm is a prospective replication test with pre-specified model-based
+selection and new SAXS measurements. The split into test and control proteins uses only the model and the
+sequence; the pool is the archive's disordered entries whose deposited profiles pass the quality checks. The test arm takes disordered
 proteins whose BioEmu-1 ensemble Rg exceeds the disordered scaling-law Rg (1.927 N^0.598 Å) by more than
 {int(100 * (arms['arm2']['threshold_ratio'] - 1))}%, spanning chain length and net charge
-({arms['arm2']['n_test_candidates']} of {arms['arm2']['n_disordered_pool']} disordered entries qualify); matched
-controls are disordered proteins of the same length bins whose ratio is within 10% of 1
-({arms['arm2']['n_control_candidates']} qualify).
+({arms['arm2']['n_test_candidates']} of {arms['arm2']['n_disordered_pool']} disordered entries qualify); the
+scaling-law-matched controls are disordered proteins of the same length bins whose ratio to the scaling law is
+within 10% of 1 ({arms['arm2']['n_control_candidates']} qualify). In the archive their observed Rg_model / Rg_exp
+is {f2(arms['arm2']['control_observed_median_ratio'])} at the median, against
+{f2(arms['arm2']['test_observed_median_ratio'])} for the test candidates, so the controls are not known to agree
+with experiment; they are matched to the test arm on the scaling-law ratio only.
 
 Test arm:
 
@@ -758,10 +796,8 @@ Controls:
 
 Pre-specified outcome: the median of Rg_exp / Rg_model across the test arm, from Guinier fits of the new
 profiles. The bias is refuted if that median is at least 0.95; it is confirmed if the median is at most 0.90
-in the test arm and at least 0.95 in the controls. In the archive, the test candidates have a median
-observed Rg_model / Rg_exp of {f2(arms['arm2']['test_observed_median_ratio'])} and the controls
-{f2(arms['arm2']['control_observed_median_ratio'])}; the campaign repeats this under one condition, with the
-selection made from the model alone.
+in the test arm and at least 0.95 in the controls. The campaign repeats the archive comparison under one
+condition, with the selection made from the model alone.
 
 ## 5. Assay design
 
@@ -779,7 +815,7 @@ selection made from the model alone.
 - **Standards and controls.** A protein standard (bovine serum albumin or glucose isomerase) in every
   session for absolute scale; water for intensity calibration; a buffer-only frame bracketing each
   sample; a repeat of one previously measured SASBDB entry per batch as a cross-site control.
-- **Companion measurement.** For the not-fit kind, HDX-MS on the same batch of protein: it reports
+- **Companion measurement.** For entries whose target fit is not reached, HDX-MS on the same batch of protein: it reports
   per-segment exchange that distinguishes a locally unfolded region from a globally wrong fold.
 
 ## 6. QC criteria, applied by script
@@ -812,7 +848,7 @@ contingency below.
 - **Contingencies.** Poor expression → switch to a homologue from the same family with a deposited
   SASBDB entry. Aggregation at SEC → lower concentration and add 5% glycerol; if that fails, retire.
   Beamtime loss → a laboratory SAXS instrument for the smallest, most concentrated samples, accepting
-  the lower q range and recording it. Ambiguous SAXS (the not-fit kind) → HDX-MS first, SAXS second.
+  the lower q range and recording it. Ambiguous SAXS (target fit not reached) → HDX-MS first, SAXS second.
 
 ## 8. Work packages for an external provider
 
@@ -821,7 +857,7 @@ contingency below.
 | WP1 Constructs | Expression plasmids for both arms, sequence-verified, with and without tags | Design review before synthesis; sequence files checked by script |
 | WP2 Protein production | ≥ 2 mg per construct at ≥ 95% purity by SEC and SDS-PAGE, monodisperse by DLS | Purity and DLS reports per batch; a batch failing DLS does not proceed |
 | WP3 SEC-SAXS | Three-concentration SEC-SAXS per sample, with standards and buffer frames; raw frames and reduced curves | Scripted QC on delivery; results joined to the candidate table |
-| WP4 HDX-MS (not-fit kind only) | Deuterium uptake per peptide at four time points, with a fully deuterated control | Peptide coverage ≥ 85%; back-exchange reported |
+| WP4 HDX-MS (target fit not reached only) | Deuterium uptake per peptide at four time points, with a fully deuterated control | Peptide coverage ≥ 85%; back-exchange reported |
 | WP5 Deposition | SASBDB deposition of every QC-passed dataset with full metadata | Accession codes recorded against each candidate |
 
 Milestones are set per batch of twelve constructs: constructs at week 2, protein at week 6, SAXS at
@@ -833,7 +869,7 @@ every batch updates the error map before the next batch is chosen.
 The ensembles are from the PeptoneBench archive, generated with BioEmu at code commit ac7455d; the archive
 does not record the checkpoint version, and re-sampling with the current v1.2 checkpoint is the first
 follow-up. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so
-part of the raw error is condition mismatch, which a campaign under one standard condition removes. The
+part of the raw error is condition mismatch, which a campaign under one standard condition reduces. The
 scoring treats the Pepsi-SAXS forward model as exact; its hydration-shell parameters are a known source of
 Rg bias of a few per cent, which is why modestly reweightable cases are read with care. The comparison with
 other models is restricted to the six comparators on the shared entries.
@@ -850,13 +886,15 @@ def main() -> None:
     paths = json.load(open(C.RESULTS / "paths" / f"{C.MODEL}.json"))
     ent = pd.read_csv(C.RESULTS / "entries.csv")
     fig_error_map(d, A)
+    fig_length(d, A)
     fig_rg(d)
     fig_rg_robustness(d, A)
+    fig_kinds(d, paths, A)
     fig_resolvability(d, paths)
     if A["model_comparison"]:
-        fig_models(A, d)
-    fig_candidates(cand)
+        fig_models(A)
     fig_predict()
+    fig_predict_detail()
     fig_examples(A, ent)
     arms = campaign_arms(A, cand, d, ent)
     write_campaign(A, cand, arms)
