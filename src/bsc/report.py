@@ -22,10 +22,11 @@ MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold": "AlphaFold2", "esmfold": "ESMFo
               "idpsam": "idpSAM", "idpgan": "idpGAN", "idp-o": "IDP-o"}
 # Role palette, used in every figure and on the page: one colour per role, none of them ink. The three
 # line roles are checked with the dataviz palette validator on the white figure surface (all pairs pass).
-ROLE_COL = {"data": "#3C4650",              # measured points: neutral, drawn semi-transparent
-            "bioemu": "#3A80CC",            # BioEmu-1 raw ensemble (and BioEmu-1 wherever it is named)
-            "reweighted": "#D9504A",        # BioEmu-1 reweighted towards the profile
-            "single_structure": "#1F9E8A"}  # AlphaFold2 / ESMFold reference, drawn dashed
+ROLE_COL = {"data": "#8C96A0",              # measured points: light neutral, drawn semi-transparent
+            "bioemu": "#1F6FE5",            # BioEmu-1 raw ensemble (and BioEmu-1 wherever it is named)
+            "reweighted": "#F05A0A",        # BioEmu-1 reweighted towards the profile, drawn dotted
+            "single_structure": "#D6338C"}  # AlphaFold2 / ESMFold reference, drawn dashed
+CURVE_LW = {"raw": 2.0, "operating": 2.2, "alphafold": 1.8}
 PAGE_ACCENT = "#2F5D8A"                     # links and headings on the page; not a figure role
 NEUTRAL_BAR = "#8A939B"
 # the model under study in its role colour; comparators in desaturated tones
@@ -530,7 +531,7 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
     gs = fig.add_gridspec(2, 3, height_ratios=[2.1, 0.85], hspace=0.07, wspace=0.2,
                           left=0.065, right=0.99, top=0.862, bottom=0.44)
     gs3 = fig.add_gridspec(1, 3, wspace=0.06, left=0.02, right=0.99, top=0.34, bottom=0.085)
-    data_style = {"facecolors": "none", "edgecolors": ROLE_COL["data"], "alpha": 0.4, "linewidths": 0.5}
+    data_style = {"facecolors": "none", "edgecolors": ROLE_COL["data"], "alpha": 0.25, "linewidths": 0.5}
     col = {"raw": ROLE_COL["bioemu"], "operating": ROLE_COL["reweighted"], "alphafold": ROLE_COL["single_structure"]}
     style = {"raw": "-", "operating": ":", "alphafold": "--"}
     out = {}
@@ -544,12 +545,12 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
         y0 = np.log(I[pos]).min() - 0.08 * np.ptp(np.log(I[pos]))
         lo = np.where(I - s > 0, np.log(np.clip(I - s, 1e-30, None)), y0)
         hi = np.log(np.clip(I + s, 1e-30, None))
-        ax.fill_between(q, np.maximum(lo, y0), np.maximum(hi, y0), color="#BFC8D0", lw=0, zorder=0)
+        ax.fill_between(q, np.maximum(lo, y0), np.maximum(hi, y0), color="#D3D9DF", lw=0, zorder=0)
         ax.scatter(q[pos], np.log(I[pos]), s=6, zorder=1, **data_style)
         for k, name in enumerate(("alphafold", "raw", "operating")):
             fit = f["curves"][name]["fit"]
             okf = fit > 0
-            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.8, ls=style[name], alpha=LINE_ALPHA,
+            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=CURVE_LW[name], ls=style[name], alpha=LINE_ALPHA,
                     zorder=3 + k)
             axr.plot(q, (fit - I) / s, color=col[name], lw=RESIDUAL_LW, ls="-", alpha=LINE_ALPHA, zorder=3 + k)
         c2 = f["curves"]
@@ -604,14 +605,14 @@ def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
                       "denss": {k: st[k] for k in ("dmax_A", "n_maps", "chi2_median", "resolution_A",
                                                   "maps_accepted", "rg_per_map_mean") if k in st}}
     # one shared legend above the three columns
-    handles = [matplotlib.lines.Line2D([], [], color=col["raw"], lw=1.8, ls=style["raw"], label="BioEmu-1 raw"),
-               matplotlib.lines.Line2D([], [], color=col["operating"], lw=1.8, ls=style["operating"],
+    handles = [matplotlib.lines.Line2D([], [], color=col["raw"], lw=CURVE_LW["raw"], ls=style["raw"], label="BioEmu-1 raw"),
+               matplotlib.lines.Line2D([], [], color=col["operating"], lw=CURVE_LW["operating"], ls=style["operating"],
                                        label="reweighted"),
-               matplotlib.lines.Line2D([], [], color=col["alphafold"], lw=1.8, ls=style["alphafold"],
+               matplotlib.lines.Line2D([], [], color=col["alphafold"], lw=CURVE_LW["alphafold"], ls=style["alphafold"],
                                        label="AlphaFold2"),
                matplotlib.lines.Line2D([], [], marker="o", ls="none", mfc="none", mec=ROLE_COL["data"], mew=0.7,
                                        ms=4, label="measured"),
-               matplotlib.patches.Patch(color="#BFC8D0", label="± σ")]
+               matplotlib.patches.Patch(color="#D3D9DF", label="± σ")]
     fig.legend(handles=handles, loc="upper center", ncol=5, frameon=False, fontsize=9.5,
                bbox_to_anchor=(0.53, 1.0), handlelength=2.6, columnspacing=1.6)
     # density key
@@ -870,18 +871,27 @@ condition, with the selection made from the model alone.
 - **Buffer.** Matched buffer from the final SEC step, with the exact dialysate recorded; BioEmu does not
   model pH or ionic strength, so buffer is held at one standard condition (20 mM HEPES pH 7.4, 150 mM NaCl,
   2 mM TCEP) and recorded with each dataset.
-- **Solubility and sample-quality gate.** One common buffer and temperature is the design aim, but it may
-  not be possible for every protein: some may be insoluble, unstable or aggregate in that buffer. Each
-  construct therefore passes a gate before any SAXS: a solubility test in the standard buffer; the UV trace
-  of the purification and of analytical SEC (a single symmetric A280 peak at the expected elution volume, and
-  the A260/A280 ratio for nucleic-acid contamination); SDS-PAGE (a single band at the expected mass, for
-  purity and identity); and circular dichroism where the fold is in question, to confirm the expected
-  secondary-structure content (folded or disordered).
 - **Standards and controls.** A protein standard (bovine serum albumin or glucose isomerase) in every
   session for absolute scale; water for intensity calibration; a buffer-only frame bracketing each
   sample; a repeat of one previously measured SASBDB entry per batch as a cross-site control.
 - **Companion measurement.** For entries whose target fit is not reached, HDX-MS on the same batch of protein: it reports
   per-segment exchange that distinguishes a locally unfolded region from a globally wrong fold.
+
+### Feasibility judgement
+
+- A single common buffer and temperature is the aim, but it may not hold for every protein: some may be
+  insoluble, unstable or aggregate in it.
+- Gate before any SAXS: a solubility test in the standard buffer; the A280 trace of the purification and of
+  analytical SEC (a single symmetric peak at the expected elution volume) with the A260/A280 ratio for
+  nucleic-acid contamination; SDS-PAGE (a single band at the expected mass, for purity and identity); and
+  circular dichroism where the fold is in question, to confirm the expected folded or disordered content.
+- Aggregation signs on the SAXS data: a low-angle upturn, a non-linear Guinier region, Rg or I(0)/c rising
+  with concentration, a molecular weight from I(0) above the monomer, and frames across the SEC peak that do
+  not give a constant Rg; all are among the scripted criteria of §6.
+- Fallback: a protein that fails in the standard buffer is measured in the nearest buffer in which it is
+  monodisperse (or in its deposited buffer), the deviation recorded, and analysed separately, because its
+  replication no longer controls the condition; one that fails in every buffer is dropped and replaced by the
+  next eligible system.
 
 ## 6. QC criteria, applied by script
 

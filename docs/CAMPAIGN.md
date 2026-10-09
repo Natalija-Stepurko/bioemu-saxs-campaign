@@ -135,18 +135,27 @@ condition, with the selection made from the model alone.
 - **Buffer.** Matched buffer from the final SEC step, with the exact dialysate recorded; BioEmu does not
   model pH or ionic strength, so buffer is held at one standard condition (20 mM HEPES pH 7.4, 150 mM NaCl,
   2 mM TCEP) and recorded with each dataset.
-- **Solubility and sample-quality gate.** One common buffer and temperature is the design aim, but it may
-  not be possible for every protein: some may be insoluble, unstable or aggregate in that buffer. Each
-  construct therefore passes a gate before any SAXS: a solubility test in the standard buffer; the UV trace
-  of the purification and of analytical SEC (a single symmetric A280 peak at the expected elution volume, and
-  the A260/A280 ratio for nucleic-acid contamination); SDS-PAGE (a single band at the expected mass, for
-  purity and identity); and circular dichroism where the fold is in question, to confirm the expected
-  secondary-structure content (folded or disordered).
 - **Standards and controls.** A protein standard (bovine serum albumin or glucose isomerase) in every
   session for absolute scale; water for intensity calibration; a buffer-only frame bracketing each
   sample; a repeat of one previously measured SASBDB entry per batch as a cross-site control.
 - **Companion measurement.** For entries whose target fit is not reached, HDX-MS on the same batch of protein: it reports
   per-segment exchange that distinguishes a locally unfolded region from a globally wrong fold.
+
+### Feasibility judgement
+
+- A single common buffer and temperature is the aim, but it may not hold for every protein: some may be
+  insoluble, unstable or aggregate in it.
+- Gate before any SAXS: a solubility test in the standard buffer; the A280 trace of the purification and of
+  analytical SEC (a single symmetric peak at the expected elution volume) with the A260/A280 ratio for
+  nucleic-acid contamination; SDS-PAGE (a single band at the expected mass, for purity and identity); and
+  circular dichroism where the fold is in question, to confirm the expected folded or disordered content.
+- Aggregation signs on the SAXS data: a low-angle upturn, a non-linear Guinier region, Rg or I(0)/c rising
+  with concentration, a molecular weight from I(0) above the monomer, and frames across the SEC peak that do
+  not give a constant Rg; all are among the scripted criteria of §6.
+- Fallback: a protein that fails in the standard buffer is measured in the nearest buffer in which it is
+  monodisperse (or in its deposited buffer), the deviation recorded, and analysed separately, because its
+  replication no longer controls the condition; one that fails in every buffer is dropped and replaced by the
+  next eligible system.
 
 ## 6. QC criteria, applied by script
 

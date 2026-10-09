@@ -1,149 +1,149 @@
 {
- "SASDD43": {
+ "SASDH84": {
   "class": "folded",
-  "length": 187,
+  "length": 135,
   "chi2": {
-   "raw": 2.3495026607490597,
-   "operating": 1.8048666402741893,
-   "alphafold": 1.9269291727453204
+   "raw": 2.331008037531264,
+   "operating": 1.9124080614037113,
+   "alphafold": 2.2542440498362155
   },
-  "chi2_minimum": 1.2128994707552636,
-  "phi_operating": 0.4628218694460635,
-  "phi_minimum": 0.03158475830942259,
+  "chi2_minimum": 1.1537483511480533,
+  "phi_operating": 0.9601866085269983,
+  "phi_minimum": 0.021411306405843007,
   "operating_is_raw": false,
   "operating_reached": true,
-  "rg_exp": 17.47467396485706,
-  "rg_raw": 17.24291713129892,
-  "rg_operating": 17.31548214856457,
-  "rg_minimum": 17.547964253416826,
-  "top_conformer": 81,
-  "top_weight": 0.4005875511651135,
-  "ca_inside_envelope": 0.893048128342246,
-  "ca_inside_support_surface": 0.9732620320855615,
+  "rg_exp": 21.196169696143176,
+  "rg_raw": 19.80444599031161,
+  "rg_operating": 20.021974660633045,
+  "rg_minimum": 20.823769674448062,
+  "top_conformer": 56,
+  "top_weight": 0.5672896721745385,
+  "ca_inside_envelope": 0.8888888888888888,
+  "ca_inside_support_surface": 0.9925925925925926,
   "density_levels": [
    {
     "name": "particle",
-    "volume_A3": 52009.57049999997,
-    "iso_over_max": 0.1488991033048845,
-    "ca_inside": 0.9732620320855615
+    "volume_A3": 51840.444299999996,
+    "iso_over_max": 0.2091409786292968,
+    "ca_inside": 0.9925925925925926
    },
    {
     "name": "protein",
-    "volume_A3": 34673.046999999984,
-    "iso_over_max": 0.28496513413950464,
-    "ca_inside": 0.893048128342246
+    "volume_A3": 26301.601000000006,
+    "iso_over_max": 0.43174382060516836,
+    "ca_inside": 0.8888888888888888
    }
   ],
   "chain_breaks": 0,
-  "n_points": 1720,
-  "n_points_positive": 1720,
-  "isovalue_volume_A3": 34673.046999999984,
-  "support_volume_A3": 36580.950000000004,
+  "n_points": 1324,
+  "n_points_positive": 1324,
+  "isovalue_volume_A3": 26301.601000000006,
+  "support_volume_A3": 51840.444299999996,
   "denss": {
-   "dmax_A": 56.0,
+   "dmax_A": 67.30000000000001,
    "n_maps": 10,
-   "chi2_median": 1.3239999999999998,
-   "resolution_A": 25.8,
+   "chi2_median": 1.2115,
+   "resolution_A": 25.1,
    "maps_accepted": 9,
-   "rg_per_map_mean": 17.749100000000002
+   "rg_per_map_mean": 23.1109
   }
  },
- "SASDVZ8": {
+ "SASDM65": {
   "class": "partly disordered",
-  "length": 150,
+  "length": 292,
   "chi2": {
-   "raw": 3.3634999124124954,
-   "operating": 1.8865789584784154,
-   "alphafold": 2.4210167900635877
+   "raw": 4.336348587679039,
+   "operating": 1.9674358177010478,
+   "alphafold": 28.91742262704262
   },
-  "chi2_minimum": 1.0654059171614685,
-  "phi_operating": 0.5426751807349361,
-  "phi_minimum": 0.026684857480144677,
+  "chi2_minimum": 0.985919347237367,
+  "phi_operating": 0.8971186072336009,
+  "phi_minimum": 0.08044337291016981,
   "operating_is_raw": false,
   "operating_reached": true,
-  "rg_exp": 17.5317001270869,
-  "rg_raw": 16.877760951808593,
-  "rg_operating": 17.07741512004927,
-  "rg_minimum": 17.397049305823064,
-  "top_conformer": 32,
-  "top_weight": 0.42843360846922296,
-  "ca_inside_envelope": 0.8733333333333333,
-  "ca_inside_support_surface": 0.9066666666666666,
+  "rg_exp": 35.862684366923666,
+  "rg_raw": 37.291842641975904,
+  "rg_operating": 36.15684940963387,
+  "rg_minimum": 35.83115508158354,
+  "top_conformer": 42,
+  "top_weight": 0.25327654563555024,
+  "ca_inside_envelope": 0.5958904109589042,
+  "ca_inside_support_surface": 0.863013698630137,
   "density_levels": [
    {
     "name": "particle",
-    "volume_A3": 42525.967500000006,
-    "iso_over_max": 0.19510232507384354,
-    "ca_inside": 0.9066666666666666
+    "volume_A3": 161136.1589,
+    "iso_over_max": 0.15725755350891,
+    "ca_inside": 0.863013698630137
    },
    {
     "name": "protein",
-    "volume_A3": 28350.645000000004,
-    "iso_over_max": 0.33643348119758054,
-    "ca_inside": 0.8733333333333333
+    "volume_A3": 55410.616000000045,
+    "iso_over_max": 0.3552899698496289,
+    "ca_inside": 0.5958904109589042
    }
   ],
-  "chain_breaks": 4,
-  "n_points": 270,
-  "n_points_positive": 270,
-  "isovalue_volume_A3": 28350.645000000004,
-  "support_volume_A3": 39679.2,
+  "chain_breaks": 5,
+  "n_points": 1186,
+  "n_points_positive": 1186,
+  "isovalue_volume_A3": 55410.616000000045,
+  "support_volume_A3": 161136.1589,
   "denss": {
-   "dmax_A": 64.0,
+   "dmax_A": 151.0,
    "n_maps": 10,
-   "chi2_median": 3.5805,
-   "resolution_A": 24.2,
+   "chi2_median": 3.7005,
+   "resolution_A": 32.4,
    "maps_accepted": 9,
-   "rg_per_map_mean": 17.1137
+   "rg_per_map_mean": 34.9497
   }
  },
- "SASDBY5": {
+ "SASDLK9": {
   "class": "disordered",
-  "length": 217,
+  "length": 475,
   "chi2": {
-   "raw": 7.601847703911844,
-   "operating": 1.7457738084385173,
-   "alphafold": 63.060461126548574
+   "raw": 8.888180348544271,
+   "operating": 1.802935282789506,
+   "alphafold": 115.55288840074233
   },
-  "chi2_minimum": 1.0035255301758996,
-  "phi_operating": 0.7300052795993375,
-  "phi_minimum": 0.061816469179878604,
+  "chi2_minimum": 0.9269574939673051,
+  "phi_operating": 0.8362509609042056,
+  "phi_minimum": 0.08505627087424042,
   "operating_is_raw": false,
   "operating_reached": true,
-  "rg_exp": 50.84005024313629,
-  "rg_raw": 61.124014631878616,
-  "rg_operating": 54.14018914686103,
-  "rg_minimum": 50.98506004272212,
-  "top_conformer": 0,
-  "top_weight": 0.2607153540794761,
-  "ca_inside_envelope": 0.18433179723502305,
-  "ca_inside_support_surface": 0.783410138248848,
+  "rg_exp": 71.66806527509094,
+  "rg_raw": 78.27335496516739,
+  "rg_operating": 75.18201822684824,
+  "rg_minimum": 71.73365056727668,
+  "top_conformer": 57,
+  "top_weight": 0.24115648475676277,
+  "ca_inside_envelope": 0.13052631578947368,
+  "ca_inside_support_surface": 0.6357894736842106,
   "density_levels": [
    {
     "name": "particle",
-    "volume_A3": 529053.0029999999,
-    "iso_over_max": 0.17910008609048855,
-    "ca_inside": 0.783410138248848
+    "volume_A3": 998957.8125,
+    "iso_over_max": 0.17195817572841696,
+    "ca_inside": 0.6357894736842106
    },
    {
     "name": "protein",
-    "volume_A3": 39550.63600000001,
-    "iso_over_max": 0.7417970683839639,
-    "ca_inside": 0.18433179723502305
+    "volume_A3": 89375.83400000022,
+    "iso_over_max": 0.6350448990792018,
+    "ca_inside": 0.13052631578947368
    }
   ],
-  "chain_breaks": 1,
-  "n_points": 412,
-  "n_points_positive": 412,
-  "isovalue_volume_A3": 39550.63600000001,
-  "support_volume_A3": 529053.0029999999,
+  "chain_breaks": 24,
+  "n_points": 230,
+  "n_points_positive": 230,
+  "isovalue_volume_A3": 89375.83400000022,
+  "support_volume_A3": 998957.8125,
   "denss": {
-   "dmax_A": 220.0,
+   "dmax_A": 240.0,
    "n_maps": 10,
-   "chi2_median": 1.775,
-   "resolution_A": 64.4,
+   "chi2_median": 1.475,
+   "resolution_A": 64.0,
    "maps_accepted": 9,
-   "rg_per_map_mean": 49.7316
+   "rg_per_map_mean": 69.63119999999999
   }
  }
 }
