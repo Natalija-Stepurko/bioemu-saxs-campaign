@@ -13,7 +13,8 @@ quartiles 1.4–10.9). By class, the median raw χ² is
 8.9 for disordered (n = 41).
 Expectation E1 (disordered worse than folded) is met
 (one-sided p = 1.3e-06); E2 (error rising with length among folded proteins) is
-not met (ρ = +0.09); E4 (over-compaction of
+not met (ρ = +0.09; folded proteins of up to 100 residues fit
+67% of the time, longer ones 45%, with no trend above that); E4 (over-compaction of
 disordered proteins) is not met: the median ensemble Rg is
 1.21 times the measured value, and only 24% of disordered
 entries are below 1, so the model's disordered ensembles are too extended,
