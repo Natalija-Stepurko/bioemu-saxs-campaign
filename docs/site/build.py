@@ -310,6 +310,7 @@ details.more .result{border:0;padding:0}
 @media (max-width:760px){.tiles{grid-template-columns:minmax(0,1fr)}}
 .tile{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--acc);border-radius:3px;padding:12px 14px}
 .tile .v{font-size:26px;font-weight:640;letter-spacing:-.01em;line-height:1.1}
+.nb{white-space:nowrap}
 .tile .l{font-size:14px;margin:4px 0 2px}.tile .s{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.45}
 .flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13.5px;margin:0 0 16px;color:var(--muted)}
 .flow b{color:var(--ink);font-size:15px;font-family:var(--mono)}.flow .arr{color:var(--muted)}
@@ -481,10 +482,13 @@ def build():
         f"The proposed campaign therefore has two arms, a controlled replication of known discrepancies and a "
         f"prospective test of the extension bias.")
     tiles = (tile(pct(share_fit), "raw ensembles meet the χ² ≤ 2 threshold", f"{fits} of {n_bioemu} profiles")
-             + tile(f"{f2(rg_dis)}×", "disordered ensemble size against experiment",
-                    f"median Rg ratio, n = {E['E4']['n']}, 95% interval {ci(rg_ci)}")
-             + tile(f"R² = {f2(r2_best)}", "predicting raw error before measuring",
-                    "best model, sequence-grouped cross-validation"))
+             + tile(pct(rg_dis - 1), "larger than measured: BioEmu-1's ensembles of disordered proteins",
+                    f"median radius of gyration {f2(rg_dis)} times the measured value, {E['E4']['n']} proteins "
+                    f'<span class="nb">(95% interval {ci(rg_ci)})</span>')
+             + tile(pct(r2_best), "of BioEmu-1's error can be predicted before measuring",
+                    f'from sequence and model features, on held-out proteins <span class="nb">(R² = {f2(r2_best)})</span>'))
+    check(pct(rg_dis - 1) == f"{round(100 * (rg_dis - 1))}%" == pct(ext_curve), "size tile: same rounding as Result 2")
+    check(pct(r2_best) == f"{round(100 * r2_best)}%", "prediction tile: R² as a percentage")
     flow = (f'<div class="flow" aria-label="data flow"><span><b>{n_entries}</b> archive profiles</span><span class="arr">→</span>'
             f'<span><b>{n_clean}</b> pass quality checks</span><span class="arr">→</span>'
             f'<span><b>{n_bioemu}</b> with a BioEmu-1 ensemble</span></div>')
