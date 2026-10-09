@@ -72,3 +72,21 @@ def test_phi_at_chi2_and_chi2_at_phi():
     assert saxs.phi_at_chi2(path, 2.5) == 0.5
     assert np.isnan(saxs.phi_at_chi2(path, 0.5))
     assert saxs.chi2_at_phi(path, 0.4) == 2.0
+
+
+def test_nrmsd_log_on_a_synthetic_case():
+    """Zero for the data themselves; a 10% error in sphere radius registers; a constant rescaling
+    of sigma leaves the score unchanged while chi2 moves by the square of the factor."""
+    q = np.linspace(0.01, 0.3, 150)
+    truth = sphere_curve(q, 25.0)
+    sigma = 0.02 * truth + 1e-5
+    assert saxs.nrmsd_log(truth, truth, sigma) < 1e-12
+    wrong = sphere_curve(q, 27.5)
+    v = saxs.nrmsd_log(wrong, truth, sigma)
+    assert 0.005 < v < 0.5
+    assert abs(saxs.nrmsd_log(wrong, truth, 3 * sigma) - v) < 0.1 * v
+    assert saxs.chi2(wrong, truth, 3 * sigma) < saxs.chi2(wrong, truth, sigma) / 5
+    # reweighting_curve can hand back the weights of every point on the path
+    curves = np.array([sphere_curve(q, r) for r in (24.0, 25.0, 26.0)])
+    path, ws = saxs.reweighting_curve(curves, truth, sigma, np.array([100.0, 1.0]), return_weights=True)
+    assert len(path) == len(ws) == 2 and all(abs(w.sum() - 1) < 1e-9 for w in ws)

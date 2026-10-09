@@ -84,7 +84,7 @@ def fetch_sasbdb_summaries(labels: list[str]) -> None:
     """Entry summaries (measured molecular weight, Guinier Rg, project title) from the SASBDB REST API."""
     import time
     out = json.load(open(C.SASBDB_SUMMARY)) if C.SASBDB_SUMMARY.exists() else {}
-    keys = ("experimental_mw", "guinier_i0_mw", "porod_mw", "guinier_rg", "symmetry")
+    keys = ("experimental_mw", "guinier_i0_mw", "porod_mw", "guinier_rg", "pddf_dmax", "symmetry")
     for lab in labels:
         if lab in out:
             continue

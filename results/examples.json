@@ -1,0 +1,83 @@
+{
+ "SASDH84": {
+  "class": "folded",
+  "length": 135,
+  "chi2": {
+   "raw": 2.331008037531264,
+   "reweighted": 1.1679746546446794,
+   "alphafold": 2.2542440498362155
+  },
+  "rg_exp": 21.196169696143176,
+  "rg_raw": 19.80444599031161,
+  "rg_reweighted": 20.788065063706274,
+  "phi_reweighted": 0.022167176043259126,
+  "top_conformer": 56,
+  "top_weight": 0.5629295940585813,
+  "ca_inside_envelope": 0.8888888888888888,
+  "ca_inside_support_surface": 0.9925925925925926,
+  "isovalue_volume_A3": 26301.601000000006,
+  "support_volume_A3": 51840.444299999996,
+  "denss": {
+   "dmax_A": 67.30000000000001,
+   "n_maps": 10,
+   "chi2_median": 1.2115,
+   "resolution_A": 25.1,
+   "maps_accepted": 9,
+   "rg_per_map_mean": 23.1109
+  }
+ },
+ "SASDM65": {
+  "class": "partly disordered",
+  "length": 292,
+  "chi2": {
+   "raw": 4.336348587679039,
+   "reweighted": 0.9869040441953693,
+   "alphafold": 28.91742262704262
+  },
+  "rg_exp": 35.862684366923666,
+  "rg_raw": 37.291842641975904,
+  "rg_reweighted": 35.815487596129515,
+  "phi_reweighted": 0.07636615880535155,
+  "top_conformer": 42,
+  "top_weight": 0.2543012513635661,
+  "ca_inside_envelope": 0.5958904109589042,
+  "ca_inside_support_surface": 0.863013698630137,
+  "isovalue_volume_A3": 55410.616000000045,
+  "support_volume_A3": 161136.1589,
+  "denss": {
+   "dmax_A": 151.0,
+   "n_maps": 10,
+   "chi2_median": 3.7005,
+   "resolution_A": 32.4,
+   "maps_accepted": 9,
+   "rg_per_map_mean": 34.9497
+  }
+ },
+ "SASDLK9": {
+  "class": "disordered",
+  "length": 475,
+  "chi2": {
+   "raw": 8.888180348544271,
+   "reweighted": 0.9271892361946837,
+   "alphafold": 115.55288840074233
+  },
+  "rg_exp": 71.66806527509094,
+  "rg_raw": 78.27335496516739,
+  "rg_reweighted": 71.62078762283825,
+  "phi_reweighted": 0.034675098476185565,
+  "top_conformer": 57,
+  "top_weight": 0.5071925740886484,
+  "ca_inside_envelope": 0.13052631578947368,
+  "ca_inside_support_surface": 0.6357894736842106,
+  "isovalue_volume_A3": 89375.83400000022,
+  "support_volume_A3": 998957.8125,
+  "denss": {
+   "dmax_A": 240.0,
+   "n_maps": 10,
+   "chi2_median": 1.475,
+   "resolution_A": 64.0,
+   "maps_accepted": 9,
+   "rg_per_map_mean": 69.63119999999999
+  }
+ }
+}

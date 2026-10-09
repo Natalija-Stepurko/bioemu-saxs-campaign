@@ -1,4 +1,5 @@
-"""Named stages with a run log: `bsc fetch`, `bsc score`, `bsc analyse`, `bsc report`, `bsc all`."""
+"""Named stages with a run log: `bsc fetch`, `bsc score`, `bsc coordrg`, `bsc analyse`, `bsc select_eval`,
+`bsc predict`, `bsc envelopes`, `bsc report`, `bsc all`."""
 from __future__ import annotations
 
 import argparse
@@ -11,7 +12,7 @@ from pathlib import Path
 
 from bsc import config as C
 
-STAGES = ["fetch", "score", "analyse", "report"]
+STAGES = ["fetch", "score", "coordrg", "analyse", "select_eval", "predict", "envelopes", "report"]
 
 
 def _git() -> dict:
@@ -44,9 +45,25 @@ def run(stage: str, argv: list[str]) -> None:
         ap.add_argument("--models", nargs="*", default=None)
         a = ap.parse_args(argv)
         score.main(a.models)
+    elif stage == "coordrg":
+        from bsc import coordrg
+        ap = argparse.ArgumentParser(prog="bsc coordrg")
+        ap.add_argument("--archive", type=Path, default=None,
+                        help="PeptoneBench Predictions.tar.gz; missing ensembles are extracted in one pass")
+        a = ap.parse_args(argv)
+        coordrg.main(a.archive)
     elif stage == "analyse":
         from bsc import analyse
         analyse.main()
+    elif stage == "select_eval":
+        from bsc import select_eval
+        select_eval.main()
+    elif stage == "predict":
+        from bsc import predict
+        predict.main()
+    elif stage == "envelopes":
+        from bsc import envelopes
+        envelopes.main()
     elif stage == "report":
         from bsc import report
         report.main()

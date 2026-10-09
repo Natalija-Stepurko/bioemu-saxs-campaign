@@ -12,6 +12,7 @@ import pandas as pd
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from bsc import analyse, saxs, score  # noqa: E402
 from bsc import config as C  # noqa: E402
 
 INK, MUTED, RULE = "#16191D", "#5B646E", "#DDE1E4"
@@ -19,6 +20,12 @@ CLS_COL = {"folded": "#2F5D8A", "partly disordered": "#8A6FA8", "disordered": "#
 MODEL_NAME = {"bioemu": "BioEmu-1", "alphafold": "AlphaFold2", "esmfold": "ESMFold", "boltz2": "Boltz-2",
               "idpfold": "IDPFold", "peptron": "PepTron", "boltz1x": "Boltz-1x", "esmflow": "ESMFlow",
               "idpsam": "idpSAM", "idpgan": "idpGAN", "idp-o": "IDP-o"}
+# one saturated colour for the model under study (the page accent); comparators in desaturated tones
+MODEL_COL = {"bioemu": "#2F5D8A", "peptron": "#8A6FA8", "boltz2": "#7A9E7E", "idpfold": "#B08968",
+             "idpsam": "#9A8FA3", "alphafold": "#8A939B", "esmfold": "#B9C0C6",
+             "boltz1x": "#A9B8A3", "esmflow": "#C9CDD1", "idpgan": "#B5ADB9", "idp-o": "#C4BDC7"}
+ACCENT = MODEL_COL["bioemu"]
+SINGLE_STRUCTURE = ("alphafold", "esmfold")      # reference baselines, one structure each
 CLASS_ORDER = [c[0] for c in C.DISORDER_CLASSES]
 OUT = C.RESULTS / "figures"
 
@@ -53,6 +60,9 @@ def fig_error_map(d: pd.DataFrame, A: dict) -> None:
         ax.scatter(g["length"], np.log10(g["chi2_raw"]), s=14, color=CLS_COL[cls], alpha=0.7, lw=0, label=cls)
     ax.axhline(np.log10(2), color=RULE, lw=1, ls="--")
     ax.set_xscale("log")
+    ax.set_xticks([20, 50, 100, 200, 500])
+    ax.set_xticklabels(["20", "50", "100", "200", "500"])
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_xlabel("chain length (residues)")
     ax.set_ylabel("raw reduced χ² (log10)")
     ax.set_ylim(-0.6, 3.7)
@@ -78,10 +88,15 @@ def fig_rg(d: pd.DataFrame) -> None:
     ax.set_yscale("log")
     ax.set_xlim(lim)
     ax.set_ylim(lim)
+    ticks = [t for t in (10, 20, 30, 50, 100, 150) if lim[0] <= t <= lim[1]]
+    for axis in (ax.xaxis, ax.yaxis):
+        axis.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
+        axis.set_major_formatter(matplotlib.ticker.FixedFormatter([str(t) for t in ticks]))
+        axis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_xlabel("experimental Rg (Å, Guinier)")
     ax.set_ylabel("BioEmu-1 ensemble Rg (Å)")
     ax.legend(frameon=False, fontsize=9, loc="upper left")
-    ax.set_title("Points below the line: the ensemble is too compact", fontsize=10, loc="left")
+    ax.set_title("Ensemble size against measured size; above the line: too extended", fontsize=10, loc="left")
     fig.tight_layout()
     fig.savefig(OUT / "fig_rg.png")
     plt.close(fig)
@@ -107,7 +122,7 @@ def fig_resolvability(d: pd.DataFrame, paths: list[dict]) -> None:
     ax.set_ylabel("reduced χ²")
     ax.set_title("How far each ensemble must be reweighted to fit", fontsize=10, loc="left")
     ax = axes[1]
-    order = ["fits", "calibration", "population", "unresolved"]
+    order = analyse.KINDS
     tab = (m.groupby(["disorder_class", "resolvability"]).size().unstack(fill_value=0)
            .reindex(index=CLASS_ORDER, columns=order, fill_value=0))
     share = tab.div(tab.sum(axis=1), axis=0)
@@ -120,7 +135,7 @@ def fig_resolvability(d: pd.DataFrame, paths: list[dict]) -> None:
     ax.set_yticklabels(CLASS_ORDER)
     ax.set_xlim(0, 1)
     ax.set_xlabel("share of entries")
-    ax.legend(frameon=False, fontsize=8.5, ncol=2, loc="lower center", bbox_to_anchor=(0.5, 1.0))
+    ax.legend(frameon=False, fontsize=8, ncol=2, loc="lower center", bbox_to_anchor=(0.5, 1.0))
     ax.invert_yaxis()
     fig.tight_layout()
     fig.savefig(OUT / "fig_resolvability.png")
@@ -129,14 +144,17 @@ def fig_resolvability(d: pd.DataFrame, paths: list[dict]) -> None:
 
 def fig_models(A: dict, d: pd.DataFrame) -> None:
     """Raw chi2 by class for every model in the archive."""
-    models = [C.MODEL] + [r["model"] for r in A["model_comparison"]]
+    comps = [r["model"] for r in A["model_comparison"]]
+    models = [C.MODEL] + [m for m in comps if m not in SINGLE_STRUCTURE] + [m for m in comps if m in SINGLE_STRUCTURE]
     bc = pd.DataFrame(A["by_class"])
     fig, ax = plt.subplots(figsize=(7.5, 4))
     w = 0.8 / len(models)
     for j, mo in enumerate(models):
         g = bc[bc["model"] == mo].set_index("disorder_class").reindex(CLASS_ORDER)
         x = np.arange(3) + (j - (len(models) - 1) / 2) * w
-        ax.bar(x, g["chi2_raw_median"], width=w * 0.92, color=plt.cm.tab10(j), label=MODEL_NAME.get(mo, mo))
+        name = MODEL_NAME.get(mo, mo) + (" (single structure)" if mo in SINGLE_STRUCTURE else "")
+        ax.bar(x, g["chi2_raw_median"], width=w * 0.92, color=MODEL_COL.get(mo, MUTED), label=name,
+               hatch="///" if mo in SINGLE_STRUCTURE else None, edgecolor="white", lw=0)
         ax.errorbar(x, g["chi2_raw_median"], yerr=[g["chi2_raw_median"] - g["chi2_raw_q25"],
                                                    g["chi2_raw_q75"] - g["chi2_raw_median"]],
                     fmt="none", ecolor=INK, lw=0.8, capsize=2)
@@ -145,7 +163,7 @@ def fig_models(A: dict, d: pd.DataFrame) -> None:
     ax.set_xticklabels(CLASS_ORDER)
     ax.set_ylabel("median raw reduced χ² (bars: quartiles)")
     ax.axhline(2, color=RULE, lw=1, ls="--")
-    ax.legend(frameon=False, fontsize=9, ncol=3)
+    ax.legend(frameon=False, fontsize=8.5, ncol=3)
     ax.set_title("Unweighted ensembles of each model against the same profiles", fontsize=10, loc="left")
     fig.tight_layout()
     fig.savefig(OUT / "fig_models.png")
@@ -170,30 +188,503 @@ def fig_candidates(cand: pd.DataFrame) -> None:
     plt.close(fig)
 
 
+def fig_rg_robustness(d: pd.DataFrame, A: dict) -> None:
+    """Rg-ratio distributions per class, curve-derived and coordinate-derived, with bootstrap
+    intervals of the median; disordered points coloured by chain length."""
+    R = A["rg_robustness"]
+    m = d[(d["model"] == C.MODEL) & d["clean"]].dropna(subset=["rg_ratio"])
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.6), gridspec_kw={"width_ratios": [1.25, 1]})
+    cmap = plt.cm.viridis
+    norm = matplotlib.colors.LogNorm(vmin=50, vmax=600)
+    ax = axes[0]
+    xlabels = []
+    for i, cls in enumerate(CLASS_ORDER):
+        g = m[m["disorder_class"] == cls]
+        x = i + np.random.default_rng(i).uniform(-0.22, 0.22, len(g))
+        if cls == "disordered":
+            sc = ax.scatter(x, g["rg_ratio"], s=20, c=g["length"], cmap=cmap, norm=norm, lw=0, alpha=0.9)
+        else:
+            ax.scatter(x, g["rg_ratio"], s=12, color=CLS_COL[cls], alpha=0.45, lw=0)
+        st = R["curve_rg_ratio_by_class"][cls]
+        ax.plot([i - 0.32, i + 0.32], [st["median"]] * 2, color=INK, lw=2)
+        ax.plot([i + 0.36, i + 0.36], st["ci95"], color=INK, lw=1.6)
+        xlabels.append(f"{cls}\nn = {st['n']}\n{st['median']:.2f} [{st['ci95'][0]:.2f}, {st['ci95'][1]:.2f}]")
+    ax.axhline(1, color=RULE, lw=1, ls="--")
+    ax.set_xticks(range(3))
+    ax.set_xticklabels(xlabels, fontsize=8.5)
+    ax.set_yscale("log")
+    ax.set_yticks([0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5])
+    ax.set_yticklabels(["0.6", "0.8", "1.0", "1.2", "1.5", "2.0", "2.5"])
+    ax.set_ylabel("ensemble Rg / experimental Rg (from the curves)")
+    ax.set_ylim(0.58, 2.6)
+    ax.set_title("Curve-derived ratio, every clean entry (bars: median and 95% interval)", fontsize=10, loc="left")
+    cb = fig.colorbar(sc, ax=ax, pad=0.01, fraction=0.05, ticks=[50, 100, 200, 400])
+    cb.ax.set_yticklabels(["50", "100", "200", "400"])
+    cb.ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    cb.set_label("chain length (disordered)", fontsize=8.5)
+    cb.ax.tick_params(labelsize=8)
+    ax = axes[1]
+    cr = R.get("coordinate_rg", {}).get("by_class", {})
+    p = C.RESULTS / "coord_rg.csv"
+    if cr and p.exists():
+        tab = pd.read_csv(p)
+        tab = tab[tab["label"].isin(m["label"])]
+        pos = 0
+        ticks, labels = [], []
+        for cls in ("folded", "disordered"):
+            if cls not in cr:
+                continue
+            g = tab[tab["disorder_class"] == cls]
+            for col, nm in (("ratio_curve_exp", "curve"), ("ratio_coord_exp", "Cα coordinates")):
+                x = pos + np.random.default_rng(int(10 * pos)).uniform(-0.25, 0.25, len(g))
+                if cls == "disordered":
+                    ax.scatter(x, g[col], s=18, c=g["length"], cmap=cmap, norm=norm, lw=0, alpha=0.9)
+                else:
+                    ax.scatter(x, g[col], s=12, color=CLS_COL[cls], alpha=0.5, lw=0)
+                key = "curve_over_exp" if nm == "curve" else "coord_over_exp"
+                ax.plot([pos - 0.35, pos + 0.35], [cr[cls][f"{key}_median"]] * 2, color=INK, lw=2)
+                ax.plot([pos + 0.4, pos + 0.4], cr[cls][f"{key}_ci95"], color=INK, lw=1.6)
+                ticks.append(pos)
+                lo, hi = cr[cls][f"{key}_ci95"]
+                labels.append(f"{cls}\n{nm}\n{cr[cls][f'{key}_median']:.2f} [{lo:.2f}, {hi:.2f}]")
+                pos += 1.4
+            pos += 0.4
+        ax.axhline(1, color=RULE, lw=1, ls="--")
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(labels, fontsize=7.5)
+        ax.set_yscale("log")
+        ax.set_yticks([0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 2.5])
+        ax.set_yticklabels(["0.6", "0.8", "1.0", "1.2", "1.5", "2.0", "2.5"])
+        ax.set_ylim(0.58, 2.9)
+        ax.set_ylabel("model Rg / experimental Rg")
+        n_d = cr.get("disordered", {}).get("n", 0)
+        n_f = cr.get("folded", {}).get("n", 0)
+        ax.set_title(f"From conformer coordinates ({n_d} disordered, {n_f} folded)", fontsize=10, loc="left")
+    else:
+        ax.text(0.5, 0.5, "coordinate Rg not computed\n(run `bsc coordrg`)", ha="center", va="center",
+                transform=ax.transAxes, color=MUTED)
+        ax.set_axis_off()
+    fig.tight_layout()
+    fig.savefig(OUT / "fig_rg_robustness.png")
+    plt.close(fig)
+
+
+def fig_predict() -> None:
+    """D2: out-of-fold prediction of the error and the kind; D1: the selection-rule evaluation."""
+    pp, sp = C.RESULTS / "predict.json", C.RESULTS / "select_eval.json"
+    if not (pp.exists() and sp.exists()):
+        print("  fig_predict: predict.json or select_eval.json missing; skipped", flush=True)
+        return
+    P, S = json.load(open(pp)), json.load(open(sp))
+    oof = pd.read_csv(C.RESULTS / "predict_oof.csv")
+    fig, axes = plt.subplots(2, 2, figsize=(10, 8.6))
+    ax = axes[0, 0]
+    best = P["best_regressor"]
+    for cls in CLASS_ORDER:
+        g = oof[oof["disorder_class"] == cls]
+        ax.scatter(g[f"pred_{best}"], g["y_log10_chi2"], s=12, color=CLS_COL[cls], alpha=0.7, lw=0, label=cls)
+    lim = [oof["y_log10_chi2"].min() - 0.1, oof["y_log10_chi2"].max() + 0.1]
+    ax.plot(lim, lim, color=RULE, lw=1)
+    ax.set_xlabel(f"predicted log₁₀ raw χ² ({'ridge' if best == 'ridge' else 'boosted trees'}, out of fold)")
+    ax.set_ylabel("observed log₁₀ raw χ²")
+    r = P["regression"]
+    ax.set_title(f"a · R² = {r[best]['r2']['mean']:.2f} ± {r[best]['r2']['sd']:.2f} "
+                 f"(class mean {r['class_mean']['r2']['mean']:.2f})", fontsize=10, loc="left")
+    ax.legend(frameon=False, fontsize=8.5, loc="upper left")
+    ax = axes[0, 1]
+    cal = P["calibration_hgb"]
+    ax.plot([0, 1], [0, 1], color=RULE, lw=1)
+    ax.plot([c["mean_predicted"] for c in cal], [c["observed_rate"] for c in cal], "o-", color=ACCENT, ms=5)
+    for c in cal:
+        ax.text(c["mean_predicted"], c["observed_rate"] + 0.03, f"n={c['n']}", ha="center", fontsize=7.5, color=MUTED)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel("predicted P(strongly reweightable or not fit)\nquintile means, boosted trees, out of fold")
+    ax.set_ylabel("observed share")
+    c = P["classification"]
+    ax.set_title(f"b · AUC trees {c['hgb']['auc']['mean']:.2f} ± {c['hgb']['auc']['sd']:.2f}, "
+                 f"logistic {c['logistic']['auc']['mean']:.2f}\n    Brier {c['hgb']['brier']['mean']:.3f} "
+                 f"against {c['rate']['brier']['mean']:.3f} for the base rate", fontsize=10, loc="left")
+    ax = axes[1, 0]
+    imp = P["permutation_importance_hgb"][:10][::-1]
+    ax.barh(range(len(imp)), [i["mean"] for i in imp], xerr=[i["sd"] for i in imp], color=MODEL_COL["alphafold"],
+            height=0.6, error_kw={"lw": 0.8, "ecolor": INK})
+    ax.set_yticks(range(len(imp)))
+    ax.set_yticklabels([i["feature"].replace("_", " ") for i in imp], fontsize=8.5)
+    ax.axvline(0, color=INK, lw=0.8)
+    ax.set_xlabel("permutation importance (drop in held-out R², trees)")
+    ax.set_title("c · which features the tree model used", fontsize=10, loc="left")
+    ax = axes[1, 1]
+    pols = ["random", "predicted error", "predicted priority", "observed priority (ceiling)"]
+    short = ["random", "predicted\nerror", "predicted\npriority", "observed priority\n(ceiling)"]
+    cols = [RULE, MODEL_COL["idpsam"], ACCENT, INK]
+    w = 0.38
+    for j, k in enumerate(S["top_k"]):
+        pol = S["policies"][str(k)]
+        x = np.arange(len(pols)) + (j - 0.5) * w
+        v = [pol[p]["strong_or_notfit"]["mean"] for p in pols]
+        e = [pol[p]["strong_or_notfit"]["sd"] for p in pols]
+        ax.bar(x, v, width=w * 0.92, color=cols, alpha=1.0 if j == 0 else 0.55, edgecolor="none")
+        ax.errorbar(x, v, yerr=e, fmt="none", ecolor=INK, lw=0.8, capsize=2)
+        for xi, vi in zip(x, v, strict=True):
+            ax.text(xi, vi + 0.03, f"{vi:.2f}", ha="center", fontsize=7.5, color=MUTED)
+    sd = S["random_single_draw_sd"][str(S["top_k"][0])]["strong_or_notfit"]
+    pm = S["pool_mean"]["strong_or_notfit"]
+    ax.axhspan(pm - sd, pm + sd, color=RULE, alpha=0.5, lw=0)
+    ax.axhline(pm, color=MUTED, lw=1, ls="--")
+    ax.set_xticks(range(len(pols)))
+    ax.set_xticklabels(short, fontsize=8)
+    ax.set_ylim(0, 1.34)
+    ax.set_ylabel("share strongly reweightable or not fit\namong the selected entries")
+    handles = [matplotlib.patches.Patch(color=MUTED, label=f"top {S['top_k'][0]}"),
+               matplotlib.patches.Patch(color=MUTED, alpha=0.55, label=f"top {S['top_k'][1]}"),
+               matplotlib.patches.Patch(color=RULE, alpha=0.5, label="pool mean ± sd of one random pick of 10")]
+    ax.legend(handles=handles, frameon=False, fontsize=8, loc="upper left")
+    ax.set_title("d · what each acquisition policy picks, held-out folds", fontsize=10, loc="left")
+    fig.tight_layout()
+    fig.savefig(OUT / "fig_predict.png")
+    plt.close(fig)
+
+
+# ---- worked examples (A3) -------------------------------------------------------------------------
+POROD_A3_PER_DA = 1.7          # protein volume from mass, for the isovalue that encloses the expected volume
+ENSEMBLES = C.DATA / "Predictions" / "PeptoneDB-SAXS-ensembles"
+
+
+def example_fit(label: str) -> dict | None:
+    """Data, raw and reweighted BioEmu-1 curves and the AlphaFold2 curve for one entry, each scaled to
+    the data, with chi2, Rg and the weights at the chi2 minimum of the path."""
+    exp = score.read_experiment(label)
+    keep = (exp["sigma"] > 0).to_numpy()
+    q, I, s = (exp[c].to_numpy()[keep] for c in ("q", "I", "sigma"))
+    curves = score.read_prediction(C.MODEL, label)
+    af = score.read_prediction("alphafold", label)
+    if curves is None:
+        return None
+    ok = np.isfinite(curves).all(axis=1)
+    idx = np.flatnonzero(ok)
+    curves = curves[ok][:, keep]
+    raw = saxs.ensemble_curve(curves)
+    path, ws = saxs.reweighting_curve(curves, I, s, C.THETA_GRID, return_weights=True)
+    i_best = int(np.argmin([p["chi2"] for p in path]))
+    w = ws[i_best]
+    rew = saxs.ensemble_curve(curves, w)
+    out = {"label": label, "q": q, "I": I, "sigma": s, "curves": {}, "phi_reweighted": saxs.kish_fraction(w),
+           "top_conformer": int(idx[int(np.argmax(w))]), "top_weight": float(w.max()),
+           "rg_raw": saxs.guinier(q, raw, 0.01 * raw + 1e-9, C.GUINIER_QRG_MAX)["rg"],
+           "rg_reweighted": saxs.guinier(q, rew, 0.01 * rew + 1e-9, C.GUINIER_QRG_MAX)["rg"],
+           "rg_exp": saxs.guinier(q, I, s, C.GUINIER_QRG_MAX)["rg"]}
+    for name, m in (("raw", raw), ("reweighted", rew), ("alphafold", af[0][keep] if af is not None else None)):
+        if m is None:
+            continue
+        c, b = saxs.scale_and_background(m, I, s)
+        out["curves"][name] = {"fit": c * m + b, "chi2": saxs.chi2(m, I, s)}
+    return out
+
+
+def principal_frame(x: np.ndarray, weights: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
+    """Centroid and rotation (columns: principal axes, longest first, right-handed)."""
+    wts = np.ones(len(x)) if weights is None else weights
+    c = (wts[:, None] * x).sum(0) / wts.sum()
+    cov = ((x - c) * wts[:, None]).T @ (x - c) / wts.sum()
+    vals, vecs = np.linalg.eigh(cov)
+    R = vecs[:, ::-1]
+    if np.linalg.det(R) < 0:
+        R[:, 2] *= -1
+    return c, R
+
+
+def envelope_mesh(mrc_path, volume_A3: float, upsample: int = 3):
+    """Marching-cubes mesh of the averaged DENSS map at the isovalue enclosing `volume_A3`."""
+    import mrcfile
+    from scipy import ndimage
+    from skimage import measure
+    with mrcfile.open(mrc_path) as m:
+        rho = np.asarray(m.data, float)
+        vox = float(m.voxel_size.x)
+    rho = np.clip(ndimage.zoom(rho, upsample, order=3), 0, None)
+    vox /= upsample
+    frac = min(0.95, volume_A3 / (rho.size * vox**3))
+    iso = float(np.quantile(rho, 1 - frac))
+    verts, faces, _, _ = measure.marching_cubes(rho, level=iso, spacing=(vox, vox, vox))
+    return verts, faces, rho, vox, iso
+
+
+def dock_trace(label: str, conformer: int, verts: np.ndarray, rho: np.ndarray, vox: float, iso: float):
+    """C-alpha trace of one conformer superposed on the envelope by principal axes. The four proper
+    axis-sign choices and the mirror image of the envelope (SAXS does not fix handedness) are tried;
+    the one placing most C-alpha atoms inside the isosurface is kept."""
+    import mdtraj as md
+    tr = md.load(str(ENSEMBLES / C.MODEL / f"{label}.xtc"), top=str(ENSEMBLES / C.MODEL / f"{label}.pdb"))
+    ca = 10.0 * tr.xyz[conformer][tr.topology.select("name CA")]
+    inside = np.argwhere(rho > iso) * vox
+    c_map, R_map = principal_frame(inside, rho[rho > iso])
+    c_ca, R_ca = principal_frame(ca)
+    x_frame = (ca - c_ca) @ R_ca
+    best = None
+    for mirror in (1, -1):
+        for sx, sy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+            S = np.diag([sx, sy, sx * sy])
+            cand = x_frame @ S
+            M = np.array([mirror, 1, 1])
+            # back to the map grid to count atoms inside
+            grid = ((cand * M) @ R_map.T + c_map) / vox
+            ijk = np.clip(np.round(grid).astype(int), 0, np.array(rho.shape) - 1)
+            score_in = float(np.mean(rho[ijk[:, 0], ijk[:, 1], ijk[:, 2]] > iso))
+            if best is None or score_in > best[0]:
+                best = (score_in, cand, M)
+    score_in, cand, M = best
+
+    class Place:
+        """Map-frame coordinates -> displayed frame, and displayed trace -> map grid indices."""
+
+        def __call__(self, v):
+            return ((v - c_map) @ R_map) * M
+
+        def grid(self, x):
+            g = ((x * M) @ R_map.T + c_map) / vox
+            return np.clip(np.round(g).astype(int), 0, np.array(rho.shape) - 1)
+
+    place = Place()
+    return cand, place(verts), score_in, place
+
+
+def fig_examples(A: dict, ent: pd.DataFrame) -> dict | None:
+    """One column per class: the fit of three curves to the data with residuals, and the DENSS
+    envelope with the highest-weight BioEmu-1 conformer docked inside."""
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    stats_path = C.RESULTS / "denss_stats.json"
+    if not stats_path.exists():
+        print("  fig_examples: no results/denss_stats.json (run `bsc envelopes`); tracked figure kept", flush=True)
+        return None
+    stats = json.load(open(stats_path))
+    examples = A["examples"]
+    need = [C.RESULTS / stats[lab]["avg_map"] for lab in examples.values() if lab in stats]
+    if len(need) < len(examples) or not all(p.exists() for p in need) or not C.SAXS_DIR.exists():
+        print("  fig_examples: DENSS maps or input curves missing; tracked figure kept", flush=True)
+        return None
+    e = ent.set_index("label")
+    fig = plt.figure(figsize=(12, 9.6))
+    gs = fig.add_gridspec(2, 3, height_ratios=[2.3, 0.9], hspace=0.08, wspace=0.28,
+                          left=0.06, right=0.99, top=0.95, bottom=0.40)
+    gs3 = fig.add_gridspec(1, 3, wspace=0.08, left=0.04, right=0.97, top=0.31, bottom=0.0)
+    col = {"raw": INK, "reweighted": ACCENT, "alphafold": MODEL_COL["alphafold"]}
+    lab_txt = {"raw": "BioEmu-1 raw ensemble", "reweighted": "reweighted at the χ² minimum",
+               "alphafold": "AlphaFold2 single structure"}
+    out = {}
+    for j, (cls, label) in enumerate(examples.items()):
+        f = example_fit(label)
+        st = stats[label]
+        ax = fig.add_subplot(gs[0, j])
+        axr = fig.add_subplot(gs[1, j], sharex=ax)
+        q, I, s = f["q"], f["I"], f["sigma"]
+        pos = I > 0
+        thin = slice(None, None, max(1, len(q) // 60))
+        ax.errorbar(q[thin], np.log(np.clip(I[thin], 1e-12, None)), yerr=(s / np.clip(I, 1e-12, None))[thin],
+                    fmt="o", mfc="none", mec=INK, ecolor=MUTED, ms=3.2, mew=0.7, lw=0.6, capsize=0, zorder=1)
+        ax.scatter(q[pos], np.log(I[pos]), s=1.5, color=INK, alpha=0.12, lw=0, zorder=0)
+        y0 = np.log(I[pos]).min() - 0.5
+        for k, name in enumerate(("raw", "reweighted", "alphafold")):
+            if name not in f["curves"]:
+                continue
+            fit = f["curves"][name]["fit"]
+            okf = fit > 0
+            ax.plot(q[okf], np.log(fit[okf]), color=col[name], lw=1.4 if name != "raw" else 1.2, zorder=3 - k)
+            ax.text(0.97, 0.90 - 0.09 * k, f"χ² = {f['curves'][name]['chi2']:.2f}", transform=ax.transAxes,
+                    ha="right", va="top", color=col[name], fontsize=9.5)
+            axr.plot(q, (fit - I) / s, color=col[name], lw=0.8, alpha=0.9, zorder=3 - k)
+        ax.set_ylim(y0, np.log(I[pos]).max() + 0.4)
+        ax.set_title(f"{cls}: {label} · {int(e.loc[label, 'length'])} residues", fontsize=10, loc="left")
+        ax.set_ylabel("ln I(q)")
+        plt.setp(ax.get_xticklabels(), visible=False)
+        axr.axhline(0, color=INK, lw=0.8)
+        for g in (-3, 3):
+            axr.axhline(g, color=RULE, lw=0.8, ls="--")
+        lim = np.nanmax(np.abs(np.concatenate([(f["curves"][n]["fit"] - I) / s for n in f["curves"]])))
+        axr.set_ylim(-min(lim * 1.05, 25), min(lim * 1.05, 25))
+        axr.set_ylabel("(I$_{model}$ − I$_{exp}$)/σ", fontsize=8)
+        axr.set_xlabel("q (Å⁻¹)")
+        if j == 0:
+            for name in ("raw", "reweighted", "alphafold"):
+                ax.plot([], [], color=col[name], lw=1.4, label=lab_txt[name])
+            ax.plot([], [], "o", mfc="none", mec=INK, ms=3.5, label="experiment", lw=0)
+            ax.legend(frameon=False, fontsize=8, loc="lower left")
+        # envelope with the docked top-weight conformer: an inner surface enclosing the protein's
+        # expected volume and a fainter outer surface at the volume DENSS assigned to the particle
+        ax3 = fig.add_subplot(gs3[0, j], projection="3d")
+        volume = POROD_A3_PER_DA * 1000.0 * float(e.loc[label, "mw_seq_kda"])
+        support = float(st.get("support_volume_mean_A3", volume))
+        verts, faces, rho, vox, iso = envelope_mesh(C.RESULTS / st["avg_map"], volume)
+        trace, vshow, inside, place = dock_trace(label, f["top_conformer"], verts, rho, vox, iso)
+        ax3.add_collection3d(Poly3DCollection(vshow[faces], alpha=0.30, facecolor="#9DB4CC", edgecolor="none"))
+        pts = [vshow, trace]
+        if support > 1.3 * volume:
+            v2, f2, _, _, iso2 = envelope_mesh(C.RESULTS / st["avg_map"], support)
+            v2 = place(v2)
+            ax3.add_collection3d(Poly3DCollection(v2[f2], alpha=0.10, facecolor="#9DB4CC", edgecolor="none"))
+            pts.append(v2)
+            inside_outer = float(np.mean(rho[tuple(place.grid(trace).T)] > iso2))
+        else:
+            inside_outer = inside
+        ax3.plot(trace[:, 0], trace[:, 1], trace[:, 2], color=INK, lw=1.0, zorder=5)
+        ax3.scatter(trace[:1, 0], trace[:1, 1], trace[:1, 2], color=ACCENT, s=14, zorder=6)
+        allp = np.vstack(pts)
+        lo, hi = allp.min(axis=0), allp.max(axis=0)
+        span = (hi - lo) * 1.04
+        ax3.set_xlim(lo[0] - 0.02 * span[0], hi[0] + 0.02 * span[0])
+        ax3.set_ylim(lo[1] - 0.02 * span[1], hi[1] + 0.02 * span[1])
+        ax3.set_zlim(lo[2] - 0.02 * span[2], hi[2] + 0.02 * span[2])
+        ax3.set_box_aspect(tuple(span / span.max()), zoom=1.45)
+        ax3.view_init(elev=16, azim=-62)
+        ax3.set_axis_off()
+        ax3.text2D(0.0, 1.08, f"DENSS envelope · {st['n_maps']} maps · {st.get('resolution_A', 0):.0f} Å · "
+                   f"Dmax {st['dmax_A']:.0f} Å\ntop conformer (w = {f['top_weight']:.2f}): "
+                   f"{100 * inside:.0f}% of Cα inside the inner envelope",
+                   transform=ax3.transAxes, fontsize=8.2, color=MUTED, va="top")
+        out[label] = {"class": cls, "length": int(e.loc[label, "length"]),
+                      "chi2": {k: float(v["chi2"]) for k, v in f["curves"].items()},
+                      "rg_exp": float(f["rg_exp"]), "rg_raw": float(f["rg_raw"]),
+                      "rg_reweighted": float(f["rg_reweighted"]), "phi_reweighted": float(f["phi_reweighted"]),
+                      "top_conformer": f["top_conformer"], "top_weight": f["top_weight"],
+                      "ca_inside_envelope": inside, "ca_inside_support_surface": inside_outer,
+                      "isovalue_volume_A3": volume, "support_volume_A3": support,
+                      "denss": {k: st[k] for k in ("dmax_A", "n_maps", "chi2_median", "resolution_A",
+                                                  "maps_accepted", "rg_per_map_mean") if k in st}}
+    fig.savefig(OUT / "fig_examples.png")
+    plt.close(fig)
+    json.dump(out, open(C.RESULTS / "examples.json", "w"), indent=1)
+    return out
+
+
 def pct(x: float) -> str:
     return f"{100 * x:.0f}%"
 
 
-def write_campaign(A: dict, cand: pd.DataFrame) -> None:
+def f2(x) -> str:
+    return "n/a" if x is None or not np.isfinite(x) else f"{x:.2f}"
+
+
+def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFrame) -> dict:
+    """The two arms of the campaign, from results only.
+
+    Arm 1 (model improvement): high-error monomers that reweighting can fit, re-measured under one
+    standard condition. Arm 2 (hypothesis test): disordered proteins whose BioEmu-1 ensemble Rg exceeds
+    the disordered scaling-law Rg by more than 10% (a pre-acquisition quantity), spanning length and
+    composition, with matched controls whose ratio is within 10% of 1."""
+    from bsc import features
+    arm1 = cand[cand["resolvability"].isin([analyse.KIND_STRONG, analyse.KIND_MODEST])].head(12)
+    m = d[(d["model"] == C.MODEL) & d["clean"]].copy()
+    m["kind"] = m["resolvability"]
+    e = ent.set_index("label")
+    m["disorder_mean"] = e.loc[m["label"], "disorder_mean"].to_numpy()
+    sc = pd.read_csv(C.RESULTS / "scores.csv")
+    sc = sc[sc["model"] == C.MODEL].set_index("label")
+    for c in ("rg_conformer_iqr", "rg_conformer_median"):
+        m[c] = sc.loc[m["label"], c].to_numpy()
+    tab = features.build(m, ent).set_index("label")
+    dis = tab[tab["disorder_class"] == "disordered"].copy()
+    dis["ratio_pred"] = dis["rg_model_over_law_disordered"]
+    dis["ratio_obs"] = m.set_index("label").loc[dis.index, "rg_ratio"]
+    dis["length_bin"] = pd.cut(dis["length"], [0, 100, 200, 350, 10_000],
+                               labels=["≤100", "101–200", "201–350", ">350"])
+    test = dis[dis["ratio_pred"] > 1.1].sort_values(["length_bin", "ncpr"])
+    ctrl = dis[(dis["ratio_pred"] - 1).abs() <= 0.1].sort_values(["length_bin", "ncpr"])
+    # one test entry per length bin and charge tercile where available, up to twelve; controls matched by bin
+    picks = []
+    for _, g in test.groupby("length_bin", observed=True):
+        g = g.sort_values("ncpr")
+        idx = np.unique(np.linspace(0, len(g) - 1, min(3, len(g))).round().astype(int))
+        picks += g.index[idx].tolist()
+    test_sel = test.loc[picks].head(12)
+    ctrl_picks = []
+    for b in test_sel["length_bin"].unique():
+        ctrl_picks += ctrl[ctrl["length_bin"] == b].index.tolist()[:2]
+    ctrl_sel = ctrl.loc[ctrl_picks]
+
+    def rows(t):
+        return [{"label": lab, "length": int(r["length"]), "ncpr": round(float(r["ncpr"]), 3),
+                 "fcr": round(float(r["fcr"]), 3), "frac_proline": round(float(r["frac_proline"]), 3),
+                 "rg_model": round(float(r["rg_model"]), 1), "rg_law_disordered": round(float(r["rg_law_disordered"]), 1),
+                 "ratio_model_over_law": round(float(r["ratio_pred"]), 2),
+                 "ratio_model_over_exp_observed": round(float(r["ratio_obs"]), 2)} for lab, r in t.iterrows()]
+    P = json.load(open(C.RESULTS / "predict.json")) if (C.RESULTS / "predict.json").exists() else None
+    predictive = bool(P and max(P["regression"]["ridge"]["r2"]["mean"], P["regression"]["hgb"]["r2"]["mean"]) >= 0.2)
+    out = {"arm1": {"replication": json.loads(arm1.to_json(orient="records")),
+                    "novel_acquisition_possible": predictive,
+                    "predictor_r2": None if P is None else {k: P["regression"][k]["r2"]["mean"]
+                                                               for k in ("class_mean", "ridge", "hgb")}},
+           "arm2": {"threshold_ratio": 1.1, "n_disordered_pool": int(len(dis)),
+                    "n_test_candidates": int(len(test)), "n_control_candidates": int(len(ctrl)),
+                    "test": rows(test_sel), "controls": rows(ctrl_sel),
+                    "test_observed_median_ratio": float(test["ratio_obs"].median()),
+                    "control_observed_median_ratio": float(ctrl["ratio_obs"].median()) if len(ctrl) else None,
+                    "outcome": "median Rg_exp / Rg_model across the test arm",
+                    "refutes_bias_if": "median Rg_exp / Rg_model >= 0.95 in the test arm (the ensembles are "
+                                       "not systematically too extended)",
+                    "confirms_bias_if": "median Rg_exp / Rg_model <= 0.9 in the test arm and >= 0.95 in the controls"}}
+    json.dump(out, open(C.RESULTS / "campaign_arms.json", "w"), indent=1)
+    return out
+
+
+def write_campaign(A: dict, cand: pd.DataFrame, arms: dict) -> None:
     """docs/CAMPAIGN.md: the proposal, with every number read from the analysis."""
     b = A["bioemu"]
     E = A["expectations"]
     res = b["resolvability_counts"]
-    n_clean = A["n_clean"]
+    n_bioemu = sum(res.values())
     cls = {r["disorder_class"]: r for r in A["by_class"] if r["model"] == C.MODEL}
-    top = cand.head(12)
-    rows = "\n".join(
-        f"| {r.label} | {int(r.length)} | {r.disorder_class} | {r.chi2_raw:.1f} | {r.chi2_best:.2f} | "
-        f"{r.resolvability} | {r.rg_direction} |" for r in top.itertuples())
+    R = A["rg_robustness"]
+    H = A["headline_robustness"]
+    S = json.load(open(C.RESULTS / "select_eval.json")) if (C.RESULTS / "select_eval.json").exists() else None
+    arm1 = arms["arm1"]["replication"]
+    rows1 = "\n".join(
+        f"| {r['label']} | {int(r['length'])} | {r['disorder_class']} | {r['chi2_raw']:.1f} | {r['chi2_best']:.2f} | "
+        f"{r['resolvability']} | {r['rg_direction']} |" for r in arm1)
+    rows2 = "\n".join(
+        f"| {r['label']} | {r['length']} | {r['ncpr']:+.2f} | {r['fcr']:.2f} | {r['rg_model']} | {r['rg_law_disordered']} | "
+        f"{r['ratio_model_over_law']:.2f} |" for r in arms["arm2"]["test"])
+    rows2c = "\n".join(
+        f"| {r['label']} | {r['length']} | {r['ncpr']:+.2f} | {r['fcr']:.2f} | {r['rg_model']} | {r['rg_law_disordered']} | "
+        f"{r['ratio_model_over_law']:.2f} |" for r in arms["arm2"]["controls"])
+    cr = R.get("coordinate_rg", {}).get("by_class", {}).get("disordered")
+    coord_sentence = (f"The excess is in the conformers: the Cα radius of gyration of the sampled conformers is "
+                      f"{cr['coord_over_exp_median']:.2f} times the measured value at the median "
+                      f"(95% interval {cr['coord_over_exp_ci95'][0]:.2f}–{cr['coord_over_exp_ci95'][1]:.2f}, n = {cr['n']})."
+                      if cr else "")
+    pr2 = arms["arm1"]["predictor_r2"]
+    if pr2 is None:
+        novel = "The error predictor (`bsc predict`) has not been run, so no novel-acquisition list is offered."
+    elif not arms["arm1"]["novel_acquisition_possible"]:
+        novel = ("A novel-acquisition list (sequences without a SASBDB entry, chosen by the error predictor) is not "
+                 f"offered: the predictor of the raw error from sequence-level features reaches R² = "
+                 f"{max(pr2['ridge'], pr2['hgb']):.2f} in grouped cross-validation (class means alone "
+                 f"{pr2['class_mean']:.2f}), so its ranking of unmeasured sequences would be close to random. "
+                 "Only the replication list stands.")
+    else:
+        novel = ("A novel-acquisition list follows the error predictor's highest predicted error with the largest "
+                 "disagreement between models.")
+    if S:
+        k = str(S["top_k"][0])
+        pol = S["policies"][k]
+        sel_sentence = (f"On held-out folds of the existing pool, the rule fed with predicted quantities picks "
+                        f"{pol['predicted priority']['strong_or_notfit']['mean']:.2f} strongly reweightable or not-fit "
+                        f"entries per entry chosen (top {k}) against {pol['random']['strong_or_notfit']['mean']:.2f} for "
+                        f"random choice and {pol['observed priority (ceiling)']['strong_or_notfit']['mean']:.2f} when the "
+                        f"observed quantities are used; the predicted-error policy alone reaches "
+                        f"{pol['predicted error']['strong_or_notfit']['mean']:.2f}.")
+    else:
+        sel_sentence = ""
     text = f"""# Experimental campaign proposal: SAXS data for the next BioEmu
 
-*Generated by `bsc report` from `results/analysis.json` and `results/candidates.csv`. The reasoning
-is fixed in `docs/DESIGN.md` §6; the numbers below are read from the results.*
+*Generated by `bsc report` from `results/`. The reasoning is fixed in `docs/DESIGN.md` §6; the two-arm
+structure and the validation experiments are the post hoc additions of §7; the numbers are read from the
+results.*
 
 ## 1. What the error map says
 
-Scored without reweighting against {n_clean} quality-filtered SASBDB profiles, the BioEmu-1 ensemble
-reaches reduced χ² ≤ 2 for {pct(b['share_raw_fit_chi2_2'])} of entries (median χ² {b['chi2_raw_median']:.1f};
+Scored without reweighting against {n_bioemu} quality-filtered SASBDB profiles with a BioEmu-1 ensemble, the
+ensemble reaches reduced χ² ≤ 2 for {pct(b['share_raw_fit_chi2_2'])} of entries (95% interval
+{pct(H['share_raw_fit']['ci95'][0])}–{pct(H['share_raw_fit']['ci95'][1])}; median χ² {b['chi2_raw_median']:.1f},
 quartiles {b['chi2_raw_q25']:.1f}–{b['chi2_raw_q75']:.1f}). By class, the median raw χ² is
 {cls['folded']['chi2_raw_median']:.1f} for folded proteins (n = {cls['folded']['n']}),
 {cls['partly disordered']['chi2_raw_median']:.1f} for partly disordered (n = {cls['partly disordered']['n']}) and
@@ -202,44 +693,77 @@ Expectation E1 (disordered worse than folded) is {'met' if E['E1']['met'] else '
 (one-sided p = {E['E1']['p_one_sided']:.2g}); E2 (error rising with length among folded proteins) is
 {'met' if E['E2']['met'] else 'not met'} (ρ = {E['E2']['spearman_rho']:+.2f}; folded proteins of up to 100 residues fit
 {pct(E['E2']['share_fit_le_100'])} of the time, longer ones {pct(E['E2']['share_fit_gt_100'])}, with no trend above that); E4 (over-compaction of
-disordered proteins) is {'met' if E['E4']['met'] else 'not met'}: the median ensemble Rg is
-{E['E4']['median_rg_ratio_disordered']:.2f} times the measured value, and only {pct(E['E4']['share_below_1'])} of disordered
-entries are below 1, so the model's disordered ensembles are too {'compact' if E['E4']['median_rg_ratio_disordered'] < 1 else 'extended'},
-which is the direction a measurement campaign on disordered proteins would correct.
+disordered proteins) came out reversed: the median ensemble Rg is
+{E['E4']['median_rg_ratio_disordered']:.2f} times the measured value (95% interval
+{E['E4']['ci95_median_rg_ratio'][0]:.2f}–{E['E4']['ci95_median_rg_ratio'][1]:.2f}; two-sided Wilcoxon p = {E['E4']['p_two_sided']:.1e}), and only {pct(E['E4']['share_below_1'])} of disordered
+entries are below 1, so the model's disordered ensembles are too extended. {coord_sentence}
 
 ## 2. What SAXS can and cannot resolve
 
-Reweighting each ensemble towards its profile sorts the entries into four kinds
-({res.get('fits', 0)} fit as they are; {res.get('calibration', 0)} need a modest shift, keeping at least half the
-effective sample; {res.get('population', 0)} need their populations moved substantially; {res.get('unresolved', 0)}
-cannot be brought to χ² ≤ 2 from the conformers the model proposes). Expectation E3 is
+Reweighting each ensemble towards its profile sorts the entries into four kinds:
+{res.get(analyse.KIND_RAW, 0)} raw fits; {res.get(analyse.KIND_MODEST, 0)} modestly reweightable (χ² ≤ 2 while keeping at least half the
+effective sample); {res.get(analyse.KIND_STRONG, 0)} strongly reweightable (χ² ≤ 2 only below that); {res.get(analyse.KIND_NOTFIT, 0)}
+not fit along the path. Expectation E3 is
 {'met' if E['E3']['met'] else 'not met'}: {pct(E['E3']['share_phi_above_0.3'])} of entries reach χ² ≈ 1 while
 keeping more than 30% of the effective sample.
 
-- **Population cases** are where new SAXS data would move the model most: the right conformers exist in
-  the ensemble, and the measurement says how to weight them. A fine-tuning signal built from such
-  profiles is informative.
-- **Unresolved cases** need a different measurement or a different model. SAXS says the ensemble is wrong
-  but not how; the follow-up is a measurement that reports local structure or dynamics (NMR relaxation
-  or chemical shifts, HDX-MS, single-molecule FRET on labelled constructs).
-- **Calibration cases** are cheap wins: a small, consistent correction, often of the Rg scale. For these,
-  repeat measurements at several concentrations matter more than new systems.
+As interpretation: a **strongly reweightable** entry is one where the right conformers are present and
+mis-weighted, so a profile of it carries a usable fine-tuning signal; a **not-fit** entry needs a
+different measurement or a different model, because SAXS says the ensemble is wrong without saying how
+(NMR relaxation or chemical shifts, HDX-MS, single-molecule FRET on labelled constructs); a **modestly
+reweightable** entry needs a small, consistent correction, often of the Rg scale, for which repeat
+measurements at several concentrations matter more than new systems. φ measures how concentrated the
+weights become, not information content; and SAXS is low-dimensional, so distinct ensembles can give the
+same curve.
 
-## 3. Candidate systems
+## 3. Arm 1, model improvement: high-error, reweightable monomers under one standard condition
 
-The ranking multiplies the model's error (log₁₀ raw χ²) by a resolvability weight (population 1.0,
-calibration 0.6, unresolved 0.3) and a tractability weight (chain ≤ 350 residues; folded or partly
-disordered). The top of the list:
+The ranking multiplies the model's error (log₁₀ raw χ²) by a reweighting weight (strongly reweightable 1.0,
+modestly reweightable 0.6, not fit 0.3) and a tractability weight (chain ≤ 350 residues; folded or partly
+disordered). The arm takes the top reweightable entries:
 
 | SASBDB | length | class | raw χ² | best χ² | kind | Rg |
 |---|---|---|---|---|---|---|
-{rows}
+{rows1}
 
-Each candidate carries a construct note in `results/candidates.csv` (length, disorder class, Rg direction).
-Before commissioning, each is checked against its SASBDB entry for buffer, concentration series and
-oligomeric state, and against UniProt for tags and disordered termini.
+Re-measuring deposited systems controls conditions (one buffer, one temperature, tags removed, a
+concentration series), which removes the condition mismatch that is part of the raw error; it adds no new
+region of sequence space. {novel}
 
-## 4. Assay design
+The heuristic weights are a limitation: they were set by judgement, not fitted. {sel_sentence} This is
+retrospective, and a profile that already exists carries no new information for the model; the evaluation
+says only how far the rule can be trusted to rank unmeasured proteins from what is known about them.
+
+## 4. Arm 2, hypothesis test: are BioEmu-1's disordered ensembles too extended?
+
+The pre-registered expectation E4 predicted over-compaction; the archive shows the opposite. A measurement
+campaign can test this on proteins chosen before any SAXS curve is seen. The test arm takes disordered
+proteins whose BioEmu-1 ensemble Rg exceeds the disordered scaling-law Rg (1.927 N^0.598 Å) by more than
+{int(100 * (arms['arm2']['threshold_ratio'] - 1))}%, spanning chain length and net charge
+({arms['arm2']['n_test_candidates']} of {arms['arm2']['n_disordered_pool']} disordered entries qualify); matched
+controls are disordered proteins of the same length bins whose ratio is within 10% of 1
+({arms['arm2']['n_control_candidates']} qualify).
+
+Test arm:
+
+| SASBDB | length | NCPR | FCR | ensemble Rg (Å) | scaling-law Rg (Å) | ratio |
+|---|---|---|---|---|---|---|
+{rows2}
+
+Controls:
+
+| SASBDB | length | NCPR | FCR | ensemble Rg (Å) | scaling-law Rg (Å) | ratio |
+|---|---|---|---|---|---|---|
+{rows2c}
+
+Pre-specified outcome: the median of Rg_exp / Rg_model across the test arm, from Guinier fits of the new
+profiles. The bias is refuted if that median is at least 0.95; it is confirmed if the median is at most 0.90
+in the test arm and at least 0.95 in the controls. In the archive, the test candidates have a median
+observed Rg_model / Rg_exp of {f2(arms['arm2']['test_observed_median_ratio'])} and the controls
+{f2(arms['arm2']['control_observed_median_ratio'])}; the campaign repeats this under one condition, with the
+selection made from the model alone.
+
+## 5. Assay design
 
 - **Primary assay.** Size-exclusion-coupled SAXS (SEC-SAXS) at a synchrotron beamline, so that
   aggregates and oligomers are separated from the monomer before scattering is recorded. Three
@@ -255,12 +779,12 @@ oligomeric state, and against UniProt for tags and disordered termini.
 - **Standards and controls.** A protein standard (bovine serum albumin or glucose isomerase) in every
   session for absolute scale; water for intensity calibration; a buffer-only frame bracketing each
   sample; a repeat of one previously measured SASBDB entry per batch as a cross-site control.
-- **Companion measurement.** For the unresolved kind, HDX-MS on the same batch of protein: it reports
+- **Companion measurement.** For the not-fit kind, HDX-MS on the same batch of protein: it reports
   per-segment exchange that distinguishes a locally unfolded region from a globally wrong fold.
 
-## 5. QC criteria, applied by script
+## 6. QC criteria, applied by script
 
-Every dataset passes or fails on recorded values, not on inspection:
+Every dataset passes or fails on recorded values:
 
 1. Guinier region: at least 12 points with q·Rg ≤ 1.3 and a linear fit whose residuals show no trend.
 2. No aggregation: lowest-angle intensity within 5% of the Guinier line; Rg from the three concentrations
@@ -275,41 +799,44 @@ Every dataset passes or fails on recorded values, not on inspection:
 Datasets that fail are repeated once; a second failure retires the construct and triggers the
 contingency below.
 
-## 6. Success criteria and contingencies
+## 7. Success criteria and contingencies
 
 - **Dataset-level success:** QC passed, and the profile constrains the BioEmu ensemble (reweighting to
   χ² ≤ 1 changes the effective sample fraction by at least 0.2). A profile that the raw ensemble already
   fits is still deposited, but counted as a confirmation, not as training signal.
-- **Campaign-level success:** at least 60% of commissioned systems yield a usable profile; the set
-  covers the three disorder classes in roughly the proportions of the error map; the population kind
-  is over-represented, because that is where the model can learn.
+- **Arm 1 success:** at least 60% of commissioned systems yield a usable profile; the set covers the three
+  disorder classes in roughly the proportions of the error map; the strongly reweightable kind is
+  over-represented, because that is where the model can learn.
+- **Arm 2 success:** the pre-specified outcome is reached with at least eight test and six control profiles
+  passing QC, whichever way it falls.
 - **Contingencies.** Poor expression → switch to a homologue from the same family with a deposited
   SASBDB entry. Aggregation at SEC → lower concentration and add 5% glycerol; if that fails, retire.
   Beamtime loss → a laboratory SAXS instrument for the smallest, most concentrated samples, accepting
-  the lower q range and recording it. Ambiguous SAXS (the unresolved kind) → HDX-MS first, SAXS second.
+  the lower q range and recording it. Ambiguous SAXS (the not-fit kind) → HDX-MS first, SAXS second.
 
-## 7. Work packages for an external provider
+## 8. Work packages for an external provider
 
 | Package | Deliverable | Review point |
 |---|---|---|
-| WP1 Constructs | Expression plasmids for the ranked list, sequence-verified, with and without tags | Design review before synthesis; sequence files checked by script |
+| WP1 Constructs | Expression plasmids for both arms, sequence-verified, with and without tags | Design review before synthesis; sequence files checked by script |
 | WP2 Protein production | ≥ 2 mg per construct at ≥ 95% purity by SEC and SDS-PAGE, monodisperse by DLS | Purity and DLS reports per batch; a batch failing DLS does not proceed |
 | WP3 SEC-SAXS | Three-concentration SEC-SAXS per sample, with standards and buffer frames; raw frames and reduced curves | Scripted QC on delivery; results joined to the candidate table |
-| WP4 HDX-MS (unresolved kind only) | Deuterium uptake per peptide at four time points, with a fully deuterated control | Peptide coverage ≥ 85%; back-exchange reported |
+| WP4 HDX-MS (not-fit kind only) | Deuterium uptake per peptide at four time points, with a fully deuterated control | Peptide coverage ≥ 85%; back-exchange reported |
 | WP5 Deposition | SASBDB deposition of every QC-passed dataset with full metadata | Accession codes recorded against each candidate |
 
 Milestones are set per batch of twelve constructs: constructs at week 2, protein at week 6, SAXS at
 week 8, QC and model re-scoring at week 9. The re-scoring repeats this pipeline on the new profiles, so
 every batch updates the error map before the next batch is chosen.
 
-## 8. What this proposal rests on, and what it does not claim
+## 9. What this proposal rests on, and what it does not claim
 
-The error map uses ensembles generated by the PeptoneBench authors with BioEmu-1 at their settings; a
-re-sampling with the current checkpoint is the first check once GPU time is available. SASBDB profiles
-differ in buffer, temperature and construct, none of which the model sees, so part of the raw error is
-condition mismatch, which a campaign under one standard condition removes. The scoring treats the
-Pepsi-SAXS forward model as exact; its hydration-shell parameters are a known source of Rg bias of a
-few per cent, which is why calibration cases are read with care.
+The ensembles are from the PeptoneBench archive, generated with BioEmu at code commit ac7455d; the archive
+does not record the checkpoint version, and re-sampling with the current v1.2 checkpoint is the first
+follow-up. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so
+part of the raw error is condition mismatch, which a campaign under one standard condition removes. The
+scoring treats the Pepsi-SAXS forward model as exact; its hydration-shell parameters are a known source of
+Rg bias of a few per cent, which is why modestly reweightable cases are read with care. The comparison with
+other models is restricted to the six comparators on the shared entries.
 """
     (C.REPO / "docs" / "CAMPAIGN.md").write_text(text)
 
@@ -321,13 +848,18 @@ def main() -> None:
     d = pd.read_csv(C.RESULTS / "resolvability.csv")
     cand = pd.read_csv(C.RESULTS / "candidates.csv")
     paths = json.load(open(C.RESULTS / "paths" / f"{C.MODEL}.json"))
+    ent = pd.read_csv(C.RESULTS / "entries.csv")
     fig_error_map(d, A)
     fig_rg(d)
+    fig_rg_robustness(d, A)
     fig_resolvability(d, paths)
     if A["model_comparison"]:
         fig_models(A, d)
     fig_candidates(cand)
-    write_campaign(A, cand)
+    fig_predict()
+    fig_examples(A, ent)
+    arms = campaign_arms(A, cand, d, ent)
+    write_campaign(A, cand, arms)
     print(f"  figures -> {OUT}; proposal -> docs/CAMPAIGN.md", flush=True)
 
 

@@ -108,13 +108,27 @@ def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
     assert A["n_clean"] == n - 1
     E = A["expectations"]
     assert E["E1"]["met"] and E["E2"]["met"] and E["E4"]["met"]
-    assert set(A["bioemu"]["resolvability_counts"]) <= {"fits", "calibration", "population", "unresolved"}
+    assert set(A["bioemu"]["resolvability_counts"]) <= set(analyse.KINDS)
     assert A["model_comparison"][0]["model"] == "alphafold2"
     assert A["model_comparison"][0]["median_log10_chi2_ratio_vs_bioemu"] > 0
+    lo, hi = A["model_comparison"][0]["ci95_median_log10_chi2_ratio"]
+    assert lo <= A["model_comparison"][0]["median_log10_chi2_ratio_vs_bioemu"] <= hi
     cand = pd.read_csv(results / "candidates.csv")
     assert cand["priority"].is_monotonic_decreasing
     assert "S000" not in set(cand["label"])          # the flagged entry is excluded
-    assert (cand["resolvability"].iloc[0] in {"population", "calibration"})
+    assert (cand["resolvability"].iloc[0] in {analyse.KIND_STRONG, analyse.KIND_MODEST})
+    # the additions after the first run: intervals cover the point estimates, the kind counts at the
+    # pre-specified threshold equal the headline counts, and the examples are one entry per class
+    R = A["rg_robustness"]
+    lo, hi = R["curve_rg_ratio_by_class"]["disordered"]["ci95"]
+    assert lo <= E["E4"]["median_rg_ratio_disordered"] <= hi
+    H = A["headline_robustness"]
+    lo, hi = H["share_raw_fit"]["ci95"]
+    assert lo <= A["bioemu"]["share_raw_fit_chi2_2"] <= hi
+    assert H["kind_counts_by_phi_threshold"]["0.5"] == {k: A["bioemu"]["resolvability_counts"].get(k, 0)
+                                                        for k in analyse.KINDS}
+    assert set(A["examples"]) == {"folded", "partly disordered", "disordered"}
+    assert (results / "clusters.csv").exists()
 
 
 def test_report_builds_from_analysis(tmp_path, monkeypatch):
@@ -134,9 +148,17 @@ def test_report_builds_from_analysis(tmp_path, monkeypatch):
     monkeypatch.setattr(report, "OUT", results / "figures")
     analyse.main()
     report.main()
-    for f in ("fig_error_map", "fig_rg", "fig_resolvability", "fig_models", "fig_candidates"):
+    for f in ("fig_error_map", "fig_rg", "fig_rg_robustness", "fig_resolvability", "fig_models",
+              "fig_candidates"):
         assert (results / "figures" / f"{f}.png").stat().st_size > 10_000
+    # without DENSS maps and the validation stages the examples and prediction figures are left alone
+    assert not (results / "figures" / "fig_examples.png").exists()
+    assert not (results / "figures" / "fig_predict.png").exists()
     text = (docs / "CAMPAIGN.md").read_text()
-    assert "## 3. Candidate systems" in text and "| SASDB |" not in text
+    assert "## 3. Arm 1" in text and "## 4. Arm 2" in text and "| SASDB |" not in text
+    arms = json.load(open(results / "campaign_arms.json"))
+    assert arms["arm1"]["predictor_r2"] is None and "has not been run" in text
+    assert all(r["ratio_model_over_law"] > 1.1 for r in arms["arm2"]["test"])
+    assert all(abs(r["ratio_model_over_law"] - 1) <= 0.1 for r in arms["arm2"]["controls"])
     A = json.load(open(results / "analysis.json"))
     assert f"{A['bioemu']['chi2_raw_median']:.1f}" in text
