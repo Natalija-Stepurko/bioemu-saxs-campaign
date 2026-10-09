@@ -55,6 +55,7 @@ def download(name: str, dest: Path, remote: dict) -> Path:
 
 def record_checksums(paths: dict[str, Path]) -> None:
     rec = C.DATA / "checksums.json"
+    C.DATA.mkdir(parents=True, exist_ok=True)
     old = json.load(open(rec)) if rec.exists() else {}
     new = {k: _sha256(p) for k, p in paths.items()}
     for k, v in new.items():
@@ -67,16 +68,33 @@ def record_checksums(paths: dict[str, Path]) -> None:
 def extract_saxs(archive: Path) -> None:
     """Unpack the SAXS table and curves only."""
     with tarfile.open(archive) as t:
-        members = [m for m in t.getmembers() if m.name.startswith("PeptoneDB-SAXS/")]
+        members = [m for m in t.getmembers() if m.name.lstrip("./").startswith("PeptoneDB-SAXS/")]
         t.extractall(C.DATA, members=members, filter="data")
 
 
 def extract_predictions(archive: Path, models: list[str]) -> None:
-    """Unpack the back-calculated SAXS curves (and ensembles) for the named models only."""
-    want = tuple(f"Predictions/PeptoneDB-SAXS/{m}/" for m in models)
+    """Unpack the back-calculated SAXS curves for the named models only (the conformers are not needed)."""
+    want = tuple(f"Predictions/PeptoneDB-SAXS-expt/{m}/" for m in models)
     with tarfile.open(archive) as t:
         members = [m for m in t.getmembers() if m.name.startswith(want)]
         t.extractall(C.DATA, members=members, filter="data")
+
+
+def fetch_sasbdb_summaries(labels: list[str]) -> None:
+    """Entry summaries (measured molecular weight, Guinier Rg, project title) from the SASBDB REST API."""
+    import time
+    out = json.load(open(C.SASBDB_SUMMARY)) if C.SASBDB_SUMMARY.exists() else {}
+    keys = ("experimental_mw", "guinier_i0_mw", "porod_mw", "guinier_rg", "symmetry")
+    for lab in labels:
+        if lab in out:
+            continue
+        r = requests.get(C.SASBDB_API.format(label=lab), timeout=60)
+        r.raise_for_status()
+        d = r.json()
+        out[lab] = {k: d.get(k) for k in keys}
+        out[lab]["title"] = (d.get("project") or {}).get("title")
+        time.sleep(0.1)
+    json.dump(out, open(C.SASBDB_SUMMARY, "w"), indent=1)
 
 
 def main(models: list[str] | None = None, archive_dir: Path | None = None) -> None:
@@ -93,3 +111,6 @@ def main(models: list[str] | None = None, archive_dir: Path | None = None) -> No
     extract_predictions(paths["Predictions.tar.gz"], models)
     n = len(list(C.SAXS_DIR.glob("*.dat")))
     print(f"  {n} experimental curves; predictions for {', '.join(models)}", flush=True)
+    import pandas as pd
+    fetch_sasbdb_summaries(pd.read_csv(C.SAXS_TABLE)["label"].tolist())
+    print(f"  SASBDB summaries for {len(json.load(open(C.SASBDB_SUMMARY)))} entries", flush=True)

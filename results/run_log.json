@@ -1,0 +1,177 @@
+[
+ {
+  "stage": "fetch",
+  "args": [
+   "--archive-dir",
+   "/scratch/scfm-work/pbench"
+  ],
+  "seconds": 138.3,
+  "started_utc": "2026-10-08T17:01:24Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "a8345a93b75b6f96"
+ },
+ {
+  "stage": "fetch",
+  "args": [
+   "--archive-dir",
+   "/scratch/scfm-work/pbench"
+  ],
+  "seconds": 223.7,
+  "started_utc": "2026-10-08T17:06:49Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "54bcf3f833072964"
+ },
+ {
+  "stage": "score",
+  "args": [],
+  "seconds": 110.6,
+  "started_utc": "2026-10-08T17:12:58Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "54bcf3f833072964"
+ },
+ {
+  "stage": "analyse",
+  "args": [],
+  "seconds": 0.7,
+  "started_utc": "2026-10-08T17:15:36Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "54bcf3f833072964"
+ },
+ {
+  "stage": "score",
+  "args": [],
+  "seconds": 110.0,
+  "started_utc": "2026-10-08T17:16:11Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "2c2f6d14c423e364"
+ },
+ {
+  "stage": "analyse",
+  "args": [],
+  "seconds": 0.7,
+  "started_utc": "2026-10-08T17:18:02Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "2c2f6d14c423e364"
+ },
+ {
+  "stage": "report",
+  "args": [],
+  "seconds": 1.5,
+  "started_utc": "2026-10-08T17:18:23Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "2c2f6d14c423e364"
+ },
+ {
+  "stage": "report",
+  "args": [],
+  "seconds": 1.5,
+  "started_utc": "2026-10-08T17:18:42Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "2c2f6d14c423e364"
+ },
+ {
+  "stage": "analyse",
+  "args": [],
+  "seconds": 0.7,
+  "started_utc": "2026-10-08T17:19:23Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "2c2f6d14c423e364"
+ },
+ {
+  "stage": "report",
+  "args": [],
+  "seconds": 1.5,
+  "started_utc": "2026-10-08T17:19:24Z",
+  "commit": "0c4ba2bab2fe1e6ecff875676e8cc8ab08ec3d04",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "2c2f6d14c423e364"
+ },
+ {
+  "stage": "score",
+  "args": [],
+  "seconds": 110.0,
+  "started_utc": "2026-10-08T17:28:52Z",
+  "commit": "3d71d7890cd5e1c0f3b2763a7cb54875e8d6ffe6",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "analyse",
+  "args": [],
+  "seconds": 0.7,
+  "started_utc": "2026-10-08T17:30:43Z",
+  "commit": "3d71d7890cd5e1c0f3b2763a7cb54875e8d6ffe6",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "report",
+  "args": [],
+  "seconds": 1.5,
+  "started_utc": "2026-10-08T17:30:43Z",
+  "commit": "3d71d7890cd5e1c0f3b2763a7cb54875e8d6ffe6",
+  "dirty": true,
+  "inputs_sha256": {
+   "PeptoneDBs.tar.gz": "5e937b46698df5f012f5653f75b61e35bea2cfbb80d92e7201a42087d1561113",
+   "Predictions.tar.gz": "dec532683dee2c8be1df6cd3a28fd69a7463e4a331f06b500ad655a064b0286f"
+  },
+  "config_sha256": "4dd41249c51e1b40"
+ }
+]
