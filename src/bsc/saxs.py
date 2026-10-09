@@ -33,6 +33,25 @@ def chi2(model: np.ndarray, exp: np.ndarray, sigma: np.ndarray, fit_background: 
     return float(np.sum(r**2) / dof)
 
 
+def nrmsd_log(model: np.ndarray, exp: np.ndarray, sigma: np.ndarray, snr_min: float = 3.0) -> float:
+    """A second fit score that does not weight by the reported errors.
+
+    The computed curve is scaled to the data with the same scale factor and constant background as
+    the chi-squared fit. Over the usable q range, the points at which the experimental intensity is
+    positive and at least `snr_min` standard errors above zero and the scaled model is positive, the
+    root-mean-square deviation of ln I between model and data is divided by the range of ln I of the
+    data over those points. 0 is a perfect fit; 0.02 is a deviation of 2% of the curve's dynamic
+    range in log intensity. Errors enter only through the point selection and the scale fit."""
+    c, b = scale_and_background(model, exp, sigma)
+    fit = c * model + b
+    use = (exp > 0) & (exp >= snr_min * sigma) & (fit > 0)
+    if use.sum() < 10:
+        return float("nan")
+    d = np.log(fit[use]) - np.log(exp[use])
+    rng = np.ptp(np.log(exp[use]))
+    return float(np.sqrt(np.mean(d**2)) / rng) if rng > 0 else float("nan")
+
+
 def ensemble_curve(curves: np.ndarray, weights: np.ndarray | None = None) -> np.ndarray:
     """Weighted mean of per-conformer curves, shape (n_conformers, n_q) -> (n_q,)."""
     if weights is None:
@@ -117,15 +136,17 @@ def kish_fraction(w: np.ndarray) -> float:
     return float(np.sum(w) ** 2 / np.sum(w**2) / len(w))
 
 
-def reweighting_curve(curves: np.ndarray, exp: np.ndarray, sigma: np.ndarray,
-                      thetas: np.ndarray) -> list[dict]:
+def reweighting_curve(curves: np.ndarray, exp: np.ndarray, sigma: np.ndarray, thetas: np.ndarray,
+                      return_weights: bool = False) -> list[dict] | tuple[list[dict], list]:
     """Chi2 and Kish fraction along a decreasing sequence of theta, from almost no reweighting
-    towards a full fit. Each solve starts from uniform weights."""
-    out = []
+    towards a full fit. Each solve starts from uniform weights. With `return_weights` the weight
+    vector of every point on the path is returned as well."""
+    out, ws = [], []
     for th in sorted(thetas, reverse=True):
         w, c2 = reweight(curves, exp, sigma, th)
         out.append({"theta": float(th), "chi2": c2, "phi": kish_fraction(w)})
-    return out
+        ws.append(w)
+    return (out, ws) if return_weights else out
 
 
 def phi_at_chi2(path: list[dict], target: float) -> float:

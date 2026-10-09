@@ -103,8 +103,12 @@ def score_entry(model: str, label: str, exp: pd.DataFrame) -> tuple[dict, list[d
     rgs = [saxs.guinier(q, c, 0.01 * c + 1e-9, C.GUINIER_QRG_MAX)["rg"] for c in curves]
     rec["rg_conformer_median"] = float(np.nanmedian(rgs))
     rec["rg_conformer_iqr"] = float(np.nanpercentile(rgs, 75) - np.nanpercentile(rgs, 25))
-    path = saxs.reweighting_curve(curves, I, s, C.THETA_GRID)
-    best = min(path, key=lambda p: p["chi2"])
+    path, weights = saxs.reweighting_curve(curves, I, s, C.THETA_GRID, return_weights=True)
+    i_best = int(np.argmin([p["chi2"] for p in path]))
+    best = path[i_best]
+    # a second fit score that does not weight by the reported errors (DESIGN §7, C2)
+    rec["nrmsd_raw"] = saxs.nrmsd_log(raw, I, s)
+    rec["nrmsd_best"] = saxs.nrmsd_log(saxs.ensemble_curve(curves, weights[i_best]), I, s)
     rec.update({"chi2_best": best["chi2"], "phi_at_best": best["phi"],
                 "phi_at_chi2_1": saxs.phi_at_chi2(path, C.CHI2_TARGET),
                 "phi_at_chi2_2": saxs.phi_at_chi2(path, 2.0),
