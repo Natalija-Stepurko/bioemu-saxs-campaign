@@ -26,24 +26,25 @@ entries are below 1, so the model's disordered ensembles are too extended. The e
 
 Reweighting each ensemble towards its profile sorts the entries into four kinds:
 146 raw fits; 65 modestly reweightable (χ² ≤ 2 while keeping at least half the
-effective sample); 91 strongly reweightable (χ² ≤ 2 only below that); 97
-not fit along the path. Expectation E3 is
+effective sample); 91 strongly reweightable (χ² ≤ 2 only below that, which requires substantial population
+changes); 97 whose target fit is not reached by the tested reweighting procedure. Expectation E3 is
 not met: 10% of entries reach χ² ≈ 1 while
 keeping more than 30% of the effective sample.
 
 As interpretation: a **strongly reweightable** entry is one where the right conformers are present and
-mis-weighted, so a profile of it carries a usable fine-tuning signal; a **not-fit** entry needs a
-different measurement or a different model, because SAXS says the ensemble is wrong without saying how
+mis-weighted, so a profile of it carries a usable fine-tuning signal; an entry whose **target fit is not
+reached** needs a different measurement or a different model, because SAXS says the ensemble is wrong without saying how
 (NMR relaxation or chemical shifts, HDX-MS, single-molecule FRET on labelled constructs); a **modestly
 reweightable** entry needs a small, consistent correction, often of the Rg scale, for which repeat
 measurements at several concentrations matter more than new systems. φ measures how concentrated the
-weights become, not information content; and SAXS is low-dimensional, so distinct ensembles can give the
-same curve.
+weights become, not information gain; SAXS is low-dimensional, so distinct ensembles can give the same
+curve; and a target fit that is not reached does not establish that compatible conformations are absent from
+BioEmu's distribution: it describes this finite ensemble, this forward model and this procedure.
 
 ## 3. Arm 1, model improvement: high-error, reweightable monomers under one standard condition
 
 The ranking multiplies the model's error (log₁₀ raw χ²) by a reweighting weight (strongly reweightable 1.0,
-modestly reweightable 0.6, not fit 0.3) and a tractability weight (chain ≤ 350 residues; folded or partly
+modestly reweightable 0.6, target fit not reached 0.3) and a tractability weight (chain ≤ 350 residues; folded or partly
 disordered). The arm takes the top reweightable entries:
 
 | SASBDB | length | class | raw χ² | best χ² | kind | Rg |
@@ -61,23 +62,28 @@ disordered). The arm takes the top reweightable entries:
 | SASDVL7 | 114 | partly disordered | 19.5 | 1.19 | strongly reweightable | model too compact |
 | SASDJX7 | 302 | folded | 19.4 | 1.07 | strongly reweightable | Rg agrees |
 
-Re-measuring deposited systems controls conditions (one buffer, one temperature, tags removed, a
-concentration series), which removes the condition mismatch that is part of the raw error; it adds no new
-region of sequence space. A novel-acquisition list (sequences without a SASBDB entry, chosen by the error predictor) is not offered: the predictor of the raw error from sequence-level features reaches R² = 0.05 in grouped cross-validation (class means alone 0.04), so its ranking of unmeasured sequences would be close to random. Only the replication list stands.
+Re-measuring deposited systems under standardised conditions (one buffer, one temperature, tags removed, a
+concentration series) reduces condition heterogeneity and tests whether the discrepancy is reproducible; one
+common buffer and temperature can itself shift some ensembles, so a changed profile is read against the
+deposited one before it is read against the model. It adds no new region of sequence space. A novel-acquisition list (sequences without a SASBDB entry, chosen by the error predictor) is not offered: the predictor of the raw error from sequence-level features reaches R² = 0.05 in grouped cross-validation (class means alone 0.04), so its ranking of unmeasured sequences would be close to random. Only the replication list stands.
 
-The heuristic weights are a limitation: they were set by judgement, not fitted. On held-out folds of the existing pool, the rule fed with predicted quantities picks 0.52 strongly reweightable or not-fit entries per entry chosen (top 10) against 0.48 for random choice and 1.00 when the observed quantities are used; the predicted-error policy alone reaches 0.58. This is
+The heuristic weights are a limitation: they were set by judgement, not fitted. On held-out folds of the existing pool, the rule fed with predicted quantities picks 0.52 strongly reweightable or target-not-reached entries per entry chosen (top 10) against 0.48 for random choice and 1.00 when the observed quantities are used; the predicted-error policy alone reaches 0.58. This is
 retrospective, and a profile that already exists carries no new information for the model; the evaluation
 says only how far the rule can be trusted to rank unmeasured proteins from what is known about them.
 
 ## 4. Arm 2, hypothesis test: are BioEmu-1's disordered ensembles too extended?
 
-The pre-registered expectation E4 predicted over-compaction; the archive shows the opposite. A measurement
-campaign can test this on proteins chosen before any SAXS curve is seen. The test arm takes disordered
+The pre-registered expectation E4 predicted over-compaction; the archive shows the opposite. The hypothesis
+came from this archive, so this arm is a prospective replication test with pre-specified model-based
+selection and new SAXS measurements. The test arm takes disordered
 proteins whose BioEmu-1 ensemble Rg exceeds the disordered scaling-law Rg (1.927 N^0.598 Å) by more than
 10%, spanning chain length and net charge
-(19 of 41 disordered entries qualify); matched
-controls are disordered proteins of the same length bins whose ratio is within 10% of 1
-(13 qualify).
+(19 of 41 disordered entries qualify); the
+scaling-law-matched controls are disordered proteins of the same length bins whose ratio to the scaling law is
+within 10% of 1 (13 qualify). In the archive their observed Rg_model / Rg_exp
+is 1.19 at the median, against
+1.36 for the test candidates, so the controls are not known to agree
+with experiment; they are matched to the test arm on the scaling-law ratio only.
 
 Test arm:
 
@@ -105,10 +111,8 @@ Controls:
 
 Pre-specified outcome: the median of Rg_exp / Rg_model across the test arm, from Guinier fits of the new
 profiles. The bias is refuted if that median is at least 0.95; it is confirmed if the median is at most 0.90
-in the test arm and at least 0.95 in the controls. In the archive, the test candidates have a median
-observed Rg_model / Rg_exp of 1.36 and the controls
-1.19; the campaign repeats this under one condition, with the
-selection made from the model alone.
+in the test arm and at least 0.95 in the controls. The campaign repeats the archive comparison under one
+condition, with the selection made from the model alone.
 
 ## 5. Assay design
 
@@ -126,7 +130,7 @@ selection made from the model alone.
 - **Standards and controls.** A protein standard (bovine serum albumin or glucose isomerase) in every
   session for absolute scale; water for intensity calibration; a buffer-only frame bracketing each
   sample; a repeat of one previously measured SASBDB entry per batch as a cross-site control.
-- **Companion measurement.** For the not-fit kind, HDX-MS on the same batch of protein: it reports
+- **Companion measurement.** For entries whose target fit is not reached, HDX-MS on the same batch of protein: it reports
   per-segment exchange that distinguishes a locally unfolded region from a globally wrong fold.
 
 ## 6. QC criteria, applied by script
@@ -159,7 +163,7 @@ contingency below.
 - **Contingencies.** Poor expression → switch to a homologue from the same family with a deposited
   SASBDB entry. Aggregation at SEC → lower concentration and add 5% glycerol; if that fails, retire.
   Beamtime loss → a laboratory SAXS instrument for the smallest, most concentrated samples, accepting
-  the lower q range and recording it. Ambiguous SAXS (the not-fit kind) → HDX-MS first, SAXS second.
+  the lower q range and recording it. Ambiguous SAXS (target fit not reached) → HDX-MS first, SAXS second.
 
 ## 8. Work packages for an external provider
 
@@ -168,7 +172,7 @@ contingency below.
 | WP1 Constructs | Expression plasmids for both arms, sequence-verified, with and without tags | Design review before synthesis; sequence files checked by script |
 | WP2 Protein production | ≥ 2 mg per construct at ≥ 95% purity by SEC and SDS-PAGE, monodisperse by DLS | Purity and DLS reports per batch; a batch failing DLS does not proceed |
 | WP3 SEC-SAXS | Three-concentration SEC-SAXS per sample, with standards and buffer frames; raw frames and reduced curves | Scripted QC on delivery; results joined to the candidate table |
-| WP4 HDX-MS (not-fit kind only) | Deuterium uptake per peptide at four time points, with a fully deuterated control | Peptide coverage ≥ 85%; back-exchange reported |
+| WP4 HDX-MS (target fit not reached only) | Deuterium uptake per peptide at four time points, with a fully deuterated control | Peptide coverage ≥ 85%; back-exchange reported |
 | WP5 Deposition | SASBDB deposition of every QC-passed dataset with full metadata | Accession codes recorded against each candidate |
 
 Milestones are set per batch of twelve constructs: constructs at week 2, protein at week 6, SAXS at
@@ -180,7 +184,7 @@ every batch updates the error map before the next batch is chosen.
 The ensembles are from the PeptoneBench archive, generated with BioEmu at code commit ac7455d; the archive
 does not record the checkpoint version, and re-sampling with the current v1.2 checkpoint is the first
 follow-up. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so
-part of the raw error is condition mismatch, which a campaign under one standard condition removes. The
+part of the raw error is condition mismatch, which a campaign under one standard condition reduces. The
 scoring treats the Pepsi-SAXS forward model as exact; its hydration-shell parameters are a known source of
 Rg bias of a few per cent, which is why modestly reweightable cases are read with care. The comparison with
 other models is restricted to the six comparators on the shared entries.
