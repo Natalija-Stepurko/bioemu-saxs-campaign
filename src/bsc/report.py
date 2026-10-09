@@ -60,6 +60,9 @@ def fig_error_map(d: pd.DataFrame, A: dict) -> None:
         ax.scatter(g["length"], np.log10(g["chi2_raw"]), s=14, color=CLS_COL[cls], alpha=0.7, lw=0, label=cls)
     ax.axhline(np.log10(2), color=RULE, lw=1, ls="--")
     ax.set_xscale("log")
+    ax.set_xticks([20, 50, 100, 200, 500])
+    ax.set_xticklabels(["20", "50", "100", "200", "500"])
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_xlabel("chain length (residues)")
     ax.set_ylabel("raw reduced χ² (log10)")
     ax.set_ylim(-0.6, 3.7)
@@ -85,10 +88,15 @@ def fig_rg(d: pd.DataFrame) -> None:
     ax.set_yscale("log")
     ax.set_xlim(lim)
     ax.set_ylim(lim)
+    ticks = [t for t in (10, 20, 30, 50, 100, 150) if lim[0] <= t <= lim[1]]
+    for axis in (ax.xaxis, ax.yaxis):
+        axis.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
+        axis.set_major_formatter(matplotlib.ticker.FixedFormatter([str(t) for t in ticks]))
+        axis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_xlabel("experimental Rg (Å, Guinier)")
     ax.set_ylabel("BioEmu-1 ensemble Rg (Å)")
     ax.legend(frameon=False, fontsize=9, loc="upper left")
-    ax.set_title("Points below the line: the ensemble is too compact", fontsize=10, loc="left")
+    ax.set_title("Ensemble size against measured size; above the line: too extended", fontsize=10, loc="left")
     fig.tight_layout()
     fig.savefig(OUT / "fig_rg.png")
     plt.close(fig)
@@ -326,7 +334,7 @@ def fig_predict() -> None:
     ax.axhline(pm, color=MUTED, lw=1, ls="--")
     ax.set_xticks(range(len(pols)))
     ax.set_xticklabels(short, fontsize=8)
-    ax.set_ylim(0, 1.2)
+    ax.set_ylim(0, 1.34)
     ax.set_ylabel("share strongly reweightable or not fit\namong the selected entries")
     handles = [matplotlib.patches.Patch(color=MUTED, label=f"top {S['top_k'][0]}"),
                matplotlib.patches.Patch(color=MUTED, alpha=0.55, label=f"top {S['top_k'][1]}"),
