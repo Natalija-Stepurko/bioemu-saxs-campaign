@@ -75,7 +75,11 @@ def run(stage: str, argv: list[str]) -> None:
         surrogate.main()
     elif stage == "value":
         from bsc import value
-        value.main()
+        ap = argparse.ArgumentParser(prog="bsc value")
+        ap.add_argument("--summary-only", action="store_true",
+                        help="re-summarise the stored marginal contributions without refitting")
+        a = ap.parse_args(argv)
+        value.main(a.summary_only)
     elif stage == "acquire":
         from bsc import acquire
         ap = argparse.ArgumentParser(prog="bsc acquire")

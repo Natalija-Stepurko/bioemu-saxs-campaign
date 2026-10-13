@@ -102,14 +102,19 @@ def test_analytic_gradient_matches_finite_differences(synthetic):
         np.testing.assert_allclose(g, fd, rtol=1e-5, atol=1e-6 * np.abs(g).max())
 
 
-def test_size_scaling_stays_in_bounds_and_scores_only_points_inside_the_grid(synthetic):
+def test_size_scaling_stays_in_bounds_and_scores_points_inside_the_grid(synthetic):
     c = next(iter(synthetic["cache"]["computed"].values()))
     for eta in (-5.0, -0.1, 0.0, 0.1, 5.0):
         ls, _ = S.log_scale(eta)
         assert np.log(0.8) - 1e-12 <= ls <= np.log(1.25) + 1e-12
         cv = S.curve(c, 0.0, eta, grad=False)
-        qs = c.q[cv["inside"]] * np.exp(ls)
-        assert qs.min() >= c.q.min() * (1 - 1e-12) and qs.max() <= c.q.max() * (1 + 1e-12)
+        u = np.log(c.q[cv["inside"]]) + ls
+        full = cv["wq"] >= 1
+        # weight 1 inside the grid, a taper of at most one grid spacing beyond it, nothing further out
+        assert (u[full] >= np.log(c.q.min()) - 1e-12).all() and (u[full] <= np.log(c.q.max()) + 1e-12).all()
+        h = np.diff(np.unique(np.log(c.q)))
+        assert u.min() > np.log(c.q.min()) - h[0] and u.max() < np.log(c.q.max()) + h[-1]
+        assert ((cv["wq"] > 0) & (cv["wq"] <= 1)).all()
     assert S.curve(c, 0.0, 0.0, grad=False)["inside"].all()
 
 
@@ -118,12 +123,11 @@ def test_fitting_recovers_a_known_size_scaling(synthetic):
     comps = synthetic["cache"]["computed"]
     items = []
     for c in comps.values():
-        q = c.q
         full = S.curve(c, 0.0, S.LOG_S_BOUND * np.arctanh(np.log(0.9) / S.LOG_S_BOUND), grad=False)
         pts = np.flatnonzero(full["inside"])
         I = full["I"]
         items.append((c, S.Experiment(c.label, pts, I, 0.01 * I + 1e-6)))
-        assert len(pts) < len(q)
+        assert full["wq"].min() < 1                         # the lowest point sits in the taper
     theta = S.fit(items, tau=100.0)
     for c, _ in items:
         lam, eta = S.lam_eta(theta, c.x)
@@ -189,3 +193,15 @@ def test_hierarchical_interval_brackets_a_constant_difference():
     d = pd.Series(0.3, index=idx)
     assert acquire.hierarchical_ci(d, n_boot=50) == pytest.approx([0.3, 0.3])
     _ = json.dumps(acquire.POLICIES)
+
+
+def test_score_is_continuous_as_points_leave_the_grid(synthetic):
+    """The taper keeps χ² continuous in the size scaling (a hard cut would jump at every grid point)."""
+    comps = synthetic["cache"]["computed"]
+    c = comps["SASDY02"]
+    e = S.read_experiment(c)
+    etas = np.linspace(0.0, 0.05, 2001)
+    x2 = np.array([S.chi2_terms(c, e, np.r_[np.zeros(4), eta / c.x[0], 0, 0, 0], grad=False)[0]
+                   for eta in etas])
+    steps = np.abs(np.diff(x2))
+    assert steps.max() < 20 * np.median(steps) + 1e-12

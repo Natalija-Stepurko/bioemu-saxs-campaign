@@ -16,7 +16,8 @@ DISORDERED_LAW blended by the disorder score, as in the `predict` stage).
 I_pk(q·s) is read from a cubic Hermite interpolant in ln q through the computed points (node slopes by
 three-point differences), built once per protein; it passes through every computed point, so s = 1
 reproduces the computed curves exactly. Only q points whose rescaled value q·s stays inside the computed
-grid are scored. Each profile's scale and constant background are solved inside χ² by weighted least
+grid are scored (with a linear taper over one grid spacing beyond either end, so the score is continuous in s;
+ACQUISITION_DESIGN §10). Each profile's scale and constant background are solved inside χ² by weighted least
 squares, as in `score`; the reduced χ² divides by the number of scored points minus two.
 
 Fit: θ̂ minimises Σ_p χ²_p(θ)/2 + |θ|²/(2τ²) (L-BFGS, analytic gradient). τ is chosen once, by grouped
@@ -48,6 +49,7 @@ TAU_GRID = (0.03, 0.1, 0.3, 1.0, 3.0, 10.0)
 N_SPLITS, HELD_OUT = 5, 0.30
 SPLIT_SEED = 20261013
 E5_THRESHOLD = 0.10
+MAX_RESTARTS = 2
 CACHE = C.DATA / "acquisition_cache.pkl"
 
 
@@ -270,8 +272,11 @@ def curve(
     grad: bool = True,
     weights_override: np.ndarray | None = None,
 ) -> dict:
-    """Î at the points `pts` (indices into c.q; all by default) that stay inside the grid after scaling,
-    with dÎ/dλ and dÎ/dη. Returns the kept mask over `pts` too."""
+    """Î at the points `pts` (indices into c.q; all by default) that are scored after scaling, with dÎ/dλ
+    and dÎ/dη. A point whose rescaled q stays inside the computed grid has weight 1; the weight falls
+    linearly to 0 over one grid spacing beyond either end (the last Hermite segment is extended that far),
+    so that the scored set changes continuously with s. Returns the kept mask over `pts`, the weights of
+    the kept points and their derivative with respect to η."""
     pts = np.arange(len(c.q)) if pts is None else pts
     ls, dls = log_scale(eta)
     w = weights(c.z, lam) if weights_override is None else weights_override
@@ -281,8 +286,12 @@ def curve(
     F = np.vstack(rows) @ c.Y
     U = c.node_u
     t = U[c.node_of[pts]] + ls
-    inside = (t >= U[0]) & (t <= U[-1])
-    t = t[inside]
+    h_lo, h_hi = U[1] - U[0], U[-1] - U[-2]
+    over, under = t - U[-1], U[0] - t
+    wq = 1.0 - np.clip(over / h_hi, 0, None) - np.clip(under / h_lo, 0, None)
+    inside = wq > 0
+    t, wq, over, under = t[inside], wq[inside], over[inside], under[inside]
+    dwq = (np.where(under > 0, 1.0 / h_lo, 0.0) - np.where(over > 0, 1.0 / h_hi, 0.0)) * dls
     n = len(U)
     i = np.clip(np.searchsorted(U, t, side="right") - 1, 0, n - 2)
     h = U[i + 1] - U[i]
@@ -291,7 +300,7 @@ def curve(
     h00, h10, h01, h11 = 2 * s3 - 3 * s2 + 1, s3 - 2 * s2 + s, -2 * s3 + 3 * s2, s3 - s2
     M = node_slopes(F, c)
     val = h00 * F[:, i] + h10 * h * M[:, i] + h01 * F[:, i + 1] + h11 * h * M[:, i + 1]
-    out = {"I": val[0], "inside": inside}
+    out = {"I": val[0], "inside": inside, "wq": wq, "dwq_deta": dwq}
     if grad:
         dval = (
             (6 * s2 - 6 * s) * (F[0, i] - F[0, i + 1]) / h
@@ -316,18 +325,19 @@ def chi2_terms(
     """Reduced χ² of the corrected curve against the profile, with its gradient over θ."""
     lam, eta = lam_eta(theta, c.x)
     cv = curve(c, lam, eta, e.pts, grad=grad)
-    m = cv["inside"]
+    m, wq = cv["inside"], cv["wq"]
     sig = e.sigma[m]
     A, ones, y = cv["I"] / sig, 1.0 / sig, e.I[m] / sig
-    sc, bg = _fit_scale(A, ones, y)
+    rw = np.sqrt(wq)
+    sc, bg = _fit_scale(A * rw, ones * rw, y * rw)
     r = sc * A + bg * ones - y
-    dof = len(r) - 2
-    chi2 = float(r @ r / dof)
+    Q, D = float(wq @ (r * r)), float(wq.sum() - 2)
+    chi2 = Q / D
     if not grad:
         return chi2, None
-    k = 2.0 * sc / dof
-    g_lam = k * (r @ (cv["dI_dlam"] / sig))
-    g_eta = k * (r @ (cv["dI_deta"] / sig))
+    g_lam = 2.0 * sc * ((wq * r) @ (cv["dI_dlam"] / sig)) / D
+    dw = cv["dwq_deta"]
+    g_eta = (2.0 * sc * ((wq * r) @ (cv["dI_deta"] / sig)) + dw @ (r * r)) / D - Q / D**2 * dw.sum()
     return chi2, np.concatenate([g_lam * c.x, g_eta * c.x])
 
 
@@ -350,16 +360,20 @@ def objective(
 def fit(items: list[tuple[Computed, Experiment]], tau: float, theta0: np.ndarray | None = None) -> np.ndarray:
     if not items:
         return np.zeros(N_THETA)
-    x0 = np.zeros(N_THETA) if theta0 is None else np.asarray(theta0, float)
-    res = minimize(
-        objective,
-        x0,
-        args=(items, tau),
-        jac=True,
-        method="L-BFGS-B",
-        options={"maxiter": 500, "gtol": 1e-6, "ftol": 1e-10},
-    )
-    return res.x
+    x = np.zeros(N_THETA) if theta0 is None else np.asarray(theta0, float)
+    for _ in range(MAX_RESTARTS + 1):
+        res = minimize(
+            objective,
+            x,
+            args=(items, tau),
+            jac=True,
+            method="L-BFGS-B",
+            options={"maxiter": 500, "gtol": 1e-6, "ftol": 1e-10},
+        )
+        x = res.x
+        if res.success:  # a line-search stop at a kink of the taper is restarted with fresh memory
+            break
+    return x
 
 
 def chi2_many(theta: np.ndarray, items: list[tuple[Computed, Experiment]]) -> np.ndarray:
@@ -374,11 +388,12 @@ def improvement(theta: np.ndarray, held: list[tuple[Computed, Experiment]], base
 def corrected_curve(
     c: Computed, e: Experiment, theta: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """(q, Î, I, σ) on the scored points, for the secondary scores."""
+    """(q, Î, I, σ) on the points inside the grid after scaling, for the secondary scores."""
     lam, eta = lam_eta(theta, c.x)
     cv = curve(c, lam, eta, e.pts, grad=False)
-    m = cv["inside"]
-    return c.q[e.pts][m], cv["I"], e.I[m], e.sigma[m]
+    m = np.flatnonzero(cv["inside"])
+    full = cv["wq"] >= 1.0
+    return c.q[e.pts][m][full], cv["I"][full], e.I[m][full], e.sigma[m][full]
 
 
 # ---------------------------------------------------------------------------- splits and E5
@@ -521,11 +536,48 @@ def main() -> None:
             c: float(np.median(np.log10(base[te][cls == c]) - np.log10(x2[cls == c])))
             for c in analyse.CLASS_ORDER
         }
+        rec["_rows"] = pd.DataFrame(
+            {
+                "split": k,
+                "label": labels[te],
+                "disorder_class": cls,
+                "chi2_raw": base[te],
+                "chi2_corrected": x2,
+            }
+        )
         return rec
 
     recs = Parallel(n_jobs=min(C.N_JOBS, N_SPLITS))(
         delayed(per_split)(k, tr, te) for k, (tr, te) in enumerate(sp)
     )
+    held_rows = pd.concat([r.pop("_rows") for r in recs], ignore_index=True)
+    # is the whole-pool optimum the one L-BFGS finds from θ = 0? Four random starts on the first split
+    pool0 = [all_items[i] for i in tr0]
+    starts = [np.zeros(N_THETA)] + [
+        np.r_[rng.normal(0, 0.5, 4), rng.normal(0, 0.05, 4)]
+        for rng in [np.random.default_rng(SPLIT_SEED + 50 + j) for j in range(4)]
+    ]
+
+    def from_start(x0):
+        th = fit(pool0, tau, theta0=x0)
+        return {
+            "objective": objective(th, pool0, tau)[0],
+            "theta": th.tolist(),
+            "held_out_median_log10_reduction": improvement(th, [all_items[i] for i in te0], base[te0]),
+        }
+
+    multistart = Parallel(n_jobs=min(C.N_JOBS, len(starts)))(delayed(from_start)(x0) for x0 in starts)
+    held_rows["log10_reduction"] = np.log10(held_rows["chi2_raw"]) - np.log10(held_rows["chi2_corrected"])
+    held_rows.to_csv(C.RESULTS / "acq_surrogate_heldout.csv", index=False)
+    pooled = {}
+    for i, c in enumerate(analyse.CLASS_ORDER):
+        v = held_rows.loc[held_rows["disorder_class"] == c, "log10_reduction"].to_numpy()
+        pooled[c] = {
+            "n": int(len(v)),
+            "median_log10_reduction": float(np.median(v)),
+            "ci95": analyse.ci(v, seed_offset=800 + i),
+            "share_held_out": float(len(v) / len(held_rows)),
+        }
     rr = np.array([r["relative_reduction_median_chi2"] for r in recs])
     e5 = {
         "statement": "fitted on the whole pool, the surrogate improves the held-out median chi2 "
@@ -536,6 +588,13 @@ def main() -> None:
         "max_relative_reduction": float(rr.max()),
         "mean_median_log10_reduction": float(np.mean([r["median_log10_reduction"] for r in recs])),
         "threshold": E5_THRESHOLD,
+        "by_class_pooled": pooled,
+        "rg_ratio_disordered_raw_mean": float(
+            np.mean([r["secondary"]["rg_ratio_disordered"]["raw"] for r in recs])
+        ),
+        "rg_ratio_disordered_corrected_mean": float(
+            np.mean([r["secondary"]["rg_ratio_disordered"]["corrected"] for r in recs])
+        ),
         "met": bool(rr.mean() >= E5_THRESHOLD),
     }
     out = {
@@ -553,6 +612,7 @@ def main() -> None:
             "sizes": [[int(len(tr)), int(len(te))] for tr, te in sp],
         },
         "fit_seconds_full_pool": [r["fit_seconds"] for r in recs],
+        "multistart_first_split": multistart,
         "E5": e5,
     }
     json.dump(out, open(C.RESULTS / "acq_surrogate.json", "w"), indent=1)

@@ -85,15 +85,30 @@ def grouped_bootstrap(v: pd.DataFrame, fn, seed: int = analyse.BOOT_SEED, n_boot
     return np.array(out)
 
 
-def main() -> None:
-    sur = json.load(open(C.RESULTS / "acq_surrogate.json"))
-    tau = sur["tau"]
-    t0 = time.time()
+def within_class(v: pd.DataFrame) -> dict:
+    """Spearman of each objective with realised value inside each disorder class (per split, averaged), to
+    separate an objective's own signal from its correlation with class."""
+    out = {}
+    for c in analyse.CLASS_ORDER:
+        sub = v[v["disorder_class"] == c]
+        out[c] = {"n": int(sub["label"].nunique()), **{k: spearman_by_split(sub, k) for k in O.OBJECTIVES}}
+    return out
+
+
+def main(summary_only: bool = False) -> None:
+    """Marginal contributions (slow), then the summary; `summary_only` re-summarises the stored gains."""
     jobs = [(k, p, n) for k in range(S.N_SPLITS) for p in range(N_PERMUTATIONS) for n in SUBSET_SIZES]
-    res = Parallel(n_jobs=C.N_JOBS)(delayed(marginal)(k, p, n, tau) for k, p, n in jobs)
-    wall = time.time() - t0
-    gains = pd.DataFrame([r for rr in res for r in rr])
-    gains.to_csv(C.RESULTS / "acq_value_gains.csv", index=False)
+    if summary_only:
+        wall = json.load(open(C.RESULTS / "acq_value.json"))["wall_seconds"]
+        gains = pd.read_csv(C.RESULTS / "acq_value_gains.csv")
+    else:
+        tau = json.load(open(C.RESULTS / "acq_surrogate.json"))["tau"]
+        t0 = time.time()
+        res = Parallel(n_jobs=C.N_JOBS)(delayed(marginal)(k, p, n, tau) for k, p, n in jobs)
+        wall = time.time() - t0
+        gains = pd.DataFrame([r for rr in res for r in rr])
+        gains.to_csv(C.RESULTS / "acq_value_gains.csv", index=False, float_format="%.6g")
+        gains = pd.read_csv(C.RESULTS / "acq_value_gains.csv")       # summarise what is stored
     table = S.load_cache()["table"].set_index("label")
     rank_cols = [f"rank_{k}" for k in O.OBJECTIVES]
     v = (
@@ -178,6 +193,7 @@ def main() -> None:
         "share_value_positive": float((per["value"] > 0).mean()),
         "gain_by_subset_size": sizes,
         "validity": validity,
+        "validity_within_class": within_class(v),
         "E6": e6,
         "value_by_class": by_cls,
         "E9": e9,

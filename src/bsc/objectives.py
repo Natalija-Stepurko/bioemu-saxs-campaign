@@ -171,11 +171,11 @@ def candidate_terms(c: S.Computed, theta: np.ndarray, noise: NoiseModel, mass_kd
     cv = S.curve(c, lam, eta)
     q = c.q[cv["inside"]]
     I = cv["I"]
-    sig = low_angle_reference(I) * noise.relative(q, mass_kda)
+    sig = low_angle_reference(I) * noise.relative(q, mass_kda) / np.sqrt(cv["wq"])
     G = np.column_stack([cv["dI_dlam"], cv["dI_deta"]]) / sig[:, None]
     Q = np.column_stack([I / sig, 1 / sig])
     Gt = _project_out(G, Q)
-    dof = len(q) - 2
+    dof = cv["wq"].sum() - 2
     a = Gt.T @ Gt / dof
     # O2: the uniform ensemble against its larger and smaller halves (raw ensemble, all computed points)
     big = c.z > np.median(c.z)
@@ -197,12 +197,12 @@ def acquired_factor(c: S.Computed, e: S.Experiment, theta: np.ndarray) -> np.nda
     lam, eta = S.lam_eta(theta, c.x)
     cv = S.curve(c, lam, eta, e.pts)
     m = cv["inside"]
-    sig = e.sigma[m]
+    sig = e.sigma[m] / np.sqrt(cv["wq"])
     A, ones, y = cv["I"] / sig, 1 / sig, e.I[m] / sig
     sc, _ = S._fit_scale(A, ones, y)
     G = sc * np.column_stack([cv["dI_dlam"], cv["dI_deta"]]) / sig[:, None]
     Gt = _project_out(G, np.column_stack([A, ones]))
-    a = Gt.T @ Gt / (len(sig) - 2)
+    a = Gt.T @ Gt / (cv["wq"].sum() - 2)
     return info_factor(a, c.x)
 
 
