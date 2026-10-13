@@ -380,7 +380,7 @@ def policy_label(p):
     return f"Chebyshev, weight {float(p.split()[1]):.2f} on O5" if p.startswith("chebyshev") else POLICY_LABEL[p]
 
 
-def acquisition_section(n_bioemu):
+def acquisition_section(n_bioemu, r2_best):
     e5, val, e6, e9 = SUR["E5"], VAL["validity"], VAL["E6"], VAL["E9"]
     splits = e5["per_split"]
     n_pool, n_held = SUR["splits"]["sizes"][0]
@@ -426,18 +426,42 @@ def acquisition_section(n_bioemu):
         f"I tested this retrospectively on the {n_bioemu} profiles, with a design fixed before any result: in five splits, 30% are held out and the "
         f"other {n_pool} are revealed ten at a time. The model they update is a small correction to BioEmu-1 with eight parameters shared across "
         f"proteins, which reweights each ensemble by conformer size and rescales it; it is not BioEmu-1's network. Fitted on a whole pool, the "
-        f"correction brings disordered ensembles to their measured size, but the held-out median χ² rose by {pct(rise)} on average where the design "
+        f"correction brings disordered ensembles to their measured size but also worsens the profiles that already fit, and the held-out median "
+        f"χ² rose by {pct(rise)} on average where the design "
         f"required a 10% fall, so by the rule fixed in advance the comparison of acquisition policies is uninformative. Of the objectives computable "
         f"before a measurement, none predicted a profile's realised value beyond a weak positive correlation for feasibility "
         f"(Spearman ρ = {sgn(val['O5']['spearman'])}); the information objective was uncorrelated with it (ρ = {sgn(val['O1']['spearman'])}).</p>")
+    hb = e5["heldout_by_raw_fit"]
+    fit_, mis = hb["raw_fit"], hb["raw_misfit"]
+    band = {(b["lo"], b["hi"]): b for b in hb["bands"]}
+    b23, b10 = band[(2.0, 3.0)], band[(10.0, None)]
+    meds = hb["median_raw_chi2_by_split"]
+    fc, dc = hb["by_class"]["folded"], hb["by_class"]["disordered"]
+    check(mis["mean_ci95"][0] > 0 and mis["median_ci95"][0] > 0, "profiles with raw χ² > 2 improve")
+    check(fit_["mean_ci95"][1] < 0 and fit_["median_ci95"][1] < 0, "profiles with raw χ² ≤ 2 get worse")
+    check(b23["mean_ci95"][1] < 0 and b10["mean_ci95"][0] > 0, "the 2–3 band gets worse, the band above 10 improves")
+    check(all(2 < m <= 5 for m in meds), "every split's held-out median raw χ² lies between 2 and 5")
+    check(band[(3.0, 5.0)]["mean_ci95"][0] < 0 < band[(3.0, 5.0)]["mean_ci95"][1], "the 3–5 band does not change")
+    check(fc["share_better"] > 0.3 and fc["share_worse"] > 0.3 and abs(fc["share_better"] - fc["share_worse"]) < 0.05,
+          "folded profiles move both ways in about equal shares")
+    check(dc["share_better"] > 0.75, "most disordered profiles improve")
+    check(r2_best < 0.1, "the first study could not predict the raw error")
     fig6 = fig("fig_acq_surrogate", "Figure 6 · what the shared correction does to held-out profiles",
                f"A: for every held-out profile of the five splits ({n_held} per split), the log₁₀ reduction of χ² when the correction fitted on the pool "
-               f"replaces raw BioEmu-1, by class, with the median and its 95% bootstrap interval; values beyond the axis are drawn at its edge. "
+               f"replaces raw BioEmu-1, against the profile's raw χ², coloured by class; black bars are the mean in bands of raw χ² (up to 2, 2–3, 3–5, "
+               f"5–10, above 10) with 95% bootstrap intervals, the dotted line is χ² = 2, and the grey band spans the five splits' held-out median raw χ². "
+               f"Values beyond the axis are drawn at its edge. "
                f"B: the reduction of the held-out median χ² in each split, the quantity E5 tested, against its 10% threshold; a negative reduction is "
                f"a rise. Disordered held-out ensembles move from a median Rg ratio of {f2(rg_raw)} to {f2(rg_cor)} (mean over the splits).",
-               f"Points above zero are profiles the correction fits better. Disordered profiles improve (median {sgn(bc['disordered']['median_log10_reduction'])}, "
-               f"interval {sci(bc['disordered']['ci95'])}), but they are {pct(bc['disordered']['share_held_out'])} of the held-out set; the folded "
-               f"profiles, {pct(bc['folded']['share_held_out'])} of it, do not move (median {sgn(bc['folded']['median_log10_reduction'], 3)}), and they set the median.")
+               f"Points above zero are profiles the correction fits better. The shared correction improves the profiles that raw BioEmu-1 fits badly "
+               f"(raw χ² above 2: mean log₁₀ reduction {sgn(mis['mean'], 3)}, 95% interval {sci(mis['mean_ci95'], 3)}, n = {mis['n']}; above 10: "
+               f"{sgn(b10['mean'], 3)}) and worsens those it already fits (raw χ² up to 2: {sgn(fit_['mean'], 3)}, {sci(fit_['mean_ci95'], 3)}, "
+               f"n = {fit_['n']}; 2–3: {sgn(b23['mean'], 3)}). The held-out median raw χ² lies between {f1(min(meds))} and {f1(max(meds))} in the five "
+               f"splits, where profiles get worse or do not change, so the held-out median rises. Folded profiles move both ways: "
+               f"{pct(fc['share_better'])} get better and {pct(fc['share_worse'])} worse by more than {hb['move']} in log₁₀ χ²; {pct(dc['share_better'])} "
+               f"of disordered profiles improve. The correction is driven only by features known before measuring, and in the first study those features "
+               f"could not predict which proteins BioEmu-1 fits badly (R² = {f2(r2_best)} for log₁₀ raw χ²), so it cannot aim its change at the "
+               f"proteins that need it.")
     value_p = (
         f"<p>The realised value of a profile is what it actually does: the change in the held-out score (the median log₁₀ χ² reduction) when the profile "
         f"is added to a random set of 10 or 30 pool profiles and the correction is refitted, averaged over 20 such sets per split, "
@@ -879,7 +903,7 @@ def build():
         f"<p><strong>How typical the examples are.</strong> Each is the entry nearest its class median of raw χ². {lab_d} is not typical in size: its size ratio ({ratio_d:.2f}) is below the disordered median ({f2(rg_dis)}), so this column understates the class-wide excess. It is {ex_d['length']} residues long, and the drawn conformer has {ex_d['chain_breaks']} chain breaks.</p>"
         "<p><strong>What the envelope is.</strong> An illustration from an ensemble-averaged measurement, not evidence about any single conformation; for a disordered protein one conformer cannot fill it.</p>")
     pp = y["predicted priority"]
-    acq_html = acquisition_section(n_bioemu)
+    acq_html = acquisition_section(n_bioemu, r2_best)
 
     html = f"""<!doctype html>
 <html lang="en">

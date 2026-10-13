@@ -42,8 +42,11 @@ reported as uninformative. Of the objectives computable before a measurement, th
 the shared parameters was uncorrelated with a profile's realised value (Spearman ρ = 0.00, 95% interval −0.09
 to 0.10); information about the protein's own ensemble (ρ = −0.29), disagreement between generators (−0.14)
 and the predicted raw error (−0.16) correlated negatively, and the feasibility heuristic weakly positively
-(+0.12). Realised value was lower for disordered than for folded proteins, the opposite of the expectation:
-the held-out median is set by folded proteins, which the correction does not move. Departures from the design
+(+0.12). Realised value was lower for disordered than for folded proteins, the opposite of the expectation.
+The correction improves held-out profiles that raw BioEmu-1 fits badly (raw χ² above 2: mean log₁₀ χ²
+reduction +0.056) and worsens those it already fits (raw χ² up to 2: −0.081); the held-out median sits where
+profiles get worse or do not change. It is driven only by features known before measuring, which in the first
+study could not predict the raw error (R² = 0.05), so it cannot aim at the proteins that need it. Departures from the design
 and the choices it left open are listed, dated, in its §10.
 
 ## What was done
