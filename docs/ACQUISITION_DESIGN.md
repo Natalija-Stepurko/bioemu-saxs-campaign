@@ -158,3 +158,66 @@ Every outcome is reported as found, including a null result for E6 or E7.
   (5 splits × 10 seeds × 10 policies × 8 rounds) and the value estimation about 10,000; a few hours on six cores.
 - **Page:** one new section, "Choosing data for the next model", with the learning curves, the Pareto front and the
   objective-validity plot; detail collapsed.
+
+## 10. Deviations (added 2026-10-13, after the run)
+
+Departures from §1–§9, each with its reason:
+
+- **A taper at the ends of the computed grid.** §3 scores only the q points whose rescaled value stays inside
+  the computed grid. Taken literally, every point that leaves the grid as s changes removes its residual from
+  χ² at once, so the objective is a staircase in θ: in a first run the fits stopped at these steps (L-BFGS
+  line-search failures, with a gradient norm of about 50 at the reported optimum, and 16 of 40 refits in a
+  probe of the marginal contributions not moving from their starting point). A point now keeps weight 1
+  while its rescaled q lies inside the grid, and its weight falls linearly to 0 over one grid spacing beyond
+  either end, where the last interpolation segment is extended; the reduced χ² is the weighted sum over the
+  weights' total minus two. At s = 1 every weight is 1, so θ = 0 still reproduces the raw χ² exactly. All
+  reported results come from the second run. The first run also missed E5 (the held-out median χ² rose by 8% on
+  average) and gave the same signs for the six objective correlations; its numbers are not used.
+- **O4 uses 5-mer containment.** §4 says "3-mer containment, as in the cross-validation groups"; the
+  cross-validation groups are built on 5-mer containment (threshold 0.3), so O4 and the coverage penalty use
+  the same 5-mers, and the splits, the penalty and O4 share one notion of sequence similarity.
+- **`bsc value` runs before `bsc acquire`.** §9 lists the stages in the order objectives, surrogate, acquire,
+  value; the oracle policy of §5 ranks by realised value, so the value stage has to exist first.
+- **Number of value fits.** §9 estimated about 10,000 fits for the value estimation. Marginal contributions
+  for every pool protein outside each subset of 10 and 30, over 20 permutations and five splits, take about
+  52,000 fits (each warm-started and small); the definition in §6 is unchanged.
+- **A fifth figure.** E5 was not met, so by the decision rule the learning curves, the trade-off curve and
+  the Pareto projections are reported as uninformative or descriptive and sit in collapsed panels; the page
+  leads with a figure of what the whole-pool correction does to held-out profiles by class, which is what
+  the E5 outcome rests on, and with the objective-validity plot. The simulation was run in full and its
+  results are kept, labelled as uninformative.
+
+Choices that §1–§9 left open, fixed before the first run except the restarts of the fit, which were added
+with the taper:
+
+- *Surrogate.* z_pk is divided by one constant, the pooled within-ensemble SD of ln R over the 399 entries,
+  so that λ is in units of that spread; the three non-constant features are standardised over the same
+  entries; u_p uses the scaling-law radius blended by the disorder score (the folded and disordered laws of
+  the `predict` stage); the bound on s_p is ln s_p = ln 1.25 · tanh(θ_s·x_p / ln 1.25); I_pk(q·s) is read from
+  a cubic Hermite interpolant in ln q through the computed points, so s = 1 reproduces them exactly; τ was
+  chosen from (0.03, 0.1, 0.3, 1, 3, 10) and came out as 1. Fits use L-BFGS with the analytic gradient,
+  restarted with fresh memory (at most twice) when a line search stops at a kink of the taper; on the first
+  split's pool, four random starts reach the optimum found from θ = 0.
+- *O1.* The Fisher information is profiled: the derivatives are projected orthogonal to the scale and
+  background directions (both are solved inside χ²) and divided by the profile's degrees of freedom, which is
+  the Laplace approximation of the reduced-χ² objective of §3; Λ₀ = I/τ².
+- *Noise model.* log10(σ/I_low) is linear in (1, log10 q, (log10 q)², log10 sequence mass), I_low being the mean
+  of the five lowest-angle intensities; fitted on up to 60 evenly spaced points per acquired profile.
+- *O2* uses the raw ensemble split at the median conformer size; *O3* is the SD of ln Rg of the uniform
+  ensemble curves of the six named generators; *O5* is one minus the mean of five penalties in [0, 1]: length
+  outside 50–300 residues, the disorder score, cysteines (saturating at six), hydrophobic fraction above 0.40
+  (saturating at 0.55), isoelectric point within 1.5 units of 7.4. The quality-flag check uses the 435 entries
+  with a BioEmu-1 ensemble, of which 36 failed.
+- *Policies.* The coverage penalty defers a candidate that shares a sequence group with an acquired protein or
+  an earlier pick of the batch. O1-greedy conditions each pick on the earlier ones; O4-greedy adds each pick
+  to the set the next must be far from. Pareto batches fill from the first front, by hypervolume contribution
+  in rank-normalised objective space with the reference at the origin. Chebyshev weights on (O1, O4, O5) are
+  ((1 − a)/2, (1 − a)/2, a) for a = 0, 0.25, 0.5, 0.75, 1. The oracle ranks by each protein's realised value in
+  the same split.
+- *Statistics.* E5 is met when the mean over the five splits of 1 − (held-out median χ² corrected)/(raw) is at
+  least 0.10. The area under the curve is the trapezoid over 10–90 acquired divided by 80. Intervals for the
+  difference from random resample splits, then seed sets within each split. Objective validity: at every
+  subset each objective is ranked among the candidates, the ranks are averaged per protein, and the Spearman
+  correlation with realised value is computed per split and averaged; the interval resamples sequence
+  groups. E7 is met when the lower bounds for Pareto and O1-greedy exceed 0 and that for predicted error does
+  not; E8 when (AUC_Pareto − AUC_constrained)/AUC_Pareto < 0.25 with a positive AUC_Pareto.
