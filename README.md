@@ -3,7 +3,8 @@
 **Where does BioEmu-1 disagree with solution scattering, and which proteins should be measured next?**
 
 Project page: <https://natalija-stepurko.github.io/bioemu-saxs-campaign/> · design: [`docs/DESIGN.md`](docs/DESIGN.md) ·
-campaign proposal: [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md)
+campaign proposal: [`docs/CAMPAIGN.md`](docs/CAMPAIGN.md) · acquisition design:
+[`docs/ACQUISITION_DESIGN.md`](docs/ACQUISITION_DESIGN.md)
 
 ## Result
 
@@ -26,6 +27,24 @@ stated eligibility rules, under standardised conditions and a prospective test o
 bias with pre-specified model-based selection and scaling-law-matched controls.
 
 ![error map](results/figures/fig_error_map.png)
+
+## Extension: choosing data for the next model
+
+The acquisition design ([`docs/ACQUISITION_DESIGN.md`](docs/ACQUISITION_DESIGN.md), fixed before any result) asks
+which SAXS profiles, chosen before they are measured, would most improve a model's predictions for other
+proteins. It is evaluated retrospectively on the 399 profiles: five splits grouped by sequence, each with 279
+pool and 120 held-out profiles. The model that acquired profiles update is a correction to BioEmu-1 with eight
+parameters shared across proteins (a size-dependent reweighting of each ensemble and a bounded rescaling of the
+whole ensemble), not BioEmu-1's network. Fitted on a whole pool, the correction brings the held-out disordered
+ensembles to their measured size (median Rg ratio 1.23 before, 0.99 after), but the held-out median χ² rose by
+12% on average over the five splits, where the design's expectation E5 required a 10% fall. By the decision rule fixed in advance, the comparison of acquisition policies is therefore
+reported as uninformative. Of the objectives computable before a measurement, the expected information about
+the shared parameters was uncorrelated with a profile's realised value (Spearman ρ = 0.00, 95% interval −0.09
+to 0.10); information about the protein's own ensemble (ρ = −0.29), disagreement between generators (−0.14)
+and the predicted raw error (−0.16) correlated negatively, and the feasibility heuristic weakly positively
+(+0.12). Realised value was lower for disordered than for folded proteins, the opposite of the expectation:
+the held-out median is set by folded proteins, which the correction does not move. Departures from the design
+and the choices it left open are listed, dated, in its §10.
 
 ## What was done
 
@@ -54,6 +73,10 @@ reversed, two not met. The additions made after the first run are listed, dated,
 | `bsc select_eval` | retrospective evaluation of the selection rule on held-out folds grouped by sequence cluster |
 | `bsc predict` | can the error be predicted before measuring: grouped, repeated cross-validation of baselines, linear models and small trees |
 | `bsc envelopes` | DENSS ab initio envelopes of the three worked examples (needs the DENSS environment, see below; skipped with a notice otherwise) |
+| `bsc objectives` | the acquisition extension's pre-measurement quantities: a cache of the computed curves and conformer radii (`data/acquisition_cache.pkl`), the static objectives (generator disagreement, feasibility), and checks of the feasibility heuristic and of the noise model |
+| `bsc surrogate` | the shared correction to BioEmu-1: θ = 0 against the scored raw χ² of every entry, τ by grouped cross-validation, the whole-pool fit on five splits (E5) |
+| `bsc value` | realised value of every pool protein by Monte-Carlo marginal contributions (about 52,000 fits) and the validity of each objective (E6, E9); `-- --summary-only` re-summarises the stored contributions |
+| `bsc acquire` | the acquisition simulation, 15 policies × 5 splits × 10 seed sets × 8 rounds (E7, E8); its oracle reads the realised values, so `value` runs first |
 | `bsc report` | figures, `docs/CAMPAIGN.md` and the campaign arms from `results/` |
 
 `python3 docs/site/build.py` builds the project page from `results/`; it stops if the prose and the numbers
@@ -73,6 +96,10 @@ make page                                # the page alone, from the tracked resu
 downloaded; `BSC_N_JOBS` sets the worker count (default 4). The tracked `results/` (per-entry scores,
 reweighting paths, kinds, candidates, coordinate Rg, the validation outputs, the DENSS fit statistics and
 the figures) let `analyse`, `select_eval`, `predict`, `report` and the page rebuild without the download.
+
+The acquisition stages run on CPU and need the unpacked curves. With six workers (`BSC_N_JOBS=6`): `objectives`
+under a minute, `surrogate` about two minutes (one fit of the correction on a 279-profile pool takes 5–15 s on
+one core), `value` about 100 minutes and `acquire` about 40 minutes (750 simulated campaigns of nine fits each).
 
 ### The DENSS environment
 
@@ -97,7 +124,8 @@ examples are extracted from the archive by `bsc coordrg -- --archive Predictions
 ## What is tracked and what is not
 
 Tracked: everything under `results/` except the DENSS maps, and the documents. Not tracked: the Zenodo
-archives and the unpacked curves and ensembles (`data/`, rebuilt by `bsc fetch` and `bsc coordrg`),
+archives, the unpacked curves and ensembles and the acquisition cache (`data/`, rebuilt by `bsc fetch`,
+`bsc coordrg` and `bsc objectives`),
 because they are already public under CC-BY 4.0 and are large.
 
 ## Licence

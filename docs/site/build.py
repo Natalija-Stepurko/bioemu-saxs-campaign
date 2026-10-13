@@ -1,5 +1,6 @@
 """Build docs/index.html from results/. Every number on the page is read from results/ (analysis.json,
-by_class.csv, candidates.csv, predict.json, select_eval.json, examples.json, campaign_arms.json);
+by_class.csv, candidates.csv, predict.json, select_eval.json, examples.json, campaign_arms.json and the
+acquisition results acq_surrogate.json, acq_objectives.json, acq_value.json, acq_acquire.json);
 checks stop the build if the prose and the numbers disagree, including every sentence that states a
 direction or a comparison.
 
@@ -353,6 +354,191 @@ GH = ('<svg viewBox="0 0 16 16" aria-hidden="true" width="17" height="17"><path 
       '-8-8-8Z"/></svg>')
 
 
+# ----------------------------------------------------------------------------- the acquisition extension
+SUR = json.load(open(RESULTS / "acq_surrogate.json"))
+OBJ = json.load(open(RESULTS / "acq_objectives.json"))
+VAL = json.load(open(RESULTS / "acq_value.json"))
+ACQ = json.load(open(RESULTS / "acq_acquire.json"))
+OBJ_LABEL = {"O1": "O1 · information about the shared parameters", "O2": "O2 · information about the protein's own ensemble",
+             "O3": "O3 · disagreement between generators", "O4": "O4 · sequence coverage", "O5": "O5 · feasibility (heuristic)",
+             "predicted error": "predicted raw error (baseline)"}
+POLICY_LABEL = {"random": "random", "O1": "greedy on O1", "O2": "greedy on O2", "O3": "greedy on O3", "O4": "greedy on O4",
+                "O5": "greedy on O5", "predicted error": "greedy on predicted error", "pareto": "Pareto on (O1, O4, O5)",
+                "pareto constrained": "Pareto, more feasible half only", "oracle": "oracle (reads the profiles)"}
+
+
+def sgn(x, nd=2):
+    t = f"{x:+.{nd}f}"
+    return f"{0:.{nd}f}" if float(t) == 0 else t.replace("-", "−")
+
+
+def sci(v, nd=2):
+    return f"{sgn(v[0], nd)} to {sgn(v[1], nd)}"
+
+
+def policy_label(p):
+    return f"Chebyshev, weight {float(p.split()[1]):.2f} on O5" if p.startswith("chebyshev") else POLICY_LABEL[p]
+
+
+def acquisition_section(n_bioemu):
+    e5, val, e6, e9 = SUR["E5"], VAL["validity"], VAL["E6"], VAL["E9"]
+    splits = e5["per_split"]
+    n_pool, n_held = SUR["splits"]["sizes"][0]
+    bc = e5["by_class_pooled"]
+    rr = [r["relative_reduction_median_chi2"] for r in splits]
+    rg_raw, rg_cor = e5["rg_ratio_disordered_raw_mean"], e5["rg_ratio_disordered_corrected_mean"]
+    feas = OBJ["feasibility_check"]
+    wc = VAL["validity_within_class"]
+    # every sentence below that states a direction is checked here
+    check(SUR["theta_zero_check"]["n"] == n_bioemu and SUR["theta_zero_check"]["max_relative_difference"] < 1e-13,
+          "θ = 0 reproduces the raw χ² of every entry")
+    check(not e5["met"] and e5["mean_relative_reduction"] < e5["threshold"], "E5 not met: the held-out median χ² does not fall by 10%")
+    check(max(rr) < e5["threshold"], "no split reaches the 10% threshold")
+    check(abs(rg_cor - 1) < abs(rg_raw - 1) and rg_raw > 1.1, "the correction brings disordered sizes toward the measured value")
+    check(bc["disordered"]["ci95"][0] > 0 and bc["folded"]["ci95"][0] < 0 < bc["folded"]["ci95"][1],
+          "disordered held-out profiles improve; folded ones do not move")
+    check(bc["folded"]["share_held_out"] > 0.5 and bc["disordered"]["share_held_out"] < 0.15,
+          "folded profiles are the majority of the held-out set; disordered about a tenth")
+    check(not ACQ["informative"] and not ACQ["E7"]["evaluable"] and not ACQ["E8"]["evaluable"],
+          "the acquisition comparison is flagged uninformative")
+    check(val["O1"]["ci95"][0] < 0 < val["O1"]["ci95"][1] and not e6["met"], "O1 uncorrelated with realised value; E6 not met")
+    neg = [k for k in ("O2", "O3", "predicted error") if val[k]["ci95"][1] < 0]
+    check(neg == ["O2", "O3", "predicted error"], "O2, O3 and predicted error correlate negatively, intervals below 0")
+    check(val["O4"]["ci95"][0] < 0 < val["O4"]["ci95"][1], "O4 uncorrelated")
+    check(val["O5"]["spearman"] < 0.2 and all(val[k]["spearman"] <= val["O5"]["spearman"] for k in val), "O5 the only positive, weak")
+    check(val["O5"]["ci95"][0] > 0 and all(wc[c]["O5"] > 0 for c in CLASSES), "O5 positive overall and within each class")
+    check(all(wc[c]["O2"] < 0 for c in CLASSES), "O2 negative within each class")
+    check(not e9["met"] and e9["median_disordered"] < e9["median_folded"] and e9["p_two_sided_mannwhitney"] < 0.05,
+          "E9 opposite: realised value lower for disordered than folded")
+    check(feas["n_failed"] == 36 and feas["ci95"][0] < 0.5 < feas["ci95"][1], "O5 does not separate the 36 failed profiles")
+    check(VAL["top_decile_composition"]["share_disordered"] == 0, "no disordered protein in the top decile of realised value")
+    o2wc = [wc[c]["O2"] for c in CLASSES]
+    ms = SUR["multistart_first_split"]
+    check(max(m["objective"] for m in ms) - min(m["objective"] for m in ms) < 1e-3 * min(m["objective"] for m in ms),
+          "random starts reach the same optimum")
+    fit_s = sum(SUR["fit_seconds_full_pool"]) / len(SUR["fit_seconds_full_pool"])
+    k3 = 1e3
+
+    rise = -e5["mean_relative_reduction"]
+    check(rise > 0, "on average the held-out median χ² rose")
+    lead = (
+        f"<p class=\"lead\">Which profiles, chosen before they are measured, would most improve a model's predictions for other proteins? "
+        f"I tested this retrospectively on the {n_bioemu} profiles, with a design fixed before any result: in five splits, 30% are held out and the "
+        f"other {n_pool} are revealed ten at a time. The model they update is a small correction to BioEmu-1 with eight parameters shared across "
+        f"proteins, which reweights each ensemble by conformer size and rescales it; it is not BioEmu-1's network. Fitted on a whole pool, the "
+        f"correction brings disordered ensembles to their measured size, but the held-out median χ² rose by {pct(rise)} on average where the design "
+        f"required a 10% fall, so by the rule fixed in advance the comparison of acquisition policies is uninformative. Of the objectives computable "
+        f"before a measurement, none predicted a profile's realised value beyond a weak positive correlation for feasibility "
+        f"(Spearman ρ = {sgn(val['O5']['spearman'])}); the information objective was uncorrelated with it (ρ = {sgn(val['O1']['spearman'])}).</p>")
+    fig6 = fig("fig_acq_surrogate", "Figure 6 · what the shared correction does to held-out profiles",
+               f"A: for every held-out profile of the five splits ({n_held} per split), the log₁₀ reduction of χ² when the correction fitted on the pool "
+               f"replaces raw BioEmu-1, by class, with the median and its 95% bootstrap interval; values beyond the axis are drawn at its edge. "
+               f"B: the reduction of the held-out median χ² in each split, the quantity E5 tested, against its 10% threshold; a negative reduction is "
+               f"a rise. Disordered held-out ensembles move from a median Rg ratio of {f2(rg_raw)} to {f2(rg_cor)} (mean over the splits).",
+               f"Points above zero are profiles the correction fits better. Disordered profiles improve (median {sgn(bc['disordered']['median_log10_reduction'])}, "
+               f"interval {sci(bc['disordered']['ci95'])}), but they are {pct(bc['disordered']['share_held_out'])} of the held-out set; the folded "
+               f"profiles, {pct(bc['folded']['share_held_out'])} of it, do not move (median {sgn(bc['folded']['median_log10_reduction'], 3)}), and they set the median.")
+    value_p = (
+        f"<p>The realised value of a profile is what it actually does: the change in the held-out score (the median log₁₀ χ² reduction) when the profile "
+        f"is added to a random set of 10 or 30 pool profiles and the correction is refitted, averaged over 20 such sets per split, "
+        f"{VAL['n_fits']:,} fits in all. Each objective was computed at the same sets, as a deployed policy would compute it, from computed curves, sequence "
+        f"and the profiles already in the set, and compared with realised value by rank.</p>")
+    fig7 = fig("fig_acq_validity", "Figure 7 · do the objectives predict what a profile is worth?",
+               "A: Spearman correlation between each objective and realised value, averaged over the five splits, with 95% intervals from a bootstrap over "
+               "sequence groups. B: realised value of each pool protein (averaged over the splits in which it is in the pool), by class, with the median and "
+               "its 95% bootstrap interval.",
+               "In A an objective that identifies useful profiles sits right of zero with its interval clear of it; only feasibility does, weakly.")
+    after = (
+        f"<p>One reading of the negative correlations: a profile whose own ensemble is broad (O2), on which the generators disagree (O3), or whose raw "
+        f"error is predicted to be large pulls the shared correction toward the disordered minority, which the held-out median barely registers; "
+        f"O2 stays negative within each class (ρ from {sgn(min(o2wc))} to {sgn(max(o2wc))}). Realised value is accordingly lower for disordered than for "
+        f"folded proteins (median {f1(k3 * e9['median_disordered'])} against {f1(k3 * e9['median_folded'])} × 10⁻³ log₁₀ χ²; two-sided Mann–Whitney "
+        f"p {pv(e9['p_two_sided_mannwhitney'])}), and none of the {VAL['top_decile_composition']['n']} proteins of highest value is disordered: the "
+        f"opposite of E9. The feasibility heuristic correlates weakly and positively, also within each class, but it does not separate the "
+        f"{feas['n_failed']} deposited profiles that failed the quality flags from the rest (AUC {f2(feas['auc_pass_above_fail'])}, 95% interval "
+        f"{ci(feas['ci95'])}). The result is specific to this correction and this score: a correction with more freedom for folded proteins, or a score "
+        f"that weights the classes equally, could value data differently.</p>")
+
+    def outc(kind):
+        return {"no": '<span class="outcome no">Not supported</span>', "rev": '<span class="outcome rev">Opposite direction observed</span>',
+                "un": '<span class="outcome no">Uninformative (E5 not met)</span>'}[kind]
+    rows = [
+        ("E5", "Fitted on the whole pool, the correction improves the held-out median χ² by at least 10%.", outc("no"),
+         f"median χ² rose by {pct(rise)} on average (change across splits {sgn(-100 * max(rr), 0)}% to {sgn(-100 * min(rr), 0)}%)"),
+        ("E6", "O1 correlates positively with realised value, more strongly than O2.", outc("no"),
+         f"ρ O1 {sgn(e6['rho_O1'])} ({sci(e6['ci95_O1'])}); O2 {sgn(e6['rho_O2'])} ({sci(e6['ci95_O2'])})"),
+        ("E7", "Pareto and O1-greedy batches beat random choice; the predicted-error policy does not.", outc("un"), "not evaluated"),
+        ("E8", "Restricting to the more feasible half costs less than a quarter of the improvement.", outc("un"), "not evaluated"),
+        ("E9", "Realised value is highest for disordered proteins.", outc("rev"),
+         f"median {f1(k3 * e9['median_disordered'])} disordered, {f1(k3 * e9['median_folded'])} folded (× 10⁻³)"),
+    ]
+    table = ('<div class="scroll"><table class="exp"><thead><tr><th>expectation</th><th>outcome</th><th>numbers</th></tr></thead><tbody>'
+             + "".join(f'<tr><td><strong>{k}</strong> {s}</td><td>{o}</td><td class="dim">{n}</td></tr>' for k, s, o, n in rows)
+             + '</tbody></table></div>')
+
+    # ---- details
+    split_rows = "".join(
+        f'<tr><td>{r["split"] + 1}</td><td class="num">{f2(r["median_chi2_raw"])}</td><td class="num">{f2(r["median_chi2_corrected"])}</td>'
+        f'<td class="num">{sgn(100 * r["relative_reduction_median_chi2"], 0)}%</td><td class="num">{sgn(r["median_log10_reduction"], 3)}</td>'
+        f'<td class="num">{pct(r["share_improved"])}</td><td class="num">{f2(r["secondary"]["rg_ratio_disordered"]["raw"])} → '
+        f'{f2(r["secondary"]["rg_ratio_disordered"]["corrected"])}</td><td class="num">{f3(r["secondary"]["nrmsd"]["raw"])} → '
+        f'{f3(r["secondary"]["nrmsd"]["corrected"])}</td></tr>' for r in splits)
+    sur_detail = (
+        '<p>The correction: each conformer\'s weight is multiplied by exp(−λ z), z being its log radius of gyration relative to the ensemble mean, '
+        'and the averaged curve is read at q·s; λ and ln s are linear in four features known before a measurement (a constant, the disorder score, '
+        'log chain length, and the log ratio of the ensemble\'s Rg to the scaling-law Rg for its length), and s is bounded to 0.8–1.25. With all '
+        f'eight parameters at zero it reproduces the raw ensemble: the χ² of all {SUR["theta_zero_check"]["n"]} entries agrees with the scoring stage to '
+        f'within a relative difference of 10⁻¹³. Each profile\'s scale and background are fitted inside χ², and the '
+        f'parameters minimise the sum of reduced χ² plus a ridge penalty whose width, τ = {SUR["tau"]:g}, was chosen by grouped cross-validation inside '
+        f'the first pool. A fit on a whole pool takes {fit_s:.0f} s on one core; from five starting points it reaches the same optimum.</p>'
+        '<div class="scroll"><table class="wide"><thead><tr><th>split</th><th>held-out median χ², raw</th><th>corrected</th><th>reduction</th>'
+        '<th>median log₁₀ χ² reduction</th><th>profiles improved</th><th>disordered Rg ratio</th><th>median NRMSD</th></tr></thead><tbody>'
+        + split_rows + f'</tbody></table></div><p class="note">{n_pool} pool and {n_held} held-out profiles per split; whole sequence groups are held out.</p>')
+    val_rows = "".join(
+        f'<tr><td>{OBJ_LABEL[k]}</td><td class="num">{sgn(val[k]["spearman"])} ({sci(val[k]["ci95"])})</td>'
+        + "".join(f'<td class="num">{sgn(wc[c][k])}</td>' for c in CLASSES) + '</tr>' for k in val)
+    nm = OBJ["noise_model"]
+    val_detail = (
+        '<div class="scroll"><table class="wide"><thead><tr><th>objective</th><th>Spearman ρ (95%)</th><th>within folded</th><th>within partly disordered</th>'
+        '<th>within disordered</th></tr></thead><tbody>' + val_rows + '</tbody></table></div>'
+        '<p class="note">O1: expected gain in information about the eight shared parameters (log determinant of the posterior precision, Laplace approximation, '
+        'scale and background profiled out). O2: how strongly the curve separates the protein\'s larger and smaller conformers. O3: spread of ln Rg across six '
+        'generators. O4: 1 − 5-mer containment to the nearest acquired sequence. O5: one minus the mean of five penalties (length outside 50–300, disorder '
+        'score, cysteines, hydrophobic fraction, isoelectric point near 7.4), fixed in advance and not validated. The noise of an unmeasured profile is predicted '
+        'from q and molecular weight by a model fitted on acquired profiles only; on held-out profiles it is off by a factor of '
+        f'{10 ** nm["median_abs_log10_error"]:.1f} at the median. The predicted error is a ridge regression of log₁₀ raw χ² on the features of the prediction test, '
+        'refitted on the acquired profiles.</p>')
+    P = ACQ["policies"]
+    pols = sorted([p for p in P if p != "random"], key=lambda p: -P[p]["auc_minus_random_mean"])
+    pol_rows = "".join(
+        f'<tr><td>{policy_label(p)}</td><td class="num">{sgn(1000 * P[p]["auc_minus_random_mean"], 1)} ({sgn(1000 * P[p]["auc_minus_random_ci95"][0], 1)} to '
+        f'{sgn(1000 * P[p]["auc_minus_random_ci95"][1], 1)})</td><td class="num">{f2(P[p]["mean_O5_chosen"])}</td>'
+        f'<td class="num">{pct(P[p]["share_folded"])} / {pct(P[p]["share_partly disordered"])} / {pct(P[p]["share_disordered"])}</td></tr>' for p in pols)
+    sim_detail = (
+        '<p>Because E5 was not met, even the correction fitted on a whole pool does not lower the held-out median χ², so the simulation cannot show '
+        'which data would; the differences below are not evidence for or against any policy. They are listed for completeness.</p>'
+        + fig("fig_acq_curves", "Acquisition simulation · reported as uninformative",
+              f"A: held-out median log₁₀ χ² reduction against the number of profiles acquired, mean over {ACQ['n_splits']} splits × {ACQ['n_seeds']} seed sets of ten, "
+              "for random choice, O1, predicted error, the two Pareto policies and the oracle (other policies grey); the dash-dotted line is the correction "
+              "fitted on the whole pool. B: area under each curve minus that of random choice on the same split and seed set, with 95% intervals from a "
+              "bootstrap over splits and seed sets.", cls="result")
+        + '<div class="scroll"><table class="wide"><thead><tr><th>policy</th><th>area minus random, × 10⁻³ (95%)</th><th>mean O5 of the proteins chosen</th>'
+        '<th>chosen: folded / partly / disordered</th></tr></thead><tbody>' + pol_rows + '</tbody></table></div>'
+        f'<p class="note">Random choice: mean O5 {f2(P["random"]["mean_O5_chosen"])}, chosen {pct(P["random"]["share_folded"])} / {pct(P["random"]["share_partly disordered"])} / '
+        f'{pct(P["random"]["share_disordered"])}. {ACQ["n_fits"]:,} fits.</p>')
+    pareto_detail = fig("fig_acq_pareto", "The candidate objectives in one round",
+                        "The pool candidates of the first round (first split, first seed set) in the three pairwise projections of O1, O4 and O5; the first "
+                        "non-dominated front is ringed, and the first batch of the Pareto policy and of its feasible-half variant is marked.")
+    trade_detail = fig("fig_acq_tradeoff", "Feasibility against held-out improvement · uninformative",
+                       "Area under the held-out improvement curve against the mean feasibility of the proteins chosen, along the Chebyshev sweep of weights on "
+                       "(O1, O4, O5) and for the two Pareto policies, random choice and greedy feasibility; bars are 95% intervals.")
+    return (lead + fig6 + value_p + fig7 + after + table
+            + details("The correction, its fit and the E5 test per split", sur_detail)
+            + details("Every objective against realised value", val_detail)
+            + details("The acquisition simulation, reported as uninformative", sim_detail + trade_detail)
+            + details("The candidate objectives and a Pareto batch", pareto_detail))
+
+
 def build():
     n_bioemu = sum(RES.values())
     n_clean = A["n_clean"]
@@ -655,7 +841,7 @@ def build():
                 + '</tbody></table></div>')
     nav = "".join(f'<li><a href="#{a}">{t}</a></li>' for a, t in [
         ("method", "Method"), ("expectations", "Expectations"), ("fit", "Raw fit"), ("examples", "Examples"),
-        ("size", "Size"), ("reweight", "Reweighting"), ("guide", "Guidance"), ("next", "Next"),
+        ("size", "Size"), ("reweight", "Reweighting"), ("guide", "Guidance"), ("next", "Next"), ("choose", "Choosing data"),
         ("models", "Other models"), ("limits", "Limits"), ("repro", "Code")])
     refs_html = "".join(f'<li id="ref-{k}">{t} <a href="{u}">{u.replace("https://", "")}</a></li>' for k, t, u in REFS)
     today = date.today()
@@ -693,6 +879,7 @@ def build():
         f"<p><strong>How typical the examples are.</strong> Each is the entry nearest its class median of raw χ². {lab_d} is not typical in size: its size ratio ({ratio_d:.2f}) is below the disordered median ({f2(rg_dis)}), so this column understates the class-wide excess. It is {ex_d['length']} residues long, and the drawn conformer has {ex_d['chain_breaks']} chain breaks.</p>"
         "<p><strong>What the envelope is.</strong> An illustration from an ensemble-averaged measurement, not evidence about any single conformation; for a disordered protein one conformer cannot fill it.</p>")
     pp = y["predicted priority"]
+    acq_html = acquisition_section(n_bioemu)
 
     html = f"""<!doctype html>
 <html lang="en">
@@ -787,9 +974,12 @@ def build():
 </ul></div>
 <p>Both arms use size-exclusion-coupled SAXS at three concentrations with a protein standard in every session, and {n_qc} scripted quality criteria (Guinier linearity, no low-angle upturn and Rg agreeing across concentrations, no radiation damage across frames, molecular weight from I(0) within 20% of the sequence mass, no negative intensities, a repeated deposited entry reproduced at χ² &lt; 2, I(0)/c constant across concentrations, and a constant Rg across the SEC peak). Entries whose target fit is not reached get hydrogen–deuterium exchange mass spectrometry on the same batch of protein. Every batch of twelve constructs re-runs this pipeline, so the error map is updated before the next batch is chosen.</p>
 
+<h2 id="choose">Choosing data for the next model</h2>
+{acq_html}
+
 <h2 id="models">How does BioEmu-1 compare with other ensemble generators?</h2>
 <p>The archive carries computed curves from other models for the same entries, scored here identically and without reweighting: the ensemble generators {", ".join(MODEL_NAME[m] for m in gens)}, and the single-structure predictors {" and ".join(MODEL_NAME[m] for m in singles)} as reference baselines. On the shared entries BioEmu-1 has the lowest median raw χ² of the seven, and the ordering is kept under NRMSD. PepTron comes closest: it beats BioEmu-1 on {pct(pep['share_better_than_bioemu'])} of the {pep['n']} shared entries (95% interval {pct(pep['ci95_share_better'][0])}–{pct(pep['ci95_share_better'][1])}). BioEmu-1 is the only tested model with a disordered median Rg ratio above 1.1; PepTron sits at {f2(others_rg['peptron'])}.</p>
-{fig("fig_models", "Figure 6 · seven models on the same profiles",
+{fig("fig_models", "Figure 8 · seven models on the same profiles",
      "Left: median raw reduced χ² of each model's unweighted ensemble by disorder class, on the profiles that pass quality checks; BioEmu-1 and PepTron emphasised, single-structure predictors grouped below. Right: median Rg ratio of each model on the disordered entries; solid line 1, dashed line 1.1.",
      None)}
 {details("Paired comparison table", comp_html + f'<p class="note">Five further folders in the archive are not used: Boltz-1x and ESMFlow are superseded by models already included, idpGAN and IDP-o are disorder-only generators represented here by idpSAM, and PepTron-base is the un-finetuned PepTron. AF-CALVADOS {cite("bulow")} was evaluated on this benchmark but its predictions were not in the archive.</p>')}
@@ -798,13 +988,13 @@ def build():
 <p>The ensembles are those in the PeptoneBench archive, which records the BioEmu code version but not the checkpoint; re-sampling with the current v1.2 checkpoint is the first follow-up. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so part of the raw error is condition mismatch. The forward model is treated as exact; its hydration-shell parameters bias Rg by a few per cent, which is why modestly reweightable cases are read with care. Disorder classes come from a sequence-based predictor. The model comparison is restricted to the six comparators on the shared entries. The prediction and selection tests are retrospective and use {n_bioemu} entries; a predictor that fails at this size could succeed with more data or with richer features of the model's own ensemble. Profiles with a low-angle upturn above {int(100 * A['thresholds']['aggregation_upturn'])}%, an intensity more than three standard errors below zero, no valid Guinier region, or a measured mass above 1.6 times the sequence mass are kept out of every statistic ({A['n_flag_aggregation']}, {A['n_flag_negative']}, {A['n_guinier_invalid']} and {A['n_flag_oligomer']} profiles).</p>
 
 <h2 id="repro">Reproducibility</h2>
-<p>The pipeline runs in named stages (download, score, coordinate radii, analysis, selection test, prediction, envelopes, report) from a locked environment, with unit tests on synthetic data. Derived results are tracked in the repository, and the page build reads every number from them and stops if a sentence that states a direction or a comparison no longer matches. Key code: <a href="{REPO}/blob/main/src/bsc/coordrg.py">coordinate radii</a>, <a href="{REPO}/blob/main/src/bsc/select_eval.py">acquisition policies</a>, <a href="{REPO}/blob/main/src/bsc/predict.py">error prediction</a>. The ensembles and computed curves are those published by the PeptoneBench authors {cite('invernizzi')} (Zenodo 17306061, CC-BY 4.0).</p>
+<p>The pipeline runs in named stages (download, score, coordinate radii, analysis, selection test, prediction, envelopes, the four acquisition stages, report) from a locked environment, with unit tests on synthetic data. Derived results are tracked in the repository, and the page build reads every number from them and stops if a sentence that states a direction or a comparison no longer matches. Key code: <a href="{REPO}/blob/main/src/bsc/coordrg.py">coordinate radii</a>, <a href="{REPO}/blob/main/src/bsc/select_eval.py">acquisition policies</a>, <a href="{REPO}/blob/main/src/bsc/predict.py">error prediction</a>, <a href="{REPO}/blob/main/src/bsc/surrogate.py">the shared correction</a>, <a href="{REPO}/blob/main/src/bsc/acquire.py">the acquisition simulation</a>. The ensembles and computed curves are those published by the PeptoneBench authors {cite('invernizzi')} (Zenodo 17306061, CC-BY 4.0).</p>
 
 <h2 id="refs">References</h2>
 <ol class="refs">{refs_html}</ol>
 <footer>
 <div>Data: PeptoneDB-SAXS and PeptoneBench predictions (Zenodo 17306061, CC-BY 4.0), curated from SASBDB. Downloaded at run time and not redistributed.</div>
-<div>Code: <a href="{REPO}">bioemu-saxs-campaign</a> · design: <a href="{REPO}/blob/main/docs/DESIGN.md">design document</a> · proposal: <a href="{REPO}/blob/main/docs/CAMPAIGN.md">campaign</a>.</div>
+<div>Code: <a href="{REPO}">bioemu-saxs-campaign</a> · design: <a href="{REPO}/blob/main/docs/DESIGN.md">design document</a> · <a href="{REPO}/blob/main/docs/ACQUISITION_DESIGN.md">acquisition design</a> · proposal: <a href="{REPO}/blob/main/docs/CAMPAIGN.md">campaign</a>.</div>
 </footer>
 </div>
 <script>{NAV_JS}</script>
