@@ -5,9 +5,9 @@ UV ?= uv run
 ARCHIVE ?=
 export BSC_N_JOBS ?= 6
 
-.PHONY: all fetch score coordrg analyse select_eval predict envelopes report page test lint
+.PHONY: all fetch score coordrg analyse select_eval predict envelopes objectives surrogate value acquire report page test lint
 
-all: score coordrg analyse select_eval predict envelopes report page
+all: score coordrg analyse select_eval predict envelopes objectives surrogate value acquire report page
 
 fetch:
 	$(UV) bsc fetch
@@ -29,6 +29,19 @@ predict:
 
 envelopes:
 	$(UV) bsc envelopes
+
+# the acquisition extension (docs/ACQUISITION_DESIGN.md); value runs before acquire, whose oracle reads it
+objectives:
+	$(UV) bsc objectives
+
+surrogate:
+	$(UV) bsc surrogate
+
+value:
+	$(UV) bsc value
+
+acquire:
+	$(UV) bsc acquire
 
 report:
 	$(UV) bsc report

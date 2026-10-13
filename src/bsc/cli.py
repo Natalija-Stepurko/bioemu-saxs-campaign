@@ -1,5 +1,7 @@
 """Named stages with a run log: `bsc fetch`, `bsc score`, `bsc coordrg`, `bsc analyse`, `bsc select_eval`,
-`bsc predict`, `bsc envelopes`, `bsc report`, `bsc all`."""
+`bsc predict`, `bsc envelopes`, `bsc objectives`, `bsc surrogate`, `bsc value`, `bsc acquire`, `bsc report`,
+`bsc all`. The four acquisition stages run in that order: `acquire` reads the realised values of `value` for
+its oracle policy."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +14,8 @@ from pathlib import Path
 
 from bsc import config as C
 
-STAGES = ["fetch", "score", "coordrg", "analyse", "select_eval", "predict", "envelopes", "report"]
+STAGES = ["fetch", "score", "coordrg", "analyse", "select_eval", "predict", "envelopes",
+          "objectives", "surrogate", "value", "acquire", "report"]
 
 
 def _git() -> dict:
@@ -64,6 +67,21 @@ def run(stage: str, argv: list[str]) -> None:
     elif stage == "envelopes":
         from bsc import envelopes
         envelopes.main()
+    elif stage == "objectives":
+        from bsc import objectives
+        objectives.main()
+    elif stage == "surrogate":
+        from bsc import surrogate
+        surrogate.main()
+    elif stage == "value":
+        from bsc import value
+        value.main()
+    elif stage == "acquire":
+        from bsc import acquire
+        ap = argparse.ArgumentParser(prog="bsc acquire")
+        ap.add_argument("--policies", nargs="*", default=None)
+        a = ap.parse_args(argv)
+        acquire.main(a.policies)
     elif stage == "report":
         from bsc import report
         report.main()
