@@ -44,6 +44,7 @@ PIXEL_DENSITY = 3                # PNG pixels per CSS pixel; the page divides th
 DPI = PIXEL_DENSITY * PX_PER_IN
 LINE_ALPHA = 0.9                 # one transparency for every line plot on the page
 RESIDUAL_LW = 0.8
+GREY_BAND = "#EEF1F2"
 KIND_GREYS = ["#C3C9CF", "#959DA5", "#66707A", "#3A4148"]
 
 
@@ -996,32 +997,41 @@ def policy_name(p: str) -> str:
 
 
 def fig_acq_surrogate() -> None:
-    """E5: what the shared correction does to held-out profiles, by class (A) and per split (B)."""
+    """E5: what the shared correction does to held-out profiles against their raw fit (A), and the E5 test
+    per split (B)."""
     p = C.RESULTS / "acq_surrogate_heldout.csv"
     if not p.exists():
         return
     S = json.load(open(C.RESULTS / "acq_surrogate.json"))
     h = pd.read_csv(p)
     e5 = S["E5"]
-    fig, axes = figure(760, 320, ncols=2, gridspec_kw={"width_ratios": [1.25, 1]})
+    hb = e5["heldout_by_raw_fit"]
+    fig, axes = figure(780, 340, ncols=2, gridspec_kw={"width_ratios": [1.35, 1]})
     ax = axes[0]
-    for i, cls in enumerate(CLASS_ORDER):
-        v = h.loc[h["disorder_class"] == cls, "log10_reduction"].to_numpy()
-        x = i + np.random.default_rng(i).uniform(-0.24, 0.24, len(v))
-        ax.scatter(x, np.clip(v, -0.6, 0.8), s=11, color=CLS_COL[cls], alpha=0.55, lw=0)
-        st = e5["by_class_pooled"][cls]
-        ax.plot([i - 0.3, i + 0.3], [st["median_log10_reduction"]] * 2, color=INK, lw=2)
-        ax.plot([i + 0.36] * 2, st["ci95"], color=INK, lw=1.6)
-        ax.text(i, 0.93, "median " + signed(st["median_log10_reduction"]), ha="center",
-                va="center", fontsize=9.5, color=INK)
+    meds = hb["median_raw_chi2_by_split"]
+    ax.axvspan(min(meds), max(meds), color=GREY_BAND, lw=0, zorder=0)
+    ax.text(np.sqrt(min(meds) * max(meds)), 0.93, "held-out\nmedians", ha="center", va="top", fontsize=9, color=MUTED)
+    for cls in CLASS_ORDER:
+        g = h[h["disorder_class"] == cls]
+        ax.scatter(g["chi2_raw"], np.clip(g["log10_reduction"], -0.6, 0.8), s=11, color=CLS_COL[cls], alpha=0.55,
+                   lw=0, label=cls, zorder=2)
+    for b in hb["bands"]:
+        lo, hi = max(b["lo"], 0.6), b["hi"] if b["hi"] is not None else 3000
+        ax.plot([lo, hi], [b["mean"]] * 2, color=INK, lw=1.8, zorder=3, solid_capstyle="butt")
+        xm = np.sqrt(lo * hi)
+        ax.plot([xm, xm], b["mean_ci95"], color=INK, lw=1.4, zorder=3)
     ax.axhline(0, color=MUTED, lw=0.8, ls="--")
-    ax.set_xticks(range(3))
-    ax.set_xticklabels([f"{c}\n{pct(e5['by_class_pooled'][c]['share_held_out'])} of held out"
-                        for c in CLASS_ORDER])
-    ax.set_xlim(-0.5, 2.5)
+    ax.axvline(hb["threshold_raw_fit"], color=MUTED, lw=0.8, ls=":")
+    ax.set_xscale("log")
+    ax.set_xlim(0.6, 3000)
+    ax.set_xticks([1, 2, 5, 10, 100, 1000])
+    ax.set_xticklabels(["1", "2", "5", "10", "100", "1000"])
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_ylim(-0.65, 1.0)
     ax.set_yticks([-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8])
-    ax.set_ylabel("log₁₀ χ² reduction, held out")
+    ax.set_xlabel("raw χ² of the held-out profile (log scale)")
+    ax.set_ylabel("log₁₀ χ² reduction")
+    ax.legend(frameon=False, loc="lower right", fontsize=9, handletextpad=0.1, markerscale=1.4)
     ax.set_title("A · whole-pool fit, each held-out profile", loc="left")
     ax = axes[1]
     rr = [r["relative_reduction_median_chi2"] for r in e5["per_split"]]

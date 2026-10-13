@@ -40,7 +40,7 @@ from joblib import Parallel, delayed
 from scipy.optimize import minimize
 from scipy.special import logsumexp
 
-from bsc import analyse, features, saxs, score
+from bsc import analyse, features, robust, saxs, score
 from bsc import config as C
 
 N_THETA = 8  # θ_λ (4) then θ_s (4)
@@ -477,7 +477,61 @@ def items_for(labels, comps: dict[str, Computed], exps: Experiments) -> list[tup
     return [(comps[lab], exps[lab]) for lab in labels]
 
 
-def main() -> None:
+RAW_FIT = 2.0  # the first study's raw-fit threshold
+MOVE = 0.01  # |log10 χ² change| above which a profile counts as better or worse
+RAW_BANDS = (0.0, 2.0, 3.0, 5.0, 10.0, np.inf)
+
+
+def heldout_summary(h: pd.DataFrame) -> dict:
+    """Which held-out profiles the whole-pool correction helps: by raw fit (χ² ≤ 2 or above), by raw-χ² band,
+    and the shares that get better or worse by more than MOVE in log10 χ², per class."""
+
+    def stats_of(v, k):
+        v = np.asarray(v, float)
+        return {
+            "n": int(len(v)),
+            "mean": float(v.mean()),
+            "median": float(np.median(v)),
+            "mean_ci95": list(robust.bootstrap_ci(v, np.mean, analyse.N_BOOT, analyse.BOOT_SEED + 700 + k)),
+            "median_ci95": list(
+                robust.bootstrap_ci(v, np.median, analyse.N_BOOT, analyse.BOOT_SEED + 710 + k)
+            ),
+            "share_better": float(np.mean(v > MOVE)),
+            "share_worse": float(np.mean(v < -MOVE)),
+        }
+
+    red, raw = h["log10_reduction"].to_numpy(), h["chi2_raw"].to_numpy()
+    out = {
+        "threshold_raw_fit": RAW_FIT,
+        "move": MOVE,
+        "raw_fit": stats_of(red[raw <= RAW_FIT], 0),
+        "raw_misfit": stats_of(red[raw > RAW_FIT], 1),
+        "bands": [
+            {
+                "lo": float(lo),
+                "hi": float(hi) if np.isfinite(hi) else None,
+                **stats_of(red[(raw > lo) & (raw <= hi)], 2 + i),
+            }
+            for i, (lo, hi) in enumerate(zip(RAW_BANDS[:-1], RAW_BANDS[1:], strict=True))
+        ],
+        "by_class": {
+            c: stats_of(red[h["disorder_class"].to_numpy() == c], 10 + i)
+            for i, c in enumerate(analyse.CLASS_ORDER)
+        },
+        "median_raw_chi2_by_split": [float(g["chi2_raw"].median()) for _, g in h.groupby("split")],
+    }
+    return out
+
+
+def main(summary_only: bool = False) -> None:
+    """Fit and score everything; `summary_only` recomputes the held-out summary from the stored profiles."""
+    if summary_only:
+        out = json.load(open(C.RESULTS / "acq_surrogate.json"))
+        out["E5"]["heldout_by_raw_fit"] = heldout_summary(
+            pd.read_csv(C.RESULTS / "acq_surrogate_heldout.csv")
+        )
+        json.dump(out, open(C.RESULTS / "acq_surrogate.json", "w"), indent=1)
+        return
     cache = load_cache()
     table, comps = cache["table"], cache["computed"]
     exps = Experiments(comps)
@@ -589,6 +643,7 @@ def main() -> None:
         "mean_median_log10_reduction": float(np.mean([r["median_log10_reduction"] for r in recs])),
         "threshold": E5_THRESHOLD,
         "by_class_pooled": pooled,
+        "heldout_by_raw_fit": heldout_summary(held_rows),
         "rg_ratio_disordered_raw_mean": float(
             np.mean([r["secondary"]["rg_ratio_disordered"]["raw"] for r in recs])
         ),

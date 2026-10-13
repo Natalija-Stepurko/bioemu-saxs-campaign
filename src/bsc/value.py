@@ -12,8 +12,8 @@ converted to a rank within S, and averaged per protein. The Spearman correlation
 the realised value is computed per split and averaged over the splits; 95% intervals come from a bootstrap
 over sequence groups (2,000 resamples).
 
-Output: results/acq_value.csv (split × protein: value and mean objective ranks), results/acq_value_gains.csv
-(every marginal contribution), results/acq_value.json.
+Output: results/acq_value.csv (split × protein: value and mean objective ranks),
+results/acq_value_gains.csv.gz (every marginal contribution, gzip), results/acq_value.json.
 """
 
 from __future__ import annotations
@@ -100,15 +100,16 @@ def main(summary_only: bool = False) -> None:
     jobs = [(k, p, n) for k in range(S.N_SPLITS) for p in range(N_PERMUTATIONS) for n in SUBSET_SIZES]
     if summary_only:
         wall = json.load(open(C.RESULTS / "acq_value.json"))["wall_seconds"]
-        gains = pd.read_csv(C.RESULTS / "acq_value_gains.csv")
+        gains = pd.read_csv(C.RESULTS / "acq_value_gains.csv.gz")
     else:
         tau = json.load(open(C.RESULTS / "acq_surrogate.json"))["tau"]
         t0 = time.time()
         res = Parallel(n_jobs=C.N_JOBS)(delayed(marginal)(k, p, n, tau) for k, p, n in jobs)
         wall = time.time() - t0
         gains = pd.DataFrame([r for rr in res for r in rr])
-        gains.to_csv(C.RESULTS / "acq_value_gains.csv", index=False, float_format="%.6g")
-        gains = pd.read_csv(C.RESULTS / "acq_value_gains.csv")       # summarise what is stored
+        gains.to_csv(C.RESULTS / "acq_value_gains.csv.gz", index=False, float_format="%.6g",
+                     compression={"method": "gzip", "mtime": 0})
+        gains = pd.read_csv(C.RESULTS / "acq_value_gains.csv.gz")       # summarise what is stored
     table = S.load_cache()["table"].set_index("label")
     rank_cols = [f"rank_{k}" for k in O.OBJECTIVES]
     v = (

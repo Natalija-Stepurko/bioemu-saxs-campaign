@@ -72,7 +72,11 @@ def run(stage: str, argv: list[str]) -> None:
         objectives.main()
     elif stage == "surrogate":
         from bsc import surrogate
-        surrogate.main()
+        ap = argparse.ArgumentParser(prog="bsc surrogate")
+        ap.add_argument("--summary-only", action="store_true",
+                        help="recompute the held-out summary from the stored per-profile results")
+        a = ap.parse_args(argv)
+        surrogate.main(a.summary_only)
     elif stage == "value":
         from bsc import value
         ap = argparse.ArgumentParser(prog="bsc value")
