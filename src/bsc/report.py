@@ -963,6 +963,269 @@ other models is restricted to the six comparators on the shared entries.
     (C.REPO / "docs" / "CAMPAIGN.md").write_text(text)
 
 
+# ---- the acquisition extension (docs/ACQUISITION_DESIGN.md) ------------------------------------------
+# Three policy hues (validated with the dataviz palette script on the white surface; the green/magenta pair
+# sits in the CVD floor band, so every policy is also told apart by line style and a direct label).
+POLICY_COL = {"pareto": "#1F6FE5", "pareto constrained": "#1F6FE5", "O1": "#F05A0A",
+              "predicted error": "#D6338C", "oracle": INK, "random": "#8A939B"}
+POLICY_LS = {"pareto": "-", "pareto constrained": "--", "O1": "-", "predicted error": "-", "oracle": ":",
+             "random": "-"}
+POLICY_NAME = {"random": "random", "O1": "O1 information (θ)", "O2": "O2 own ensemble", "O3": "O3 disagreement",
+               "O4": "O4 coverage", "O5": "O5 feasibility", "predicted error": "predicted error",
+               "pareto": "Pareto (O1, O4, O5)", "pareto constrained": "Pareto, feasible half",
+               "oracle": "oracle (reads profiles)"}
+OBJ_NAME = {"O1": "O1 · information about θ", "O2": "O2 · own-ensemble information",
+            "O3": "O3 · model disagreement", "O4": "O4 · coverage", "O5": "O5 · feasibility",
+            "predicted error": "predicted error (baseline)"}
+
+
+def signed(x: float, nd: int = 2) -> str:
+    """+0.12 / −0.29 with a true minus sign; 0.00 when the value rounds to zero."""
+    t = f"{x:+.{nd}f}"
+    return f"{0:.{nd}f}" if float(t) == 0 else t.replace("-", "−")
+
+
+def class_tick(c: str) -> str:
+    return c.replace("partly ", "partly\n")
+
+
+def policy_name(p: str) -> str:
+    if p.startswith("chebyshev"):
+        return f"Chebyshev, O5 weight {float(p.split()[1]):.2f}"
+    return POLICY_NAME[p]
+
+
+def fig_acq_surrogate() -> None:
+    """E5: what the shared correction does to held-out profiles, by class (A) and per split (B)."""
+    p = C.RESULTS / "acq_surrogate_heldout.csv"
+    if not p.exists():
+        return
+    S = json.load(open(C.RESULTS / "acq_surrogate.json"))
+    h = pd.read_csv(p)
+    e5 = S["E5"]
+    fig, axes = figure(760, 320, ncols=2, gridspec_kw={"width_ratios": [1.25, 1]})
+    ax = axes[0]
+    for i, cls in enumerate(CLASS_ORDER):
+        v = h.loc[h["disorder_class"] == cls, "log10_reduction"].to_numpy()
+        x = i + np.random.default_rng(i).uniform(-0.24, 0.24, len(v))
+        ax.scatter(x, np.clip(v, -0.6, 0.8), s=11, color=CLS_COL[cls], alpha=0.55, lw=0)
+        st = e5["by_class_pooled"][cls]
+        ax.plot([i - 0.3, i + 0.3], [st["median_log10_reduction"]] * 2, color=INK, lw=2)
+        ax.plot([i + 0.36] * 2, st["ci95"], color=INK, lw=1.6)
+        ax.text(i, 0.93, "median " + signed(st["median_log10_reduction"]), ha="center",
+                va="center", fontsize=9.5, color=INK)
+    ax.axhline(0, color=MUTED, lw=0.8, ls="--")
+    ax.set_xticks(range(3))
+    ax.set_xticklabels([f"{c}\n{pct(e5['by_class_pooled'][c]['share_held_out'])} of held out"
+                        for c in CLASS_ORDER])
+    ax.set_xlim(-0.5, 2.5)
+    ax.set_ylim(-0.65, 1.0)
+    ax.set_yticks([-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8])
+    ax.set_ylabel("log₁₀ χ² reduction, held out")
+    ax.set_title("A · whole-pool fit, each held-out profile", loc="left")
+    ax = axes[1]
+    rr = [r["relative_reduction_median_chi2"] for r in e5["per_split"]]
+    ax.bar(range(len(rr)), [100 * r for r in rr], width=0.6, color=NEUTRAL_BAR)
+    for k, r in enumerate(rr):
+        ax.text(k, 100 * r + (2 if r >= 0 else -2), f"{100 * r:+.0f}%".replace("-", "−"), ha="center",
+                va="bottom" if r >= 0 else "top", fontsize=9.5, color=INK)
+    ax.axhline(100 * e5["threshold"], color=INK, lw=1, ls="--")
+    ax.text(len(rr) - 0.5, 100 * e5["threshold"] + 2, "E5 threshold, 10%", ha="right", va="bottom",
+            fontsize=9.5, color=INK)
+    ax.axhline(0, color=MUTED, lw=0.8)
+    ax.set_xticks(range(len(rr)))
+    ax.set_xticklabels([f"split {k + 1}" for k in range(len(rr))])
+    lo = min(100 * min(rr) - 12, -15)
+    ax.set_ylim(lo, 30)
+    ax.set_ylabel("reduction of the held-out median χ² (%)")
+    ax.set_title("B · the E5 test, five splits", loc="left")
+    fig.tight_layout(w_pad=2.0)
+    save(fig, "fig_acq_surrogate")
+
+
+def fig_acq_validity() -> None:
+    """Q1, E6 and E9: Spearman of each objective with realised value (A); realised value by class (B)."""
+    p = C.RESULTS / "acq_value.json"
+    if not p.exists():
+        return
+    V = json.load(open(p))
+    val = pd.read_csv(C.RESULTS / "acq_value.csv")
+    fig, axes = figure(760, 320, ncols=2, gridspec_kw={"width_ratios": [1.15, 1]})
+    ax = axes[0]
+    objs = list(V["validity"])[::-1]
+    for j, k in enumerate(objs):
+        r = V["validity"][k]
+        col = POLICY_COL["O1"] if k == "O1" else POLICY_COL["predicted error"] if k == "predicted error" else INK
+        ax.plot(r["ci95"], [j, j], color=col, lw=2.2, solid_capstyle="round")
+        ax.plot(r["spearman"], j, "o", color=col, ms=7, mec="white", mew=1.5)
+        ax.text(max(r["ci95"][1], r["spearman"]) + 0.02, j, signed(r["spearman"]), va="center", fontsize=9.5,
+                color=INK)
+    ax.axvline(0, color=MUTED, lw=0.8, ls="--")
+    ax.set_yticks(range(len(objs)))
+    ax.set_yticklabels([OBJ_NAME[k] for k in objs])
+    lim = max(0.35, max(abs(v) for r in V["validity"].values() for v in r["ci95"]) + 0.12)
+    ax.set_xlim(-lim, lim)
+    ax.set_xlabel("Spearman ρ with realised value (95% interval)")
+    ax.set_title("A · does the objective predict value?", loc="left")
+    ax = axes[1]
+    per = val.groupby("label").agg(value=("value", "mean"), disorder_class=("disorder_class", "first"))
+    scale = 1e3
+    for i, cls in enumerate(CLASS_ORDER):
+        v = per.loc[per["disorder_class"] == cls, "value"].to_numpy() * scale
+        x = i + np.random.default_rng(20 + i).uniform(-0.24, 0.24, len(v))
+        ax.scatter(x, v, s=11, color=CLS_COL[cls], alpha=0.6, lw=0)
+        st = V["value_by_class"][cls]
+        ax.plot([i - 0.3, i + 0.3], [st["median"] * scale] * 2, color=INK, lw=2)
+        ax.plot([i + 0.36] * 2, [c * scale for c in st["ci95"]], color=INK, lw=1.6)
+    ax.axhline(0, color=MUTED, lw=0.8, ls="--")
+    q = np.quantile(per["value"] * scale, [0.02, 0.98])
+    pad = 0.15 * (q[1] - q[0])
+    ax.set_ylim(q[0] - pad, q[1] + pad)
+    ax.set_xticks(range(3))
+    ax.set_xticklabels([f"{class_tick(c)}\nn = {V['value_by_class'][c]['n']}" for c in CLASS_ORDER])
+    ax.set_xlim(-0.5, 2.6)
+    ax.set_ylabel("realised value (10⁻³ log₁₀ χ²)")
+    ax.set_title("B · realised value by class", loc="left")
+    fig.tight_layout(w_pad=2.0)
+    save(fig, "fig_acq_validity")
+
+
+def fig_acq_curves() -> None:
+    """Held-out improvement against the number acquired (A) and the area difference from random (B)."""
+    p = C.RESULTS / "acq_curves.csv"
+    if not p.exists():
+        return
+    cv = pd.read_csv(p)
+    A = json.load(open(C.RESULTS / "acq_acquire.json"))
+    S = json.load(open(C.RESULTS / "acq_surrogate.json"))
+    fig, axes = figure(780, 360, ncols=2, gridspec_kw={"width_ratios": [1, 1.1]})
+    ax = axes[0]
+    for pol, g in cv.groupby("policy"):
+        m = g.groupby("n_acquired")["improvement"].mean()
+        if pol in POLICY_COL:
+            continue
+        ax.plot(m.index, m.to_numpy(), color=RULE, lw=1.1)
+    ends = []
+    for pol in ("random", "predicted error", "O1", "pareto", "pareto constrained", "oracle"):
+        g = cv[cv["policy"] == pol]
+        m = g.groupby("n_acquired")["improvement"].mean()
+        ax.plot(m.index, m.to_numpy(), color=POLICY_COL[pol], ls=POLICY_LS[pol], lw=2.0 if pol != "random" else 2.6,
+                alpha=LINE_ALPHA)
+        ends.append([m.to_numpy()[-1], pol, m.index[-1]])
+    # direct labels at the line ends, pushed apart so that none overlap
+    ends.sort(key=lambda e: e[0])
+    lo_y, hi_y = ax.get_ylim()
+    gap = 0.065 * (hi_y - lo_y)
+    ys = [e[0] for e in ends]
+    for j in range(1, len(ys)):
+        ys[j] = max(ys[j], ys[j - 1] + gap)
+    for (y0, pol, x0), y in zip(ends, ys, strict=True):
+        ax.plot([x0 + 1, x0 + 5], [y0, y], color=MUTED, lw=0.6)
+        ax.text(x0 + 6, y, policy_name(pol).split(" (")[0], fontsize=9, color=INK, va="center")
+    full = S["E5"]["mean_median_log10_reduction"]
+    ax.axhline(full, color=INK, lw=0.9, ls="-.")
+    ax.text(10, full + 0.002, "fitted on the whole pool", fontsize=9, color=INK, va="bottom")
+    ax.axhline(0, color=MUTED, lw=0.8, ls="--")
+    ax.set_xlim(8, 140)
+    ax.set_xticks([10, 30, 50, 70, 90])
+    ax.set_xlabel("profiles acquired")
+    ax.set_ylabel("held-out median log₁₀ χ² reduction")
+    ax.set_title("A · mean over 5 splits × 10 seed sets", loc="left")
+    ax = axes[1]
+    pols = [p for p in A["policies"] if p != "random"]
+    pols = sorted(pols, key=lambda p: A["policies"][p]["auc_minus_random_mean"])
+    for j, pol in enumerate(pols):
+        r = A["policies"][pol]
+        col = POLICY_COL.get(pol, MUTED)
+        ax.plot(r["auc_minus_random_ci95"], [j, j], color=col, lw=2.0, ls=POLICY_LS.get(pol, "-"))
+        ax.plot(r["auc_minus_random_mean"], j, "o", color=col, ms=6, mec="white", mew=1.2)
+    ax.axvline(0, color=MUTED, lw=0.8, ls="--")
+    ax.set_yticks(range(len(pols)))
+    ax.set_yticklabels([policy_name(p) for p in pols], fontsize=9)
+    ax.set_xlabel("area under the curve minus random (95% interval)")
+    ax.set_title("B · each policy against random", loc="left")
+    fig.tight_layout(w_pad=1.5)
+    save(fig, "fig_acq_curves")
+
+
+def fig_acq_pareto() -> None:
+    """The candidates of one round in the three pairwise projections of (O1, O4, O5), the first front, and
+    the first batch of the Pareto policy and of its feasibility-constrained variant."""
+    p = C.RESULTS / "acq_pareto_snapshot.csv"
+    if not p.exists():
+        return
+    d = pd.read_csv(p)
+    d["O1log"] = np.log10(d["O1"].clip(lower=1e-6))
+    pairs = [("O1log", "O4", "O1 · information about θ (log₁₀)", "O4 · coverage"),
+             ("O1log", "O5", "O1 · information about θ (log₁₀)", "O5 · feasibility"),
+             ("O4", "O5", "O4 · coverage", "O5 · feasibility")]
+    fig, axes = figure(780, 290, ncols=3)
+    front = d["front"] == 0
+    for ax, (x, y, xl, yl) in zip(axes, pairs, strict=True):
+        ax.scatter(d.loc[~front, x], d.loc[~front, y], s=10, color="#C3C9CF", lw=0)
+        ax.scatter(d.loc[front, x], d.loc[front, y], s=18, facecolors="none", edgecolors=INK, lw=0.9)
+        sel = d["pareto"]
+        ax.scatter(d.loc[sel, x], d.loc[sel, y], s=34, color=POLICY_COL["pareto"], lw=0.8, edgecolors="white",
+                   zorder=3)
+        con = d["pareto constrained"]
+        ax.scatter(d.loc[con, x], d.loc[con, y], s=46, marker="D", facecolors="none",
+                   edgecolors=POLICY_COL["pareto"], lw=1.2, zorder=4)
+        ax.set_xlabel(xl, fontsize=9.5)
+        ax.set_ylabel(yl, fontsize=9.5)
+    h = [matplotlib.lines.Line2D([], [], marker="o", ls="", color="#C3C9CF", label="candidate"),
+         matplotlib.lines.Line2D([], [], marker="o", ls="", mfc="none", mec=INK, label="first front"),
+         matplotlib.lines.Line2D([], [], marker="o", ls="", color=POLICY_COL["pareto"], label="Pareto batch"),
+         matplotlib.lines.Line2D([], [], marker="D", ls="", mfc="none", mec=POLICY_COL["pareto"],
+                                 label="feasible-half batch")]
+    fig.legend(handles=h, loc="upper center", ncol=4, frameon=False, fontsize=9.5, bbox_to_anchor=(0.5, 1.0))
+    fig.tight_layout(rect=(0, 0, 1, 0.9), w_pad=1.2)
+    save(fig, "fig_acq_pareto")
+
+
+def fig_acq_tradeoff() -> None:
+    """Q3: area under the improvement curve against the mean feasibility of the chosen proteins."""
+    p = C.RESULTS / "acq_acquire.json"
+    if not p.exists():
+        return
+    A = json.load(open(p))
+    P = A["policies"]
+    fig, ax = figure(560, 340)
+    sweep = sorted([k for k in P if k.startswith("chebyshev")], key=lambda k: float(k.split()[1]))
+    xs = [P[k]["mean_O5_chosen"] for k in sweep]
+    ys = [P[k]["auc_mean"] for k in sweep]
+    ax.plot(xs, ys, color=MUTED, lw=1.2, zorder=1)
+    for k, x, y in zip(sweep, xs, ys, strict=True):
+        lo, hi = (np.array(P[k]["auc_minus_random_ci95"]) + P["random"]["auc_mean"])
+        ax.plot([x, x], [lo, hi], color=MUTED, lw=1)
+        ax.plot(x, y, "o", color="white", mec=INK, ms=6, zorder=3)
+        ax.text(x, hi, f" {float(k.split()[1]):.2f}", fontsize=9, color=MUTED, va="bottom", ha="center")
+    for k in ("random", "pareto", "pareto constrained", "O5"):
+        x, y = P[k]["mean_O5_chosen"], P[k]["auc_mean"]
+        col = POLICY_COL.get(k, INK)
+        mk = {"pareto": "o", "pareto constrained": "D", "random": "s", "O5": "^"}[k]
+        ax.plot(x, y, mk, color=col, ms=7, mfc=col if k != "pareto constrained" else "white", mew=1.4)
+        name = {"O5": "greedy on O5 (= weight 1.00)", "pareto": "Pareto"}.get(k, policy_name(k))
+        dy = -0.0035 if k == "pareto" else 0.0
+        ax.text(x + (0.004 if k != "pareto" else -0.002), y + dy, " " + name, fontsize=9, color=INK, va="center",
+                ha="left" if k != "pareto" else "right")
+    ax.axhline(0, color=MUTED, lw=0.8, ls="--")
+    ax.set_xlabel("mean O5 feasibility of the proteins chosen")
+    ax.set_ylabel("area under the held-out improvement curve")
+    ax.set_title("Chebyshev sweep (labels: weight on O5) and the Pareto batches", loc="left")
+    fig.tight_layout()
+    save(fig, "fig_acq_tradeoff")
+
+
+def acquisition_figures() -> None:
+    style()
+    OUT.mkdir(parents=True, exist_ok=True)
+    fig_acq_surrogate()
+    fig_acq_validity()
+    fig_acq_curves()
+    fig_acq_pareto()
+    fig_acq_tradeoff()
+
+
 def main() -> None:
     style()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -982,6 +1245,7 @@ def main() -> None:
     fig_predict()
     fig_predict_detail()
     fig_examples(A, ent)
+    acquisition_figures()
     arms = campaign_arms(A, cand, d, ent)
     write_campaign(A, cand, arms)
     print(f"  figures -> {OUT}; proposal -> docs/CAMPAIGN.md", flush=True)
