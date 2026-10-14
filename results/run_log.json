@@ -904,5 +904,15 @@
   "dirty": false,
   "inputs_sha256": {},
   "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "coverage",
+  "args": [],
+  "seconds": 3.1,
+  "started_utc": "2026-10-14T11:56:21Z",
+  "commit": "d635dabd4bb9565fa16802b718408defdf86d071",
+  "dirty": true,
+  "inputs_sha256": {},
+  "config_sha256": "4dd41249c51e1b40"
  }
 ]
