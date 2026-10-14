@@ -25,6 +25,17 @@ used to recommend measurements. The campaign proposal therefore has a replicatio
 stated eligibility rules, under standardised conditions and a prospective test of the extension
 bias with pre-specified model-based selection and scaling-law-matched controls.
 
+Against experimentally known structure space (CATH v4.4 at the S35 level, non-redundant PDB clusters and
+Swiss-Prot), the SAXS set covers common folds and few rare ones (34 of the 50 most populated CATH
+superfamilies, 43 of the 4,630 ranked beyond 2,000), over-represents mainly-β domains, human proteins and
+disorder, under-represents α/β enzyme folds, and consists of fragments of at most 500 residues cut from long
+multidomain proteins; 26% of the mapped constructs have no experimental structure covering half of them.
+These skews lie where BioEmu-1's training data (predicted structures with mostly-coil clusters removed,
+simulations of 50–200-residue domains, stabilities of small domains) were thin by construction; overlap
+with the training data was not measured. Whether a construct has an experimental structure does not explain
+the raw error once the disorder class is accounted for (class-stratified van Elteren p = 0.39; pooled
+Mann–Whitney p = 0.014).
+
 ![error map](results/figures/fig_error_map.png)
 
 ## What was done
@@ -53,6 +64,7 @@ reversed, two not met. The additions made after the first run are listed, dated,
 | `bsc analyse` | error map by class, the four expectations, the four kinds, model comparison, the design's priority score (reported and tested, not used to select systems), bootstrap intervals, near-duplicate clusters, NRMSD orderings |
 | `bsc select_eval` | retrospective evaluation of the selection rule on held-out folds grouped by sequence cluster |
 | `bsc predict` | can the error be predicted before measuring: grouped, repeated cross-validation of baselines, linear models and small trees |
+| `bsc coverage` | where the SAXS set sits in structure space, and the raw fit split by PDB coverage of the construct, pooled and within each disorder class; reads only `results/coverage/` and `results/resolvability.csv` |
 | `bsc envelopes` | DENSS ab initio envelopes of the three worked examples (needs the DENSS environment, see below; skipped with a notice otherwise) |
 | `bsc report` | figures, `docs/CAMPAIGN.md` and the campaign arms from `results/` |
 
@@ -73,6 +85,21 @@ make page                                # the page alone, from the tracked resu
 downloaded; `BSC_N_JOBS` sets the worker count (default 4). The tracked `results/` (per-entry scores,
 reweighting paths, kinds, candidates, coordinate Rg, the validation outputs, the DENSS fit statistics and
 the figures) let `analyse`, `select_eval`, `predict`, `report` and the page rebuild without the download.
+
+### The coverage analysis
+
+`analysis/coverage/` maps every construct to a UniProtKB region and compares the set with CATH, the PDB and
+Swiss-Prot (scripts 00–10, described with database versions in
+[`analysis/coverage/README.md`](analysis/coverage/README.md)). It needs network access, about 0.9 GB of
+downloads and its own requirements (`analysis/coverage/requirements.txt`, not part of the main environment).
+Its small outputs (the per-entry mapping, the summary of all comparisons, the database versions and a CATH
+superfamily rank table) are tracked in `results/coverage/`, so `bsc coverage` and the page rebuild without it.
+
+```bash
+uv venv /path/to/venv-cov && uv pip install --python /path/to/venv-cov -r analysis/coverage/requirements.txt
+COVERAGE_PY=/path/to/venv-cov/bin/python COVERAGE_WORK=/path/with/1GB/free analysis/coverage/run_all.sh
+uv run bsc coverage
+```
 
 ### The DENSS environment
 
@@ -98,7 +125,8 @@ examples are extracted from the archive by `bsc coordrg -- --archive Predictions
 
 Tracked: everything under `results/` except the DENSS maps, and the documents. Not tracked: the Zenodo
 archives and the unpacked curves and ensembles (`data/`, rebuilt by `bsc fetch` and `bsc coordrg`),
-because they are already public under CC-BY 4.0 and are large.
+because they are already public under CC-BY 4.0 and are large, and the downloads of the coverage analysis
+(CATH, Swiss-Prot, PDB clusters and per-protein annotations, about 0.9 GB).
 
 ## Licence
 

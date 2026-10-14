@@ -190,6 +190,21 @@ beside the old ones in `results/`.
   predictable from pre-measurement features, and the policies fed predictions remain within the spread of a
   random pick.
 
+- **Coverage of structure space and the structure split (2026-10-14).** Added after the results were seen.
+  `analysis/coverage/` maps the 399 clean constructs to UniProtKB regions (390 mapped; 17 SASBDB accessions
+  set aside, 16 of them mapped again by sequence search; 9 unmapped) and compares the set with CATH v4.4.0 at
+  the S35 level, non-redundant PDB clusters (30% identity) and Swiss-Prot release 2026_03. CATH and the PDB are
+  the reference for experimentally known structure space; BioEmu-1's training data are predicted structures,
+  simulations and stabilities (Lewis et al. 2025), and overlap between these proteins and the training data
+  was not measured. Stage `coverage` splits the clean BioEmu-1 profiles by SIFTS coverage of the construct
+  (at least 50%, partial, none) and reports the raw-fit share (Wilson intervals), bootstrap medians of raw χ²,
+  NRMSD and Rg ratio and the share whose target fit is not reached, pooled and within each disorder class;
+  two-sided Mann–Whitney tests compare at least 50% against the rest, Holm-adjusted over the six
+  within-class tests, with a class-stratified van Elteren test. Result: the pooled difference (p = 0.014)
+  does not hold within classes or stratified by class (p = 0.39); among disordered proteins the nominal
+  difference (p = 0.04) does not survive the correction (0.22). SIFTS coverage counts residues listed in the
+  structure record, which can include unmodelled ones. No pre-registered quantity changes.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.
