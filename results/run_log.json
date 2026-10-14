@@ -954,5 +954,25 @@
   "dirty": true,
   "inputs_sha256": {},
   "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "coverage",
+  "args": [],
+  "seconds": 8.6,
+  "started_utc": "2026-10-14T16:33:27Z",
+  "commit": "89cea2f4593d0b5d661a41515a92371ff29c54cf",
+  "dirty": true,
+  "inputs_sha256": {},
+  "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "coverage",
+  "args": [],
+  "seconds": 10.6,
+  "started_utc": "2026-10-14T16:36:59Z",
+  "commit": "89cea2f4593d0b5d661a41515a92371ff29c54cf",
+  "dirty": true,
+  "inputs_sha256": {},
+  "config_sha256": "4dd41249c51e1b40"
  }
 ]

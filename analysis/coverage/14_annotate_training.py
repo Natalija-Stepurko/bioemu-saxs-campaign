@@ -10,7 +10,7 @@ CATH superfamilies
                     best MMseqs2 hit against CATH v4.4 S100 domain sequences (E <= 1e-3, at least 60% of the
                     query aligned); designed miniproteins mostly have none
   CATH reference    the S35 clusters of the domain list (script 08)
-Disorder: metapredict v3 (Emenecker et al. 2024) on every sequence, the same predictor for every set: the share
+Disorder: metapredict 3.1 (Emenecker et al. 2021, Biophys J) on every sequence, the same predictor for every set: the share
   of residues scoring at least 0.5 and the longest run of such residues. Categories as in script 08: mostly
   disordered (>= 50% of residues), a long disordered region (>= 30 residues, under 50%), neither.
 Organism group: UniProtKB lineage (afdb, other_md); source organism of the PDB entry (cath1, cath2 and the
