@@ -215,9 +215,9 @@ def fig_coverage_space(S: dict, rc: dict) -> None:
     ax.bar(x, sh, width=0.68, color=SAXS_COL)
     ax.errorbar(x, sh, yerr=[lo, hi], fmt="none", ecolor=report.INK, lw=0.9, capsize=2.5)
     for i, r in enumerate(b):
-        ax.text(i, r["ci95"][1] + 0.025, f"{r['k']}/{r['n']}", ha="center", fontsize=8.5, color=report.MUTED)
+        ax.text(i, r["ci95"][1] + 0.025, f"{r['k']}/{r['n']}", ha="center", fontsize=9, color=report.MUTED)
     ax.set_xticks(x)
-    ax.set_xticklabels([f"{r['first']}–\n{r['last']}" for r in b], fontsize=9)
+    ax.set_xticklabels([f"{r['first']}–\n{r['last']}" for r in b], fontsize=9.5)
     ax.set_xlabel("CATH superfamilies, ranked by number of S35 clusters")
     ax.set_ylabel("share present in the SAXS set")
     ax.set_ylim(0, 1.0)
@@ -241,7 +241,7 @@ def fig_coverage_space(S: dict, rc: dict) -> None:
     ax.invert_yaxis()
     ax.set_xlim(0, 0.86)
     ax.set_xlabel("share of protein–superfamily units")
-    ax.legend(frameon=False, loc="upper right", fontsize=9)
+    ax.legend(frameon=False, loc="upper right", fontsize=9.5)
     ax.set_title("B · CATH class (× = SAXS share / CATH share)", loc="left")
     fig.tight_layout(w_pad=2.0)
     report.save(fig, "fig_coverage_space")
@@ -268,7 +268,7 @@ def fig_coverage_sources(S: dict) -> None:
     ax.invert_yaxis()
     ax.set_xlim(0, 0.6)
     ax.set_xlabel("share of proteins")
-    ax.legend(frameon=False, loc="lower right", fontsize=9)
+    ax.legend(frameon=False, loc="lower right", fontsize=9.5)
     ax.set_title("A · source organism", loc="left")
     ax = axes[1]
     dp = S["domains_per_protein"]
@@ -276,14 +276,15 @@ def fig_coverage_sources(S: dict) -> None:
     x = np.arange(len(cats))
     w = 0.27
     for off, key, col, lab in ((-w - 0.02, "ours_construct_gene3d", SAXS_COL, "SAXS construct"),
-                               (0.0, "ours_parent_fulllength_gene3d", "#9DB4CB", "its full-length protein"),
-                               (w + 0.02, "swissprot_fulllength_gene3d", SP_COL, "Swiss-Prot protein")):
+                               (0.0, "ours_parent_fulllength_gene3d", "#9DB4CB", "full-length protein"),
+                               (w + 0.02, "swissprot_fulllength_gene3d", SP_COL, "Swiss-Prot")):
         ax.bar(x + off, [dp[key][c] for c in cats], w, color=col, label=lab)
     ax.set_xticks(x)
     ax.set_xticklabels(cats)
     ax.set_xlabel("CATH-Gene3D domains")
     ax.set_ylabel("share of proteins")
-    ax.legend(frameon=False, loc="upper right", fontsize=9)
+    ax.set_ylim(0, 0.46)
+    ax.legend(frameon=False, loc="upper right", fontsize=9.5)
     ax.set_title("B · domains per protein", loc="left")
     fig.tight_layout(w_pad=2.0)
     report.save(fig, "fig_coverage_sources")
@@ -304,7 +305,8 @@ def fig_coverage_architecture(S: dict) -> None:
     ax.set_xticklabels(["0.1", "0.25", "0.5", "1", "2", "4", "8"])
     ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_yticks(y)
-    ax.set_yticklabels([f"{r['arch']} {r['name']} ({r['ours_units']})" for _, r in ar.iterrows()], fontsize=9)
+    ax.set_yticklabels([f"{r['arch']} {r['name']} ({r['ours_units']})" for _, r in ar.iterrows()],
+                       fontsize=9.5)
     ax.set_xlabel("SAXS share / CATH S35 share (log scale, 95% bootstrap interval)")
     ax.set_title("CATH architectures (CATH share ≥ 1% or ≥ 3 units in the SAXS set)", loc="left")
     fig.tight_layout()
@@ -344,14 +346,14 @@ def fig_structure_split(d: pd.DataFrame, mp: pd.DataFrame, SP: dict) -> None:
             pos += 1
         t = SP["by_class"][cls]["tests"]
         ax.text(pos - 2, 3.55, f"{cls}", ha="center", fontsize=10, color=report.INK, fontweight="bold")
-        ax.text(pos - 2, 3.3, f"Mann–Whitney p = {t['chi2_raw_mannwhitney_p']:.2f}", ha="center", fontsize=9,
-                color=report.MUTED)
+        ax.text(pos - 2, 3.3, f"Mann–Whitney p = {t['chi2_raw_mannwhitney_p']:.2f}", ha="center",
+                fontsize=9.5, color=report.MUTED)
         pos += 0.7
     ax.axhline(np.log10(RAW_FIT), color=report.MUTED, lw=0.8, ls="--")
-    ax.text(pos - 0.75, np.log10(RAW_FIT) - 0.05, "χ² = 2", fontsize=9, color=report.MUTED, ha="right",
+    ax.text(pos - 0.75, np.log10(RAW_FIT) - 0.05, "χ² = 2", fontsize=9.5, color=report.MUTED, ha="right",
             va="top")
     ax.set_xticks(ticks)
-    ax.set_xticklabels(labels, fontsize=8.5)
+    ax.set_xticklabels(labels, fontsize=9.5)
     ax.set_xlim(-0.6, pos - 0.6)
     ax.set_ylim(-0.6, 3.75)
     ax.set_yticks([0, 1, 2, 3])
