@@ -3,7 +3,10 @@ profiles better when the construct has an experimental structure.
 
 Reads only tracked outputs: results/coverage/ (written by analysis/coverage, which needs network access
 and its own requirements) and results/resolvability.csv. Writes results/coverage/structure_split.json,
-results/coverage/rank_coverage.json and the coverage figures.
+results/coverage/rank_coverage.json and the coverage figures, and, from the training-data outputs
+(training_nearest.csv, training_summary.json), results/coverage/training_closeness.json (BioEmu-1's raw
+error against the closeness of each construct to the training data), results/coverage/category_evidence.json
+(the error on candidate protein categories for data collection) and three training-data figures.
 
 Structure groups, from SIFTS residue ranges of atomic-model PDB chains mapped onto the construct region
 of the UniProt entry (analysis/coverage/07_build_protein_table.py):
@@ -17,6 +20,7 @@ from __future__ import annotations
 import json
 
 import matplotlib
+import matplotlib.patches
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -196,6 +200,153 @@ def rank_coverage(rk: pd.DataFrame) -> dict:
             "n_present": int(rk["in_ours_gene3d"].sum())}
 
 
+ID_BINS = [0.0, 0.3, 0.5, 0.9, 1.0001]
+ID_LABELS = ["<30", "30-50", "50-90", ">=90"]
+CLOSE_METRICS = ("chi2_raw", "raw_fit", "nrmsd_raw", "rg_ratio")
+MW_METRICS = ("chi2_raw", "nrmsd_raw", "rg_ratio")
+
+
+def identity_bin(x: pd.Series) -> pd.Series:
+    """Nearest-training identity (0-1) into the four bins <30%, 30-50%, 50-90%, >=90%."""
+    return pd.cut(x, ID_BINS, right=False, labels=ID_LABELS).astype(object)
+
+
+def _spearman(x: pd.Series, y: pd.Series) -> dict:
+    k = x.notna() & y.notna()
+    if k.sum() < 5 or x[k].nunique() < 2 or y[k].nunique() < 2:
+        return {"rho": None, "p": None, "n": int(k.sum())}
+    r = stats.spearmanr(x[k], y[k])
+    return {"rho": float(r.statistic), "p": float(r.pvalue), "n": int(k.sum())}
+
+
+def _bioemu_with_training(d: pd.DataFrame, nn: pd.DataFrame) -> pd.DataFrame:
+    m = d[(d["model"] == C.MODEL) & d["clean"]].copy()
+    t = nn.set_index("label")
+    for col in ("nearest_identity", "nearest_identity_md", "sf_group", "sf_group_md", "id_afdb_member"):
+        m[col] = m["label"].map(t[col])
+    m["identity_bin"] = identity_bin(m["nearest_identity"])
+    m["raw_fit"] = (m["chi2_raw"] <= RAW_FIT).astype(float)
+    return m
+
+
+def training_closeness(d: pd.DataFrame, nn: pd.DataFrame) -> dict:
+    """Analysis C: BioEmu-1's raw SAXS error against the closeness of each construct to the training data.
+    Closeness: the identity of the nearest training sequence (local alignment covering at least half of the
+    construct), in four bins and as a continuous variable (Spearman), and whether a CATH superfamily of the
+    construct occurs in the training data (any component, or the MD components), present against absent
+    (Mann-Whitney; constructs without a CATH superfamily form a third group, reported but not tested).
+    Pooled and within each disorder class; Holm adjustment within each family of within-class tests; the
+    class-stratified van Elteren test for identity >= 50% and for superfamily presence."""
+    m = _bioemu_with_training(d, nn)
+    out = {"definition": "nearest training identity: highest MMseqs2 identity to any BioEmu-1 training "
+                         "sequence (AFDB cluster members, CATH1/CATH2 and MegaSim MD systems, MEGAscale wild "
+                         "types, other public MD proteins) over an alignment covering at least half of the "
+                         "construct; 0 when no such hit. Superfamily presence: a CATH-Gene3D superfamily "
+                         "inside the construct occurs in the training data.",
+           "n": int(len(m)), "bins": ID_LABELS}
+    seed = SEED + 500
+    out["pooled"], out["by_class"] = {}, {}
+    for b in ID_LABELS:
+        out["pooled"][b] = summarise(m[m["identity_bin"] == b], seed)
+        seed += 10
+    for cls in analyse.CLASS_ORDER:
+        g = m[m["disorder_class"] == cls]
+        out["by_class"][cls] = {}
+        for b in ID_LABELS:
+            out["by_class"][cls][b] = summarise(g[g["identity_bin"] == b], seed)
+            seed += 10
+    # identity: Spearman, pooled and within class
+    out["spearman_pooled"] = {k: _spearman(m["nearest_identity"], m[k]) for k in CLOSE_METRICS}
+    raw = {}
+    out["spearman_by_class"] = {}
+    for cls in analyse.CLASS_ORDER:
+        g = m[m["disorder_class"] == cls]
+        out["spearman_by_class"][cls] = {k: _spearman(g["nearest_identity"], g[k]) for k in CLOSE_METRICS}
+        for k in CLOSE_METRICS:
+            if out["spearman_by_class"][cls][k]["p"] is not None:
+                raw[f"{cls}|{k}"] = out["spearman_by_class"][cls][k]["p"]
+    for key, p in holm(raw).items():
+        cls, k = key.split("|")
+        out["spearman_by_class"][cls][k]["holm_p"] = p
+    out["holm_family_identity"] = f"the {len(raw)} within-class Spearman tests (three classes, four measures)"
+    k50 = m["nearest_identity"] >= 0.5
+    out["stratified_identity_ge50"] = {
+        "chi2_raw": van_elteren(np.log(m["chi2_raw"].to_numpy(float)), k50.to_numpy(),
+                                m["disorder_class"].to_numpy()),
+        "n_ge50": int(k50.sum())}
+    # superfamily presence
+    for grp in ("sf_group", "sf_group_md"):
+        rec = {"pooled": {}, "by_class": {}}
+        for gname in ("present", "absent", "none"):
+            rec["pooled"][gname] = summarise(m[m[grp] == gname], seed)
+            seed += 10
+        a, b = m[m[grp] == "present"], m[m[grp] == "absent"]
+        rec["pooled_tests"] = {f"{k}_mannwhitney_p": _mw(a[k], b[k]) for k in MW_METRICS}
+        raw = {}
+        for cls in analyse.CLASS_ORDER:
+            g = m[m["disorder_class"] == cls]
+            r = {gname: summarise(g[g[grp] == gname], seed + i)
+                 for i, gname in enumerate(("present", "absent", "none"))}
+            seed += 10
+            a, b = g[g[grp] == "present"], g[g[grp] == "absent"]
+            r["tests"] = {f"{k}_mannwhitney_p": _mw(a[k], b[k]) for k in MW_METRICS}
+            for k, p in r["tests"].items():
+                if not np.isnan(p):
+                    raw[f"{cls}|{k}"] = p
+            rec["by_class"][cls] = r
+        for key, p in holm(raw).items():
+            cls, k = key.split("|")
+            rec["by_class"][cls]["tests"][k.replace("_mannwhitney_p", "_holm_p")] = p
+        rec["holm_family"] = f"the {len(raw)} within-class Mann-Whitney tests with both groups present"
+        kk = m[grp].isin(["present", "absent"])
+        rec["stratified_by_class"] = {"chi2_raw": van_elteren(np.log(m.loc[kk, "chi2_raw"].to_numpy(float)),
+                                                              (m.loc[kk, grp] == "present").to_numpy(),
+                                                              m.loc[kk, "disorder_class"].to_numpy())}
+        out[grp] = rec
+    out["class_by_bin"] = {b: {c: int(((m["identity_bin"] == b) & (m["disorder_class"] == c)).sum())
+                               for c in analyse.CLASS_ORDER} for b in ID_LABELS}
+    return out
+
+
+ALPHA_BETA_ENZYME = ("3.40.50.", "3.20.20.")
+
+
+def category_evidence(d: pd.DataFrame, mp: pd.DataFrame, nn: pd.DataFrame, rk: pd.DataFrame) -> dict:
+    """SAXS-archive side of the candidate categories for data collection: for each category, the clean
+    profiles in it and BioEmu-1's raw error on them (raw-fit share, medians of raw chi2, NRMSD and Rg ratio),
+    with the same numbers for the rest of the set. The training-data side is in training_summary.json."""
+    m = _bioemu_with_training(d, nn)
+    mpi = mp.set_index("label")
+    t = nn.set_index("label")
+    lab = m["label"]
+    sfl = lab.map(mpi["gene3d_superfamilies"]).fillna("").str.split(";").map(lambda x: [y for y in x if y])
+    rank = dict(zip(rk["sf"], rk["rank"], strict=True))
+    grp = structure_group(mpi)
+    cats = {
+        "disordered": m["disorder_class"] == "disordered",
+        "partly disordered": m["disorder_class"] == "partly disordered",
+        "long disordered region": lab.map(t["mp_dis_cat"]).isin(["mostly disordered",
+                                                                 "long disordered region"]),
+        "construct over 500 residues": m["length"] > 500,
+        "two or more CATH superfamilies": sfl.map(lambda x: len(set(x)) >= 2),
+        "alpha/beta enzyme folds": sfl.map(lambda x: any(y.startswith(ALPHA_BETA_ENZYME) for y in x)),
+        "bacteria other than E. coli": lab.map(mpi["org_group"]) == "Other bacteria",
+        "human proteins": lab.map(mpi["org_group"]) == "Human",
+        "superfamily beyond the top 200": sfl.map(lambda x: any(rank.get(y, 10 ** 6) > 200 for y in x)),
+        "no experimental structure": lab.map(grp) == "none",
+    }
+    out = {"n": int(len(m)), "categories": {}}
+    seed = SEED + 900
+    for name, k in cats.items():
+        k = k.fillna(False).astype(bool).to_numpy()
+        out["categories"][name] = {"in": summarise(m[k], seed), "rest": summarise(m[~k], seed + 5),
+                                   "chi2_raw_mannwhitney_p": _mw(m.loc[k, "chi2_raw"], m.loc[~k, "chi2_raw"]),
+                                   "rg_ratio_mannwhitney_p": _mw(m.loc[k, "rg_ratio"], m.loc[~k, "rg_ratio"])}
+        seed += 10
+    out["max_construct_length"] = int(m["length"].max())
+    return out
+
+
 # ----------------------------------------------------------------------------- figures
 SAXS_COL = report.PAGE_ACCENT       # the SAXS set
 REF_COL = report.NEUTRAL_BAR        # the experimental reference (CATH S35, PDB clusters)
@@ -363,6 +514,168 @@ def fig_structure_split(d: pd.DataFrame, mp: pd.DataFrame, SP: dict) -> None:
     report.save(fig, "fig_structure_split")
 
 
+# training-data figures: one colour per set (validated for colour-vision deficiency, all pairs); the CATH and
+# PDB references stay in the light neutral of the earlier coverage figures
+SET_COL = {"SAXS": SAXS_COL, "AFDB": "#139C87", "CATH MD": "#C77D12", "CATH S35": SP_COL, "PDB 30%": SP_COL}
+SET_LABEL = {"SAXS": "SAXS set", "AFDB": "AFDB pre-training clusters", "CATH MD": "CATH MD domains",
+             "CATH S35": "CATH S35 (reference)", "PDB 30%": "PDB 30% clusters (reference)"}
+
+
+def _grouped_barh(ax, cats, sets, value, h_total=0.8):
+    """Horizontal grouped bars: one group per category, one bar per set (top to bottom in set order)."""
+    n = len(sets)
+    h = h_total / n
+    y = np.arange(len(cats))
+    for j, st in enumerate(sets):
+        off = -h_total / 2 + h * (j + 0.5)
+        ax.barh(y + off, [value(st, c) for c in cats], h * 0.86, color=SET_COL[st], label=SET_LABEL[st])
+    ax.set_yticks(y)
+    ax.invert_yaxis()
+    return y
+
+
+def fig_training_composition(T: dict) -> None:
+    """Training data against the SAXS set and the references: A CATH class, B chain length, C predicted
+    disorder, D organism."""
+    fig, axes = report.figure(760, 600, nrows=2, ncols=2)
+    sets4 = ["SAXS", "AFDB", "CATH MD", "CATH S35"]
+    ax = axes[0, 0]
+    cls = ["Mainly alpha", "Mainly beta", "Alpha beta"]
+    _grouped_barh(ax, cls, sets4, lambda st, c: T["composition"][st]["class"][c]["share"])
+    ax.set_yticklabels(["mainly α", "mainly β", "α/β"])
+    ax.set_xlim(0, 0.62)
+    ax.set_xlabel("share of protein–superfamily units")
+    ax.set_title("A · CATH class", loc="left")
+    ax = axes[0, 1]
+    for j, st in enumerate(sets4):
+        L = T["length"][st]
+        ax.plot([L["p10"], L["p90"]], [j, j], color=SET_COL[st], lw=1.6)
+        ax.plot([L["p25"], L["p75"]], [j, j], color=SET_COL[st], lw=7, solid_capstyle="butt")
+        ax.plot([L["median"]] * 2, [j - 0.26, j + 0.26], color=report.INK, lw=1.6)
+        ax.text(L["p90"] * 1.06, j, f"{L['median']:.0f}", va="center", fontsize=9.5, color=report.MUTED)
+    ax.axvline(500, color=report.MUTED, lw=0.8, ls="--")
+    ax.set_xscale("log")
+    ax.set_xlim(25, 2500)
+    ax.set_xticks([30, 50, 100, 200, 500, 1000, 2000])
+    ax.set_xticklabels(["30", "50", "100", "200", "500", "1000", "2000"])
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax.set_yticks(range(len(sets4)))
+    ax.set_yticklabels(["SAXS constructs", "AFDB inputs", "CATH MD", "CATH S35"])
+    ax.invert_yaxis()
+    ax.set_xlabel("chain length (residues, log scale)")
+    ax.set_title("B · length: median, 25–75% and 10–90%", loc="left")
+    ax = axes[1, 0]
+    dis = ["mostly disordered", "long disordered region"]
+    _grouped_barh(ax, dis, sets4, lambda st, c: T["disorder"][st][c]["share"])
+    ax.set_yticklabels(["≥ 50% of residues\ndisordered", "a disordered run\nof ≥ 30, under 50%"])
+    ax.set_xlabel("share of chains (metapredict)")
+    ax.set_xlim(0, max(T["disorder"][st][c]["share"] for st in sets4 for c in dis) * 1.15)
+    ax.set_title("C · predicted disorder", loc="left")
+    ax = axes[1, 1]
+    orgs = ["Human", "Mouse", "E. coli", "Yeast", "Other bacteria", "Viruses", "Plants", "Other"]
+    sets_o = ["SAXS", "AFDB", "CATH MD", "PDB 30%"]
+    _grouped_barh(ax, orgs, sets_o, lambda st, c: T["organism"][st][c]["share"], h_total=0.84)
+    ax.set_yticklabels(orgs, fontsize=9)
+    ax.set_xlim(0, 0.95)
+    v = T["organism"]["AFDB"]["Other bacteria"]["share"]       # the AFDB bar, second of four in its group
+    ax.text(v + 0.01, orgs.index("Other bacteria") - 0.105, f"{v:.0%}", va="center", fontsize=9,
+            color=report.MUTED)
+    ax.set_xlabel("share of chains")
+    ax.set_title("D · organism", loc="left")
+    handles = [matplotlib.patches.Patch(color=SET_COL[st], label=SET_LABEL[st])
+               for st in ["SAXS", "AFDB", "CATH MD", "CATH S35"]]
+    handles[-1] = matplotlib.patches.Patch(color=SP_COL,
+                                           label="reference: CATH S35 (A–C), PDB 30% clusters (D)")
+    fig.legend(handles=handles, loc="lower center", ncol=2, frameon=False, fontsize=9.5)
+    fig.tight_layout(rect=(0, 0.075, 1, 1), h_pad=1.6, w_pad=2.0)
+    report.save(fig, "fig_training_composition")
+
+
+def fig_training_overlap(nn: pd.DataFrame) -> None:
+    """A: share of the clean constructs whose nearest training sequence reaches each identity, for all
+    training data, the AFDB clusters and the MD sets. B: the constructs by identity bin and disorder class."""
+    c = nn[nn["clean"].astype(str) == "True"]
+    fig, axes = report.figure(760, 300, ncols=2, gridspec_kw={"width_ratios": [1.15, 1]})
+    ax = axes[0]
+    x = np.linspace(0, 1, 201)
+    for col, lab, colour, lw in (("nearest_identity", "any training data", SAXS_COL, 2.2),
+                                 ("id_afdb_member", "AFDB clusters", SET_COL["AFDB"], 1.6),
+                                 ("nearest_identity_md", "MD sets (CATH, MegaSim)", SET_COL["CATH MD"], 1.6)):
+        v = c[col].to_numpy(float)
+        ax.plot(x, [(v >= t - 1e-9).mean() for t in x], color=colour, lw=lw, label=lab,
+                alpha=report.LINE_ALPHA)
+    for t in (0.3, 0.5, 0.9):
+        ax.axvline(t, color=report.MUTED, lw=0.7, ls="--")
+    ax.set_xlim(0.2, 1.0)
+    ax.set_ylim(0, 0.7)
+    ax.set_xticks([0.2, 0.3, 0.5, 0.9, 1.0])
+    ax.set_xticklabels(["20%", "30%", "50%", "90%", "100%"])
+    ax.set_xlabel("identity of the nearest training sequence")
+    ax.set_ylabel("share of constructs at or above")
+    ax.legend(frameon=False, loc="upper right", fontsize=9.5)
+    ax.set_title("A · closeness to the training data", loc="left")
+    ax = axes[1]
+    b = identity_bin(c["nearest_identity"])
+    left = np.zeros(len(ID_LABELS))
+    for cls in analyse.CLASS_ORDER:
+        v = np.array([((b == lab) & (c["disorder_class"] == cls)).sum() for lab in ID_LABELS])
+        ax.barh(np.arange(len(ID_LABELS)), v, left=left, color=report.CLS_COL[cls], label=cls, height=0.62,
+                edgecolor="white", lw=1)
+        left += v
+    for i, n in enumerate(left):
+        ax.text(n + 3, i, f"{int(n)}", va="center", fontsize=9.5, color=report.MUTED)
+    ax.set_yticks(range(len(ID_LABELS)))
+    ax.set_yticklabels(["< 30%", "30–50%", "50–90%", "≥ 90%"])
+    ax.invert_yaxis()
+    ax.set_xlim(0, left.max() * 1.18)
+    ax.set_xlabel("constructs")
+    ax.set_ylabel("nearest training identity")
+    ax.legend(frameon=False, loc="lower right", fontsize=9.5)
+    ax.set_title("B · by disorder class", loc="left")
+    fig.tight_layout(w_pad=2.0)
+    report.save(fig, "fig_training_overlap")
+
+
+def fig_closeness(d: pd.DataFrame, nn: pd.DataFrame) -> None:
+    """Raw chi2 (left) and Rg ratio (right) of BioEmu-1 by nearest-training identity bin, within each
+    disorder class; bars are group medians (groups of three or more)."""
+    m = _bioemu_with_training(d, nn)
+    fig, axes = report.figure(760, 560, nrows=2)
+    for ax, col, ylab, ref in ((axes[0], "chi2_raw", "raw reduced χ²\n(log scale)", RAW_FIT),
+                               (axes[1], "rg_ratio", "ensemble Rg /\nmeasured Rg", 1.0)):
+        pos, ticks, labels = 0.0, [], []
+        for ci_, cls in enumerate(analyse.CLASS_ORDER):
+            col_c = report.CLS_COL[cls]
+            for bi, b in enumerate(ID_LABELS):
+                v = m.loc[(m["disorder_class"] == cls) & (m["identity_bin"] == b), col].dropna().to_numpy()
+                if col == "chi2_raw":
+                    v = np.log10(v)
+                x = pos + np.random.default_rng(10 * ci_ + bi).uniform(-0.18, 0.18, len(v))
+                ax.scatter(x, v, s=9, color=col_c, alpha=0.55, lw=0)
+                if len(v) >= 3:
+                    ax.plot([pos - 0.3, pos + 0.3], [np.median(v)] * 2, color=report.INK, lw=1.8)
+                ticks.append(pos)
+                labels.append(b.replace(">=", "≥ ").replace("<", "< ").replace("-", "–"))
+                pos += 1
+            ax.text(pos - 2.5, 1.0, cls, transform=ax.get_xaxis_transform(), ha="center", va="bottom",
+                    fontsize=9.5, color=report.INK)
+            pos += 0.8
+        ax.axhline(np.log10(ref) if col == "chi2_raw" else ref, color=report.MUTED, lw=0.8, ls="--")
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(labels, fontsize=9)
+        ax.set_xlim(-0.6, pos - 0.6)
+        ax.set_ylabel(ylab)
+        if col == "rg_ratio":
+            ax.set_xlabel("identity of the nearest training sequence (%)")
+        if col == "chi2_raw":
+            ax.set_yticks([0, 1, 2, 3])
+            ax.set_yticklabels(["1", "10", "100", "1000"])
+        else:
+            ax.set_ylim(0.5, 2.0)
+    fig.tight_layout(w_pad=2.0)
+    report.save(fig, "fig_closeness")
+
+
 def main() -> None:
     report.style()
     report.OUT.mkdir(parents=True, exist_ok=True)
@@ -378,6 +691,15 @@ def main() -> None:
     fig_coverage_sources(S)
     fig_coverage_architecture(S)
     fig_structure_split(d, mp, SP)
+    nn = pd.read_csv(COV / "training_nearest.csv")
+    T = json.load(open(COV / "training_summary.json"))
+    TC = training_closeness(d, nn)
+    json.dump(TC, open(COV / "training_closeness.json", "w"), indent=1)
+    CE = category_evidence(d, mp, nn, rk)
+    json.dump(CE, open(COV / "category_evidence.json", "w"), indent=1)
+    fig_training_composition(T)
+    fig_training_overlap(nn)
+    fig_closeness(d, nn)
     print(f"  structure split and rank coverage -> {COV}; figures -> {report.OUT}", flush=True)
 
 

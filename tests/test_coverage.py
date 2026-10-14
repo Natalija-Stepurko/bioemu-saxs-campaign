@@ -56,3 +56,60 @@ def test_a_confounded_pooled_difference_vanishes_when_stratified():
 def test_holm_adjustment():
     adj = coverage.holm({"a": 0.01, "b": 0.04, "c": 0.03})
     assert adj == {"a": 0.03, "c": 0.06, "b": 0.06}
+
+
+def test_identity_bins_close_on_the_left():
+    b = coverage.identity_bin(pd.Series([0.0, 0.299, 0.3, 0.5, 0.899, 0.9, 1.0]))
+    assert b.tolist() == ["<30", "<30", "30-50", "50-90", "50-90", ">=90", ">=90"]
+
+
+def _synthetic_closeness(seed=11):
+    """Identity tracks the class (folded proteins have close training relatives), the class sets the error,
+    identity itself has no effect within a class."""
+    rng = np.random.default_rng(seed)
+    rows, nn = [], []
+    for cls, n, mu_id, mu in (("folded", 200, 0.8, 0.3), ("partly disordered", 80, 0.5, 0.6),
+                              ("disordered", 100, 0.25, 1.0)):
+        for i in range(n):
+            lab = f"{cls[0]}{i}"
+            ident = float(np.clip(rng.normal(mu_id, 0.2), 0, 1))
+            rows.append({"label": lab, "disorder_class": cls, "chi2_raw": 10 ** rng.normal(mu, 0.3),
+                         "rg_ratio": 1.0 + rng.normal(0, 0.05), "nrmsd_raw": 0.03 + rng.normal(0, 0.005)})
+            sf = rng.choice(["present", "absent", "none"], p=[0.6, 0.2, 0.2])
+            nn.append({"label": lab, "nearest_identity": ident, "nearest_identity_md": ident / 2,
+                       "id_afdb_member": ident, "sf_group": sf, "sf_group_md": sf})
+    d = pd.DataFrame(rows)
+    d["model"], d["clean"] = "bioemu", True
+    d["resolvability"] = np.where(d["chi2_raw"] <= 2, "raw fit", "strongly reweightable")
+    return d, pd.DataFrame(nn)
+
+
+def test_closeness_confounded_by_class_is_null_within_class():
+    d, nn = _synthetic_closeness()
+    out = coverage.training_closeness(d, nn)
+    assert out["spearman_pooled"]["chi2_raw"]["rho"] < -0.3 and out["spearman_pooled"]["chi2_raw"]["p"] < 1e-6
+    assert sum(out["pooled"][b]["n"] for b in coverage.ID_LABELS) == len(d)
+    for cls in ("folded", "partly disordered", "disordered"):
+        sp = out["spearman_by_class"][cls]["chi2_raw"]
+        assert sp["holm_p"] >= sp["p"] and sp["holm_p"] > 0.01
+    assert out["stratified_identity_ge50"]["chi2_raw"]["p_two_sided"] > 0.01
+    assert set(out["sf_group"]["pooled"]) == {"present", "absent", "none"}
+
+
+def test_category_evidence_splits_every_profile_in_or_out():
+    d, nn = _synthetic_closeness()
+    nn["mp_dis_cat"] = np.where(d["disorder_class"] == "disordered", "mostly disordered", "neither")
+    folded = d["disorder_class"] == "folded"
+    mp = pd.DataFrame({"label": d["label"], "map_method": "SASBDB", "has_pdb_50": folded,
+                       "has_pdb_any_overlap": d["disorder_class"] != "disordered",
+                       "gene3d_superfamilies": np.where(folded, "3.40.50.300;1.10.8.10", ""),
+                       "org_group": "Human"})
+    rk = pd.DataFrame({"sf": ["3.40.50.300", "1.10.8.10"], "rank": [1, 250]})
+    out = coverage.category_evidence(d.assign(length=120), mp, nn, rk)
+    cat = out["categories"]
+    for c in cat.values():
+        assert c["in"]["n"] + c["rest"]["n"] == len(d)
+    assert cat["alpha/beta enzyme folds"]["in"]["n"] == 200
+    assert cat["superfamily beyond the top 200"]["in"]["n"] == 200
+    assert cat["no experimental structure"]["in"]["n"] == 100
+    assert cat["construct over 500 residues"]["in"]["n"] == 0
