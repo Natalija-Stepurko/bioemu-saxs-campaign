@@ -914,5 +914,45 @@
   "dirty": true,
   "inputs_sha256": {},
   "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "coverage",
+  "args": [],
+  "seconds": 8.0,
+  "started_utc": "2026-10-14T16:26:43Z",
+  "commit": "4a9a4f82149bd3b9db089a641601049c768646cc",
+  "dirty": true,
+  "inputs_sha256": {},
+  "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "coverage",
+  "args": [],
+  "seconds": 8.1,
+  "started_utc": "2026-10-14T16:27:44Z",
+  "commit": "4a9a4f82149bd3b9db089a641601049c768646cc",
+  "dirty": true,
+  "inputs_sha256": {},
+  "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "coverage",
+  "args": [],
+  "seconds": 8.3,
+  "started_utc": "2026-10-14T16:28:27Z",
+  "commit": "4a9a4f82149bd3b9db089a641601049c768646cc",
+  "dirty": true,
+  "inputs_sha256": {},
+  "config_sha256": "4dd41249c51e1b40"
+ },
+ {
+  "stage": "coverage",
+  "args": [],
+  "seconds": 8.3,
+  "started_utc": "2026-10-14T16:32:13Z",
+  "commit": "8f761750664ce12611675590fd38aa4a033abf4e",
+  "dirty": true,
+  "inputs_sha256": {},
+  "config_sha256": "4dd41249c51e1b40"
  }
 ]
