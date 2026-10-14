@@ -22,9 +22,39 @@ are tracked in `results/coverage/`; the `bsc coverage` stage and the project pag
 | `08_compare.py` | all comparisons into `summary.json`: superfamily coverage by rank, class and architecture composition (cluster bootstrap over accessions), over- and under-represented superfamilies (Poisson tails, uncorrected, for ranking), organism, length, domains per protein, disorder, structure availability, redundancy |
 | `09_figures.py` | diagnostic figures in the work directory (the page figures are drawn by `bsc coverage`) |
 | `10_export.py` | copies the tracked outputs into `results/coverage/` |
+| `11_download_bioemu_training.py` | BioEmu-1's training data at the size needed: the AFDB pre-training cluster definitions from github.com/microsoft/bioemu (pinned commit), the Zenodo dataset cards and record metadata, the member listings of the MD archives and the `topology.pdb` of every CATH1, CATH2 and MegaSim wild-type system (read out of the remote zips through HTTP range requests, no trajectories), the curated MEGAscale table, the DESRES fast-folder PDB sequences and the named proteins of the other public MD sets |
+| `12_fetch_afdb_sequences.py` | sequence, organism and CATH-Gene3D cross-references of every AFDB cluster member (UniProt ID mapping; entries deleted since AFDB v4 from UniParc) |
+| `13_training_sequences.py` | one table of training sequences by component, and a FASTA per component |
+| `14_annotate_training.py` | the same three descriptors for every set: CATH superfamilies (Gene3D for the SAXS constructs and AFDB, the domain identifier for the CATH MD systems, the best MMseqs2 hit against CATH S100 for the MEGAscale domains), predicted disorder (metapredict, also for the SAXS constructs and the CATH S35 sequences) and organism group |
+| `15_nearest_training.py` | MMseqs2 search of all 439 constructs against each training component: the nearest training sequence covering at least half of the construct, superfamily presence and accession overlap |
+| `16_compare_training.py` | composition of the training sets against the SAXS set and CATH (class, superfamilies, length, disorder, organism) and the overlap distribution, into `training_summary.json` |
+| `17_export_training.py` | copies the per-construct nearest-neighbour table, the training summary and the versions into `results/coverage/` |
 
 Units: the domain-level comparisons count unique (UniProt accession, CATH superfamily) pairs inside the
 constructs, the protein-family analogue of a CATH S35 cluster. Single proportions carry Wilson 95% intervals.
+
+## BioEmu-1's training data
+
+BioEmu-1 (Lewis et al. 2025) was pre-trained on about 50,000 AFDB sequence clusters, fine-tuned on MD
+simulations and then on MEGAscale folding stabilities. Scripts 11-17 obtain what is public of each part and
+compare it with the SAXS set:
+
+| Component | Obtained as | Used for |
+|---|---|---|
+| AFDB pre-training clusters | cluster definitions (50,228 clusters, 179,422 AFDB v4 structure representatives) from the BioEmu repository; sequences from UniProtKB or UniParc | composition (one input sequence per cluster, the member with the highest mean pLDDT) and nearest neighbours (every member) |
+| CATH1 and CATH2 MD (Zenodo 15629740) | the simulated topology of each system; CATH domain identifier from the system name | composition and nearest neighbours |
+| MegaSim wild types (Zenodo 15641184) | the simulated topology of each system | nearest neighbours; composition together with MEGAscale |
+| MegaSim point mutants (Zenodo 15641184) | archive listing only (system count) | counted; each is one substitution or indel away from a wild type |
+| Octapeptides (Zenodo 15641199) | archive listing only (system count) | counted; eight residues cannot cover half of any construct |
+| MEGAscale (Tsuboyama et al. 2023, Zenodo 7992926) | the curated Dataset2/Dataset3 table; its wild types | composition and nearest neighbours; the 361 wild types used for fine-tuning are a subset the paper does not list |
+| Other public MD sets of Table S1 (DDR1, SETD8, coronavirus proteins, MHC class II, barnase-barstar) | the named proteins, full UniProtKB chains or polyprotein chains | nearest neighbours (an upper bound: the simulated constructs can be shorter) |
+| DESRES fast folders | the twelve PDB sequences (the trajectories are not redistributable) | reported separately: Lewis et al. used them only for a separate model |
+
+The training data were filtered to under 40% sequence identity to the paper's own test proteins; the SAXS
+proteins were not part of that filter. The full MD archives are not downloaded: the scripts read the zip
+central directories and single members through HTTP range requests; the training-data downloads take about
+0.4 GB, most of it the MEGAscale table. The simulated topologies agree with the CATH domain sequences: of the 576
+CATH2 systems whose domain is in the CATH v4.4 S100 set, 575 have the same sequence or one contained in the other.
 
 ## Mapping notes
 
@@ -51,6 +81,12 @@ Recorded in `results/coverage/versions.json` when each source was first fetched 
 | PDBe SIFTS best_structures | live API, weekly update |
 | TED | v1 (AFDB v4 models with CATH labels) |
 | SASBDB | REST API entry summaries |
+| BioEmu-1 AFDB cluster definitions | github.com/microsoft/bioemu, file added 2025-04-25 (commit recorded in `versions.json`) |
+| BioEmu-1 MD datasets | Zenodo 15629740 (CATH1, CATH2), 15641199 (octapeptides), 15641184 (MegaSim), CDLA-Permissive-2.0 |
+| MEGAscale | Zenodo 7992926, version v2_230420, CC-BY 4.0 |
+| UniParc | for the 129,202 AFDB cluster members deleted from UniProtKB since AFDB v4 |
+| metapredict | 3.1.1 |
+| MMseqs2 | release 18-8cc5c |
 
 The live APIs (SIFTS, InterPro, TED, RCSB search) move between releases, so a rerun after deleting the download
 cache can differ slightly from the tracked outputs; with the cache in place the rerun reproduces them byte for
@@ -65,7 +101,8 @@ COVERAGE_PY=/path/to/venv-cov/bin/python BSC_ROOT=<where bsc fetch put data/> \
 uv run bsc coverage      # structure split, rank coverage and the page figures from results/coverage/
 ```
 
-Needs network access, about 0.9 GB of disk for the downloads (the Swiss-Prot flat file is 0.7 GB) and the
+Scripts 14 and 15 need the MMseqs2 binary (`MMSEQS`; the static `mmseqs-linux-avx2` release build was used,
+kept under `$COVERAGE_WORK/tools/`). Needs network access, about 1 GB of disk for the downloads (the Swiss-Prot flat file is 0.7 GB) and the
 extra requirements in `requirements.txt`, which the main environment does not carry. The SAXS table comes from
 `bsc fetch` (`BSC_ROOT/data/PeptoneDB-SAXS/`) and the clean-entry flags from `results/resolvability.csv`.
 Downloads are cached in `$COVERAGE_WORK/downloads` (`COVERAGE_DOWNLOADS` moves them); delete that directory
