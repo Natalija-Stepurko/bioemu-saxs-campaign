@@ -1,0 +1,65 @@
+{
+  "SASBDB": {
+    "source": "https://www.sasbdb.org/rest-api/entry/summary/<LABEL>/",
+    "n_entries": 439,
+    "accessed": "2026-10-13T21:10:22Z"
+  },
+  "UniProtKB": {
+    "release": "2026_03",
+    "release_date": "02-September-2026",
+    "source": "https://rest.uniprot.org/uniprotkb/<ACC>.json",
+    "accessed": "2026-10-13T20:58:08Z"
+  },
+  "UniProtKB/Swiss-Prot flat file": {
+    "release": "UniProtKB/Swiss-Prot Release 2026_03 of 02-Sep-2026",
+    "n_entries": 575748,
+    "source": "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz",
+    "accessed": "2026-10-13T21:11:54Z"
+  },
+  "RCSB clusters-by-entity-30": {
+    "source": "https://cdn.rcsb.org/resources/sequence/clusters/clusters-by-entity-30.txt",
+    "file_last_modified": "Sun, 04 Oct 2026 02:09:51 GMT",
+    "n_clusters_in_file": 272382,
+    "n_clusters_with_experimental_entity": 47069,
+    "accessed": "2026-10-13T21:11:02Z"
+  },
+  "InterPro:interpro": {
+    "name": "InterPro",
+    "version": "110.0",
+    "release_date": "2026-09-03T00:00:00Z",
+    "source": "https://www.ebi.ac.uk/interpro/api/",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "InterPro:cathgene3d": {
+    "name": "CATH-Gene3D",
+    "version": "4.3.0",
+    "release_date": "2020-10-21T00:00:00Z",
+    "source": "https://www.ebi.ac.uk/interpro/api/",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "InterPro:pfam": {
+    "name": "Pfam",
+    "version": "38.2",
+    "release_date": "2026-03-26T00:00:00Z",
+    "source": "https://www.ebi.ac.uk/interpro/api/",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "PDBe SIFTS best_structures": {
+    "source": "https://www.ebi.ac.uk/pdbe/api/mappings/best_structures/<ACC>",
+    "version": "live API (weekly SIFTS update)",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "TED": {
+    "source": "https://ted.cathdb.info/api/v1/uniprot/summary/<ACC>",
+    "version": "TED v1 (AFDB v4 models, CATH labels)",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "CATH": {
+    "version": "v4.4.0",
+    "version_date": "16.12.2024",
+    "source": "https://download.cathdb.info/cath/releases/latest-release/cath-classification-data/",
+    "n_domains": 601328,
+    "n_s35_clusters": 37350,
+    "accessed": "2026-10-13T21:11:57Z"
+  }
+}

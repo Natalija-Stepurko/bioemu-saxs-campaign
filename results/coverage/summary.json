@@ -1,0 +1,1424 @@
+{
+ "versions": {
+  "SASBDB": {
+   "source": "https://www.sasbdb.org/rest-api/entry/summary/<LABEL>/",
+   "n_entries": 439,
+   "accessed": "2026-10-13T21:10:22Z"
+  },
+  "UniProtKB": {
+   "release": "2026_03",
+   "release_date": "02-September-2026",
+   "source": "https://rest.uniprot.org/uniprotkb/<ACC>.json",
+   "accessed": "2026-10-13T20:58:08Z"
+  },
+  "UniProtKB/Swiss-Prot flat file": {
+   "release": "UniProtKB/Swiss-Prot Release 2026_03 of 02-Sep-2026",
+   "n_entries": 575748,
+   "source": "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz",
+   "accessed": "2026-10-13T21:11:54Z"
+  },
+  "RCSB clusters-by-entity-30": {
+   "source": "https://cdn.rcsb.org/resources/sequence/clusters/clusters-by-entity-30.txt",
+   "file_last_modified": "Sun, 04 Oct 2026 02:09:51 GMT",
+   "n_clusters_in_file": 272382,
+   "n_clusters_with_experimental_entity": 47069,
+   "accessed": "2026-10-13T21:11:02Z"
+  },
+  "InterPro:interpro": {
+   "name": "InterPro",
+   "version": "110.0",
+   "release_date": "2026-09-03T00:00:00Z",
+   "source": "https://www.ebi.ac.uk/interpro/api/",
+   "accessed": "2026-10-13T21:10:59Z"
+  },
+  "InterPro:cathgene3d": {
+   "name": "CATH-Gene3D",
+   "version": "4.3.0",
+   "release_date": "2020-10-21T00:00:00Z",
+   "source": "https://www.ebi.ac.uk/interpro/api/",
+   "accessed": "2026-10-13T21:10:59Z"
+  },
+  "InterPro:pfam": {
+   "name": "Pfam",
+   "version": "38.2",
+   "release_date": "2026-03-26T00:00:00Z",
+   "source": "https://www.ebi.ac.uk/interpro/api/",
+   "accessed": "2026-10-13T21:10:59Z"
+  },
+  "PDBe SIFTS best_structures": {
+   "source": "https://www.ebi.ac.uk/pdbe/api/mappings/best_structures/<ACC>",
+   "version": "live API (weekly SIFTS update)",
+   "accessed": "2026-10-13T21:10:59Z"
+  },
+  "TED": {
+   "source": "https://ted.cathdb.info/api/v1/uniprot/summary/<ACC>",
+   "version": "TED v1 (AFDB v4 models, CATH labels)",
+   "accessed": "2026-10-13T21:10:59Z"
+  },
+  "CATH": {
+   "version": "v4.4.0",
+   "version_date": "16.12.2024",
+   "source": "https://download.cathdb.info/cath/releases/latest-release/cath-classification-data/",
+   "n_domains": 601328,
+   "n_s35_clusters": 37350,
+   "accessed": "2026-10-13T21:11:57Z"
+  }
+ },
+ "cath_reference": {
+  "version": "v4.4.0",
+  "n_domains": 601328,
+  "n_s35_clusters": 37350,
+  "n_superfamilies": 6630,
+  "n_topologies": 1472,
+  "n_architectures": 43,
+  "n_classes": 5,
+  "v4_3_0": {
+   "n_s35_clusters": 32388,
+   "n_superfamilies": 6631,
+   "n_topologies": 1472,
+   "n_architectures": 43
+  }
+ },
+ "n_entries_all": 439,
+ "n_clean": 399,
+ "mapping": {
+  "clean": {
+   "n": 399,
+   "mapped": {
+    "k": 390,
+    "n": 399,
+    "share": 0.9774,
+    "ci95": [
+     0.9577,
+     0.9881
+    ]
+   },
+   "by_method": {
+    "SASBDB": 353,
+    "RCSB seq search + SIFTS": 23,
+    "UniProt peptide search": 14,
+    "unmapped": 9
+   },
+   "sasbdb_accession_replaced": 17,
+   "distinct_accessions": 332,
+   "median_alignment_identity": 1.0,
+   "n_identity_below_0.9": 8,
+   "n_construct_coverage_below_0.8": 12,
+   "unmapped_labels": [
+    [
+     "SASDAT3",
+     "immunoglobulin- like filamin two-domain fragment 18-19"
+    ],
+    [
+     "SASDCV7",
+     "TET12(2.3)SN-f5b"
+    ],
+    [
+     "SASDDL7",
+     "anti-DISC1 single-domain camelid antibody VHH B5"
+    ],
+    [
+     "SASDKX6",
+     "PSK, an antimicrobial peptide from Chrysomya megacephala"
+    ],
+    [
+     "SASDM97",
+     "Recombinant monoclonal anti-proNGF antibody in single chain Fv fragment (scFv)"
+    ],
+    [
+     "SASDMT7",
+     "Lanthionine synthetase C-like protein"
+    ],
+    [
+     "SASDNW2",
+     "Fab fragment in complex with small molecule hapten, crystal form-1"
+    ],
+    [
+     "SASDS37",
+     "Harpin Z2"
+    ],
+    [
+     "SASDSV6",
+     "Anti-Idiotypic-Palivizumab-Nanobody1"
+    ]
+   ]
+  },
+  "all": {
+   "n": 439,
+   "mapped": {
+    "k": 428,
+    "n": 439,
+    "share": 0.9749,
+    "ci95": [
+     0.9557,
+     0.986
+    ]
+   },
+   "by_method": {
+    "SASBDB": 391,
+    "RCSB seq search + SIFTS": 23,
+    "UniProt peptide search": 14,
+    "unmapped": 11
+   },
+   "sasbdb_accession_replaced": 17,
+   "distinct_accessions": 363,
+   "median_alignment_identity": 1.0,
+   "n_identity_below_0.9": 8,
+   "n_construct_coverage_below_0.8": 12
+  }
+ },
+ "coverage": {
+  "has_gene3d_superfamily": {
+   "k": 289,
+   "n": 399,
+   "share": 0.7243,
+   "ci95": [
+    0.6785,
+    0.7659
+   ]
+  },
+  "has_ted_superfamily": {
+   "k": 252,
+   "n": 399,
+   "share": 0.6316,
+   "ci95": [
+    0.5832,
+    0.6774
+   ]
+  },
+  "has_gene3d_or_ted": {
+   "k": 301,
+   "n": 399,
+   "share": 0.7544,
+   "ci95": [
+    0.7099,
+    0.7941
+   ]
+  },
+  "has_gene3d_by_disorder_class": {
+   "disordered": {
+    "k": 7,
+    "n": 41,
+    "share": 0.1707,
+    "ci95": [
+     0.0853,
+     0.3126
+    ]
+   },
+   "folded": {
+    "k": 208,
+    "n": 246,
+    "share": 0.8455,
+    "ci95": [
+     0.7951,
+     0.8853
+    ]
+   },
+   "partly disordered": {
+    "k": 74,
+    "n": 112,
+    "share": 0.6607,
+    "ci95": [
+     0.569,
+     0.7418
+    ]
+   }
+  },
+  "gene3d": {
+   "distinct_superfamilies": 215,
+   "distinct_topologies": 140,
+   "distinct_architectures": 26,
+   "superfamilies_not_in_cath_v4.4": [],
+   "share_of_cath_superfamilies": 0.0324,
+   "share_of_cath_topologies": 0.0951,
+   "share_of_cath_architectures": 0.6047,
+   "share_of_cath_s35_clusters_in_represented_superfamilies": 0.334
+  },
+  "gene3d_or_ted": {
+   "distinct_superfamilies": 227,
+   "distinct_topologies": 144,
+   "distinct_architectures": 27,
+   "share_of_cath_s35_clusters_in_represented_superfamilies": 0.346
+  },
+  "top50_superfamilies_present_gene3d": {
+   "k": 34,
+   "n": 50,
+   "share": 0.68,
+   "ci95": [
+    0.5419,
+    0.7924
+   ]
+  },
+  "top50_superfamilies_present_gene3d_or_ted": {
+   "k": 35,
+   "n": 50,
+   "share": 0.7,
+   "ci95": [
+    0.5625,
+    0.809
+   ]
+  },
+  "top200_superfamilies_present_gene3d": {
+   "k": 85,
+   "n": 200,
+   "share": 0.425,
+   "ci95": [
+    0.3585,
+    0.4943
+   ]
+  },
+  "top200_superfamilies_present_gene3d_or_ted": {
+   "k": 88,
+   "n": 200,
+   "share": 0.44,
+   "ci95": [
+    0.373,
+    0.5093
+   ]
+  }
+ },
+ "composition": {
+  "unit": "unique (UniProt accession, Gene3D superfamily) pairs inside constructs, classes 1-4",
+  "n_units": 345,
+  "n_units_all_classes": 351,
+  "n_domain_instances": 535,
+  "n_proteins": 251,
+  "cath_s35_clusters_classes_1_4": 36528,
+  "class": [
+   {
+    "class": 1,
+    "name": "Mainly alpha",
+    "ours_units": 89,
+    "ours_share": 0.258,
+    "ours_lo": 0.2111,
+    "ours_hi": 0.3063,
+    "cath_s35": 9071,
+    "cath_share": 0.2483,
+    "enrichment": 1.0388,
+    "enr_lo": 0.8502,
+    "enr_hi": 1.2335
+   },
+   {
+    "class": 2,
+    "name": "Mainly beta",
+    "ours_units": 115,
+    "ours_share": 0.3333,
+    "ours_lo": 0.2841,
+    "ours_hi": 0.3864,
+    "cath_s35": 8232,
+    "cath_share": 0.2254,
+    "enrichment": 1.4791,
+    "enr_lo": 1.2606,
+    "enr_hi": 1.7144
+   },
+   {
+    "class": 3,
+    "name": "Alpha beta",
+    "ours_units": 137,
+    "ours_share": 0.3971,
+    "ours_lo": 0.3466,
+    "ours_hi": 0.4457,
+    "cath_s35": 18814,
+    "cath_share": 0.5151,
+    "enrichment": 0.771,
+    "enr_lo": 0.673,
+    "enr_hi": 0.8654
+   },
+   {
+    "class": 4,
+    "name": "Few secondary structures",
+    "ours_units": 4,
+    "ours_share": 0.0116,
+    "ours_lo": 0.0028,
+    "ours_hi": 0.024,
+    "cath_s35": 411,
+    "cath_share": 0.0113,
+    "enrichment": 1.0304,
+    "enr_lo": 0.2511,
+    "enr_hi": 2.1352
+   }
+  ],
+  "architecture": [
+   {
+    "arch": "1.10",
+    "name": "Orthogonal Bundle",
+    "ours_units": 60,
+    "ours_share": 0.1739,
+    "ours_lo": 0.1333,
+    "ours_hi": 0.2184,
+    "cath_s35": 5561,
+    "cath_share": 0.1522,
+    "enrichment": 1.1424,
+    "enr_lo": 0.8758,
+    "enr_hi": 1.4346
+   },
+   {
+    "arch": "1.20",
+    "name": "Up-down Bundle",
+    "ours_units": 23,
+    "ours_share": 0.0667,
+    "ours_lo": 0.0426,
+    "ours_hi": 0.0958,
+    "cath_s35": 2748,
+    "cath_share": 0.0752,
+    "enrichment": 0.8862,
+    "enr_lo": 0.5664,
+    "enr_hi": 1.2731
+   },
+   {
+    "arch": "1.25",
+    "name": "Alpha Horseshoe",
+    "ours_units": 6,
+    "ours_share": 0.0174,
+    "ours_lo": 0.0057,
+    "ours_hi": 0.0324,
+    "cath_s35": 645,
+    "cath_share": 0.0177,
+    "enrichment": 0.9849,
+    "enr_lo": 0.3209,
+    "enr_hi": 1.8376
+   },
+   {
+    "arch": "2.10",
+    "name": "Ribbon",
+    "ours_units": 7,
+    "ours_share": 0.0203,
+    "ours_lo": 0.0081,
+    "ours_hi": 0.0357,
+    "cath_s35": 430,
+    "cath_share": 0.0118,
+    "enrichment": 1.7236,
+    "enr_lo": 0.687,
+    "enr_hi": 3.0339
+   },
+   {
+    "arch": "2.20",
+    "name": "Single Sheet",
+    "ours_units": 5,
+    "ours_share": 0.0145,
+    "ours_lo": 0.0028,
+    "ours_hi": 0.0317,
+    "cath_s35": 253,
+    "cath_share": 0.0069,
+    "enrichment": 2.0925,
+    "enr_lo": 0.4079,
+    "enr_hi": 4.5769
+   },
+   {
+    "arch": "2.30",
+    "name": "Roll",
+    "ours_units": 24,
+    "ours_share": 0.0696,
+    "ours_lo": 0.0437,
+    "ours_hi": 0.0965,
+    "cath_s35": 1226,
+    "cath_share": 0.0336,
+    "enrichment": 2.0727,
+    "enr_lo": 1.303,
+    "enr_hi": 2.875
+   },
+   {
+    "arch": "2.40",
+    "name": "Beta Barrel",
+    "ours_units": 17,
+    "ours_share": 0.0493,
+    "ours_lo": 0.0284,
+    "ours_hi": 0.0718,
+    "cath_s35": 1631,
+    "cath_share": 0.0447,
+    "enrichment": 1.1036,
+    "enr_lo": 0.6363,
+    "enr_hi": 1.609
+   },
+   {
+    "arch": "2.60",
+    "name": "Sandwich",
+    "ours_units": 49,
+    "ours_share": 0.142,
+    "ours_lo": 0.1047,
+    "ours_hi": 0.1813,
+    "cath_s35": 3614,
+    "cath_share": 0.0989,
+    "enrichment": 1.4355,
+    "enr_lo": 1.0581,
+    "enr_hi": 1.8323
+   },
+   {
+    "arch": "2.70",
+    "name": "Distorted Sandwich",
+    "ours_units": 4,
+    "ours_share": 0.0116,
+    "ours_lo": 0.0028,
+    "ours_hi": 0.0234,
+    "cath_s35": 240,
+    "cath_share": 0.0066,
+    "enrichment": 1.7646,
+    "enr_lo": 0.4311,
+    "enr_hi": 3.5602
+   },
+   {
+    "arch": "3.10",
+    "name": "Roll",
+    "ours_units": 14,
+    "ours_share": 0.0406,
+    "ours_lo": 0.0223,
+    "ours_hi": 0.0627,
+    "cath_s35": 1529,
+    "cath_share": 0.0419,
+    "enrichment": 0.9695,
+    "enr_lo": 0.5323,
+    "enr_hi": 1.4976
+   },
+   {
+    "arch": "3.20",
+    "name": "Alpha-Beta Barrel",
+    "ours_units": 6,
+    "ours_share": 0.0174,
+    "ours_lo": 0.0057,
+    "ours_hi": 0.0317,
+    "cath_s35": 1170,
+    "cath_share": 0.032,
+    "enrichment": 0.543,
+    "enr_lo": 0.1789,
+    "enr_hi": 0.9897
+   },
+   {
+    "arch": "3.30",
+    "name": "2-Layer Sandwich",
+    "ours_units": 55,
+    "ours_share": 0.1594,
+    "ours_lo": 0.1231,
+    "ours_hi": 0.1965,
+    "cath_s35": 5750,
+    "cath_share": 0.1574,
+    "enrichment": 1.0127,
+    "enr_lo": 0.7818,
+    "enr_hi": 1.2482
+   },
+   {
+    "arch": "3.40",
+    "name": "3-Layer(aba) Sandwich",
+    "ours_units": 46,
+    "ours_share": 0.1333,
+    "ours_lo": 0.0967,
+    "ours_hi": 0.1725,
+    "cath_s35": 7716,
+    "cath_share": 0.2112,
+    "enrichment": 0.6312,
+    "enr_lo": 0.4577,
+    "enr_hi": 0.8167
+   },
+   {
+    "arch": "3.80",
+    "name": "Alpha-Beta Horseshoe",
+    "ours_units": 3,
+    "ours_share": 0.0087,
+    "ours_lo": 0.0,
+    "ours_hi": 0.02,
+    "cath_s35": 126,
+    "cath_share": 0.0034,
+    "enrichment": 2.5209,
+    "enr_lo": 0.0,
+    "enr_hi": 5.7981
+   },
+   {
+    "arch": "3.90",
+    "name": "Alpha-Beta Complex",
+    "ours_units": 10,
+    "ours_share": 0.029,
+    "ours_lo": 0.0118,
+    "ours_hi": 0.0476,
+    "cath_s35": 1736,
+    "cath_share": 0.0475,
+    "enrichment": 0.6099,
+    "enr_lo": 0.2475,
+    "enr_hi": 1.002
+   },
+   {
+    "arch": "4.10",
+    "name": "Irregular",
+    "ours_units": 4,
+    "ours_share": 0.0116,
+    "ours_lo": 0.0028,
+    "ours_hi": 0.0245,
+    "cath_s35": 411,
+    "cath_share": 0.0113,
+    "enrichment": 1.0304,
+    "enr_lo": 0.2476,
+    "enr_hi": 2.181
+   }
+  ]
+ },
+ "over_under": {
+  "n_units": 351,
+  "superfamily_over": [
+   {
+    "id": "2.30.30.40",
+    "name": "SH3 Domains",
+    "observed": 7,
+    "expected": 1.41,
+    "cath_s35": 150,
+    "p": 0.00065
+   },
+   {
+    "id": "1.20.58.60",
+    "name": "",
+    "observed": 4,
+    "expected": 0.39,
+    "cath_s35": 41,
+    "p": 0.00068
+   },
+   {
+    "id": "1.10.8.50",
+    "name": "",
+    "observed": 3,
+    "expected": 0.18,
+    "cath_s35": 19,
+    "p": 0.00083
+   },
+   {
+    "id": "1.10.238.10",
+    "name": "EF-hand",
+    "observed": 7,
+    "expected": 1.82,
+    "cath_s35": 194,
+    "p": 0.0028
+   },
+   {
+    "id": "1.10.510.10",
+    "name": "Transferase(Phosphotransferase) domain 1",
+    "observed": 6,
+    "expected": 1.56,
+    "cath_s35": 166,
+    "p": 0.0054
+   },
+   {
+    "id": "1.10.8.10",
+    "name": "Ubiquitin-associated (UBA) domain",
+    "observed": 4,
+    "expected": 0.71,
+    "cath_s35": 76,
+    "p": 0.0062
+   },
+   {
+    "id": "2.60.40.790",
+    "name": "",
+    "observed": 3,
+    "expected": 0.38,
+    "cath_s35": 40,
+    "p": 0.0067
+   },
+   {
+    "id": "2.30.29.30",
+    "name": "Pleckstrin-homology domain (PH domain)/Phosphotyrosine-binding domain (PTB)",
+    "observed": 6,
+    "expected": 1.67,
+    "cath_s35": 178,
+    "p": 0.0074
+   },
+   {
+    "id": "3.40.50.410",
+    "name": "von Willebrand factor, type A domain",
+    "observed": 3,
+    "expected": 0.4,
+    "cath_s35": 43,
+    "p": 0.0081
+   },
+   {
+    "id": "2.60.40.10",
+    "name": "Immunoglobulins",
+    "observed": 19,
+    "expected": 10.5,
+    "cath_s35": 1117,
+    "p": 0.011
+   }
+  ],
+  "superfamily_under": [
+   {
+    "id": "3.40.50.720",
+    "name": "NAD(P)-binding Rossmann-like Domain",
+    "observed": 0,
+    "expected": 6.44,
+    "cath_s35": 685,
+    "p": 0.0016
+   },
+   {
+    "id": "3.40.50.150",
+    "name": "Vaccinia Virus protein VP39",
+    "observed": 0,
+    "expected": 2.92,
+    "cath_s35": 311,
+    "p": 0.054
+   },
+   {
+    "id": "1.10.10.10",
+    "name": "Winged helix-like DNA-binding domain superfamily/Winged helix DNA-binding domain",
+    "observed": 2,
+    "expected": 5.62,
+    "cath_s35": 598,
+    "p": 0.081
+   },
+   {
+    "id": "3.40.50.2300",
+    "name": "Response regulator",
+    "observed": 1,
+    "expected": 4.08,
+    "cath_s35": 434,
+    "p": 0.086
+   },
+   {
+    "id": "2.60.120.10",
+    "name": "Jelly Rolls",
+    "observed": 0,
+    "expected": 1.99,
+    "cath_s35": 212,
+    "p": 0.14
+   },
+   {
+    "id": "3.40.630.30",
+    "name": "Gcn5-related N-acetyltransferase (GNAT)",
+    "observed": 0,
+    "expected": 1.94,
+    "cath_s35": 206,
+    "p": 0.14
+   },
+   {
+    "id": "3.90.1150.10",
+    "name": "Aspartate Aminotransferase, domain 1",
+    "observed": 0,
+    "expected": 1.92,
+    "cath_s35": 204,
+    "p": 0.15
+   },
+   {
+    "id": "3.40.640.10",
+    "name": "Type I PLP-dependent aspartate aminotransferase-like (Major domain)",
+    "observed": 0,
+    "expected": 1.77,
+    "cath_s35": 188,
+    "p": 0.17
+   },
+   {
+    "id": "3.40.50.620",
+    "name": "HUPs",
+    "observed": 0,
+    "expected": 1.39,
+    "cath_s35": 148,
+    "p": 0.25
+   },
+   {
+    "id": "3.20.20.80",
+    "name": "Glycosidases",
+    "observed": 1,
+    "expected": 2.7,
+    "cath_s35": 287,
+    "p": 0.25
+   }
+  ],
+  "topology_over": [
+   {
+    "id": "2.70.50",
+    "name": "Coagulation Factor XIII; Chain A, domain 1",
+    "observed": 3,
+    "expected": 0.26,
+    "cath_s35": 28,
+    "p": 0.0025
+   },
+   {
+    "id": "1.10.510",
+    "name": "Transferase(Phosphotransferase); domain 1",
+    "observed": 6,
+    "expected": 1.57,
+    "cath_s35": 167,
+    "p": 0.0055
+   },
+   {
+    "id": "2.60.40",
+    "name": "Immunoglobulin-like",
+    "observed": 35,
+    "expected": 22.07,
+    "cath_s35": 2348,
+    "p": 0.0066
+   },
+   {
+    "id": "1.10.238",
+    "name": "Recoverin; domain 1",
+    "observed": 7,
+    "expected": 2.27,
+    "cath_s35": 242,
+    "p": 0.0088
+   },
+   {
+    "id": "2.30.30",
+    "name": "SH3 type barrels.",
+    "observed": 11,
+    "expected": 4.91,
+    "cath_s35": 522,
+    "p": 0.012
+   },
+   {
+    "id": "1.10.8",
+    "name": "Helicase, Ruva Protein; domain 3",
+    "observed": 8,
+    "expected": 3.11,
+    "cath_s35": 331,
+    "p": 0.014
+   },
+   {
+    "id": "2.30.29",
+    "name": "PH-domain like",
+    "observed": 6,
+    "expected": 1.95,
+    "cath_s35": 207,
+    "p": 0.015
+   },
+   {
+    "id": "3.30.505",
+    "name": "SHC Adaptor Protein",
+    "observed": 3,
+    "expected": 0.69,
+    "cath_s35": 73,
+    "p": 0.032
+   },
+   {
+    "id": "2.10.70",
+    "name": "Complement Module; domain 1",
+    "observed": 3,
+    "expected": 0.81,
+    "cath_s35": 86,
+    "p": 0.049
+   },
+   {
+    "id": "3.10.20",
+    "name": "Ubiquitin-like (UB roll)",
+    "observed": 8,
+    "expected": 3.99,
+    "cath_s35": 425,
+    "p": 0.051
+   }
+  ],
+  "topology_under": [
+   {
+    "id": "3.40.50",
+    "name": "Rossmann fold",
+    "observed": 26,
+    "expected": 44.15,
+    "cath_s35": 4698,
+    "p": 0.0022
+   },
+   {
+    "id": "3.20.20",
+    "name": "TIM Barrel",
+    "observed": 3,
+    "expected": 10.0,
+    "cath_s35": 1064,
+    "p": 0.01
+   },
+   {
+    "id": "3.30.450",
+    "name": "Beta-Lactamase",
+    "observed": 0,
+    "expected": 2.84,
+    "cath_s35": 302,
+    "p": 0.059
+   },
+   {
+    "id": "3.90.1150",
+    "name": "Aspartate Aminotransferase, domain 1",
+    "observed": 0,
+    "expected": 2.21,
+    "cath_s35": 235,
+    "p": 0.11
+   },
+   {
+    "id": "6.10.250",
+    "name": "Single alpha-helices involved in coiled-coils or other helix-helix interfaces",
+    "observed": 1,
+    "expected": 3.37,
+    "cath_s35": 359,
+    "p": 0.15
+   },
+   {
+    "id": "3.40.640",
+    "name": "Aspartate Aminotransferase; domain 2",
+    "observed": 0,
+    "expected": 1.77,
+    "cath_s35": 188,
+    "p": 0.17
+   },
+   {
+    "id": "1.20.5",
+    "name": "Single alpha-helices involved in coiled-coils or other helix-helix interfaces",
+    "observed": 3,
+    "expected": 5.46,
+    "cath_s35": 581,
+    "p": 0.21
+   },
+   {
+    "id": "1.10.357",
+    "name": "Tetracycline Repressor; domain 2",
+    "observed": 0,
+    "expected": 1.56,
+    "cath_s35": 166,
+    "p": 0.21
+   },
+   {
+    "id": "3.40.630",
+    "name": "Aminopeptidase",
+    "observed": 1,
+    "expected": 2.86,
+    "cath_s35": 304,
+    "p": 0.22
+   },
+   {
+    "id": "1.10.287",
+    "name": "Helix Hairpins",
+    "observed": 3,
+    "expected": 5.17,
+    "cath_s35": 550,
+    "p": 0.24
+   }
+  ],
+  "ours_sf_absent_from_cath_v4.4": [],
+  "note": "expected = n_units x CATH S35 share; Poisson tail p, uncorrected, for ranking only"
+ },
+ "organism": {
+  "groups": [
+   {
+    "group": "Human",
+    "ours_share": 0.3985,
+    "pdb_nr30_share": 0.1612,
+    "swissprot_share": 0.0355,
+    "ours": 159,
+    "pdb_nr30": 6022,
+    "swissprot": 20432,
+    "ours_lo": 0.3516,
+    "ours_hi": 0.4473
+   },
+   {
+    "group": "Mouse",
+    "ours_share": 0.0376,
+    "pdb_nr30_share": 0.0279,
+    "swissprot_share": 0.03,
+    "ours": 15,
+    "pdb_nr30": 1042,
+    "swissprot": 17292,
+    "ours_lo": 0.0229,
+    "ours_hi": 0.0611
+   },
+   {
+    "group": "E. coli",
+    "ours_share": 0.0677,
+    "pdb_nr30_share": 0.0477,
+    "swissprot_share": 0.0405,
+    "ours": 27,
+    "pdb_nr30": 1783,
+    "swissprot": 23292,
+    "ours_lo": 0.0469,
+    "ours_hi": 0.0967
+   },
+   {
+    "group": "Yeast",
+    "ours_share": 0.0351,
+    "pdb_nr30_share": 0.0582,
+    "swissprot_share": 0.0227,
+    "ours": 14,
+    "pdb_nr30": 2174,
+    "swissprot": 13062,
+    "ours_lo": 0.021,
+    "ours_hi": 0.058
+   },
+   {
+    "group": "Other bacteria",
+    "ours_share": 0.2256,
+    "pdb_nr30_share": 0.3415,
+    "swissprot_share": 0.5454,
+    "ours": 90,
+    "pdb_nr30": 12757,
+    "swissprot": 314002,
+    "ours_lo": 0.1873,
+    "ours_hi": 0.2691
+   },
+   {
+    "group": "Viruses",
+    "ours_share": 0.0476,
+    "pdb_nr30_share": 0.0652,
+    "swissprot_share": 0.0304,
+    "ours": 19,
+    "pdb_nr30": 2436,
+    "swissprot": 17522,
+    "ours_lo": 0.0307,
+    "ours_hi": 0.0732
+   },
+   {
+    "group": "Plants",
+    "ours_share": 0.0426,
+    "pdb_nr30_share": 0.0574,
+    "swissprot_share": 0.0731,
+    "ours": 17,
+    "pdb_nr30": 2145,
+    "swissprot": 42106,
+    "ours_lo": 0.0268,
+    "ours_hi": 0.0672
+   },
+   {
+    "group": "Other",
+    "ours_share": 0.1454,
+    "pdb_nr30_share": 0.2408,
+    "swissprot_share": 0.2224,
+    "ours": 58,
+    "pdb_nr30": 8993,
+    "swissprot": 128040,
+    "ours_lo": 0.1142,
+    "ours_hi": 0.1833
+   }
+  ],
+  "pdb_nr30_ge30_no_source_organism": 207,
+  "n_pdb_nr30_experimental": 47069,
+  "n_pdb_nr30_ge30": 37352,
+  "n_swissprot": 575748,
+  "ours_other_top": {
+   "Gallus gallus": 5,
+   "Bos taurus": 5,
+   "Drosophila melanogaster": 4,
+   "Plasmodium falciparum (isolate 3D7)": 4,
+   "Leishmania braziliensis": 3,
+   "Danio rerio": 2,
+   "Candida albicans": 2,
+   "Rattus norvegicus": 2,
+   "Trypanosoma brucei": 2,
+   "Equus caballus": 1
+  }
+ },
+ "length": {
+  "ours_construct": {
+   "p10": 97.80000000000001,
+   "p25": 154.5,
+   "median": 252.0,
+   "p75": 357.0,
+   "p90": 427.0
+  },
+  "ours_fulllength_parent": {
+   "p10": 159.70000000000002,
+   "p25": 290.25,
+   "median": 448.5,
+   "p75": 853.75,
+   "p90": 1687.7000000000003
+  },
+  "pdb_nr30_all": {
+   "p10": 14.0,
+   "p25": 56.0,
+   "median": 159.0,
+   "p75": 313.0,
+   "p90": 491.0
+  },
+  "pdb_nr30_ge30": {
+   "p10": 74.0,
+   "p25": 121.0,
+   "median": 212.0,
+   "p75": 357.0,
+   "p90": 540.0
+  },
+  "swissprot": {
+   "p10": 100.0,
+   "p25": 169.0,
+   "median": 296.0,
+   "p75": 451.0,
+   "p90": 665.0
+  },
+  "pdb_nr30_share_lt30": 0.2064,
+  "ks_ours_vs_pdb_nr30_ge30": 1.14e-05,
+  "ks_ours_vs_swissprot": 1.8e-14,
+  "ours_share_gt500": {
+   "k": 0,
+   "n": 399,
+   "share": 0.0,
+   "ci95": [
+    -0.0,
+    0.0095
+   ]
+  },
+  "pdb_nr30_ge30_share_gt500": 0.1202,
+  "swissprot_share_gt500": 0.1959
+ },
+ "domains_per_protein": {
+  "ours_construct_gene3d": {
+   "0": 0.259,
+   "1": 0.3385,
+   "2": 0.2487,
+   "3": 0.1026,
+   "4+": 0.0513
+  },
+  "ours_construct_ted": {
+   "0": 0.2359,
+   "1": 0.3487,
+   "2": 0.3,
+   "3": 0.0897,
+   "4+": 0.0256
+  },
+  "ours_parent_fulllength_gene3d": {
+   "0": 0.1538,
+   "1": 0.259,
+   "2": 0.1821,
+   "3": 0.1333,
+   "4+": 0.2718
+  },
+  "swissprot_fulllength_gene3d": {
+   "0": 0.1676,
+   "1": 0.4172,
+   "2": 0.242,
+   "3": 0.0976,
+   "4+": 0.0756
+  },
+  "ours_construct_gene3d_mean": 1.372,
+  "ours_parent_fulllength_gene3d_mean": 4.082,
+  "swissprot_fulllength_gene3d_mean": 1.621
+ },
+ "disorder": {
+  "ours_adopt2_class_clean": {
+   "folded": {
+    "k": 246,
+    "n": 399,
+    "share": 0.6165,
+    "ci95": [
+     0.5679,
+     0.6629
+    ]
+   },
+   "partly disordered": {
+    "k": 112,
+    "n": 399,
+    "share": 0.2807,
+    "ci95": [
+     0.2389,
+     0.3267
+    ]
+   },
+   "disordered": {
+    "k": 41,
+    "n": 399,
+    "share": 0.1028,
+    "ci95": [
+     0.0767,
+     0.1364
+    ]
+   }
+  },
+  "uniprot_disordered_annotation": {
+   "definition": "UniProt REGION features with note 'Disordered' (MobiDB-lite predictions plus curated); mostly = >=50% of residues; long IDR = >=30 consecutive residues",
+   "ours_construct": {
+    "mostly disordered (>=50% residues)": {
+     "k": 25,
+     "n": 390,
+     "share": 0.0641,
+     "ci95": [
+      0.0438,
+      0.0929
+     ]
+    },
+    "long IDR (>=30 aa), <50%": {
+     "k": 52,
+     "n": 390,
+     "share": 0.1333,
+     "ci95": [
+      0.1031,
+      0.1707
+     ]
+    },
+    "no long IDR": {
+     "k": 313,
+     "n": 390,
+     "share": 0.8026,
+     "ci95": [
+      0.7602,
+      0.839
+     ]
+    }
+   },
+   "ours_parent_fulllength": {
+    "mostly disordered (>=50% residues)": {
+     "k": 16,
+     "n": 390,
+     "share": 0.041,
+     "ci95": [
+      0.0254,
+      0.0656
+     ]
+    },
+    "long IDR (>=30 aa), <50%": {
+     "k": 161,
+     "n": 390,
+     "share": 0.4128,
+     "ci95": [
+      0.365,
+      0.4623
+     ]
+    },
+    "no long IDR": {
+     "k": 213,
+     "n": 390,
+     "share": 0.5462,
+     "ci95": [
+      0.4965,
+      0.5949
+     ]
+    }
+   },
+   "swissprot_all": {
+    "mostly disordered (>=50% residues)": 0.016,
+    "long IDR (>=30 aa), <50%": 0.123,
+    "no long IDR": 0.861
+   },
+   "swissprot_with_pdb_xref": {
+    "mostly disordered (>=50% residues)": 0.0203,
+    "long IDR (>=30 aa), <50%": 0.2165,
+    "no long IDR": 0.7632
+   },
+   "swissprot_without_pdb_xref": {
+    "mostly disordered (>=50% residues)": 0.0157,
+    "long IDR (>=30 aa), <50%": 0.1161,
+    "no long IDR": 0.8682
+   },
+   "n_swissprot_with_pdb": 39247
+  },
+  "crosstab_adopt2_vs_uniprot_construct": {
+   "long IDR (>=30 aa), <50%": {
+    "disordered": 8,
+    "folded": 7,
+    "partly disordered": 37
+   },
+   "mostly disordered (>=50% residues)": {
+    "disordered": 21,
+    "folded": 0,
+    "partly disordered": 4
+   },
+   "no long IDR": {
+    "disordered": 12,
+    "folded": 234,
+    "partly disordered": 67
+   }
+  }
+ },
+ "structure_availability": {
+  "definition": "SIFTS best_structures chains from atomic-model methods (X-ray, EM, NMR, ...; SAXS models excluded); UniProt residue ranges are SEQRES-level and can include unmodelled residues",
+  "n_mapped_clean": 390,
+  "no_pdb_ge50pct_of_construct": {
+   "k": 100,
+   "n": 390,
+   "share": 0.2564,
+   "ci95": [
+    0.2156,
+    0.302
+   ]
+  },
+  "no_pdb_overlap_at_all": {
+   "k": 75,
+   "n": 390,
+   "share": 0.1923,
+   "ci95": [
+    0.1563,
+    0.2343
+   ]
+  },
+  "uniprot_entry_without_any_pdb_xref": {
+   "k": 70,
+   "n": 390,
+   "share": 0.1795,
+   "ci95": [
+    0.1446,
+    0.2206
+   ]
+  },
+  "by_disorder_class_no_pdb_ge50": {
+   "disordered": {
+    "k": 25,
+    "n": 41,
+    "share": 0.6098,
+    "ci95": [
+     0.4573,
+     0.7434
+    ]
+   },
+   "folded": {
+    "k": 41,
+    "n": 241,
+    "share": 0.1701,
+    "ci95": [
+     0.128,
+     0.2226
+    ]
+   },
+   "partly disordered": {
+    "k": 34,
+    "n": 108,
+    "share": 0.3148,
+    "ci95": [
+     0.2349,
+     0.4075
+    ]
+   }
+  },
+  "composition_of_no_structure_set": {
+   "folded": 41,
+   "partly disordered": 34,
+   "disordered": 25
+  },
+  "fisher_disordered_or_partly_vs_folded": {
+   "odds_ratio": 3.198,
+   "p": 1.35e-06
+  },
+  "unmapped_clean_entries_not_assessed": 9,
+  "swissprot_share_with_pdb_xref": 0.0682
+ },
+ "redundancy": {
+  "distinct_accessions_mapped_clean": 332,
+  "mapped_clean_entries": 390,
+  "entries_sharing_accession_with_another_entry": {
+   "k": 100,
+   "n": 390,
+   "share": 0.2564,
+   "ci95": [
+    0.2156,
+    0.302
+   ]
+  },
+  "accessions_with_multiple_entries": 42,
+  "top_accessions": [
+   {
+    "uniprot": "P39685",
+    "entries": 5,
+    "name": "Nucleoporin POM152"
+   },
+   {
+    "uniprot": "P11532",
+    "entries": 4,
+    "name": "Dystrophin central domain repeats 1 to 2"
+   },
+   {
+    "uniprot": "P0DKX7",
+    "entries": 4,
+    "name": "Adenylate cyclase toxin Block V"
+   },
+   {
+    "uniprot": "P08603",
+    "entries": 3,
+    "name": "Factor H CCP modules 12 to 13"
+   },
+   {
+    "uniprot": "P21333",
+    "entries": 3,
+    "name": "Human Filamin A Ig-like domains 20-21*/migfilin peptide complex"
+   },
+   {
+    "uniprot": "P11274",
+    "entries": 3,
+    "name": "BCR-ABL p210 fusion protein (DH-PH)"
+   },
+   {
+    "uniprot": "Q39459",
+    "entries": 3,
+    "name": "Metallothionein-like protein 2"
+   },
+   {
+    "uniprot": "P10636",
+    "entries": 3,
+    "name": "Microtubule-associated protein tau, Tau35 fragment"
+   },
+   {
+    "uniprot": "I6X8D2",
+    "entries": 3,
+    "name": "Polyketide synthase Pks13"
+   },
+   {
+    "uniprot": "A0A1D5PXA5",
+    "entries": 3,
+    "name": "Transient receptor potential cation channel subfamily V member 4"
+   }
+  ],
+  "entries_with_gene3d": 289,
+  "entries_sharing_a_superfamily_with_an_entry_of_another_accession": {
+   "k": 179,
+   "n": 289,
+   "share": 0.6194,
+   "ci95": [
+    0.5622,
+    0.6734
+   ]
+  },
+  "top_superfamilies_by_entries": [
+   {
+    "sf": "2.60.40.10",
+    "name": "Immunoglobulins",
+    "entries": 24,
+    "accessions": 19
+   },
+   {
+    "sf": "3.40.50.300",
+    "name": "P-loop containing nucleotide triphosphate hydrolases",
+    "entries": 10,
+    "accessions": 9
+   },
+   {
+    "sf": "3.30.70.330",
+    "name": "RRM (RNA recognition motif) domain",
+    "entries": 8,
+    "accessions": 6
+   },
+   {
+    "sf": "3.10.20.90",
+    "name": "Phosphatidylinositol 3-kinase Catalytic Subunit; Chain A, domain 1",
+    "entries": 8,
+    "accessions": 6
+   },
+   {
+    "sf": "1.10.238.10",
+    "name": "EF-hand",
+    "entries": 7,
+    "accessions": 7
+   },
+   {
+    "sf": "2.30.30.40",
+    "name": "SH3 Domains",
+    "entries": 7,
+    "accessions": 7
+   },
+   {
+    "sf": "1.20.58.60",
+    "name": "",
+    "entries": 7,
+    "accessions": 4
+   },
+   {
+    "sf": "2.30.29.30",
+    "name": "Pleckstrin-homology domain (PH domain)/Phosphotyrosine-binding domain (PTB)",
+    "entries": 7,
+    "accessions": 6
+   },
+   {
+    "sf": "1.10.510.10",
+    "name": "Transferase(Phosphotransferase) domain 1",
+    "entries": 6,
+    "accessions": 6
+   },
+   {
+    "sf": "3.40.50.1820",
+    "name": "Alpha/Beta hydrolase fold, catalytic domain",
+    "entries": 6,
+    "accessions": 6
+   }
+  ],
+  "superfamilies_seen_once": 151
+ },
+ "pfam": {
+  "entries_with_pfam_in_construct": {
+   "k": 333,
+   "n": 399,
+   "share": 0.8346,
+   "ci95": [
+    0.795,
+    0.8678
+   ]
+  },
+  "distinct_pfam_families": 324
+ }
+}
