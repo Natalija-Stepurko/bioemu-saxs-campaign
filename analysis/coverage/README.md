@@ -1,11 +1,12 @@
-# Coverage of known structure space by the SAXS set
+# Coverage of known structure space and of BioEmu-1's training data by the SAXS set
 
 This analysis places the 399 clean PeptoneDB-SAXS entries with a BioEmu-1 ensemble in experimentally known
 protein structure space. It maps every construct to a UniProtKB region, annotates the region with CATH
 superfamilies, organism, disorder and PDB coverage, and compares the set with three references: CATH v4.4.0
 at the S35 sequence-cluster level (fold space), the non-redundant PDB (RCSB 30%-identity polymer-entity
-clusters, experimental entries only) and UniProtKB/Swiss-Prot (organism, length, disorder). Its small outputs
-are tracked in `results/coverage/`; the `bsc coverage` stage and the project page read only those.
+clusters, experimental entries only) and UniProtKB/Swiss-Prot (organism, length, disorder). Scripts 11-17
+then compare the set with BioEmu-1's own training data and find, for every construct, the nearest training
+sequence. Its small outputs are tracked in `results/coverage/`; the `bsc coverage` stage and the project page read only those.
 
 ## Steps
 
@@ -95,10 +96,12 @@ byte.
 ## Rerun
 
 ```bash
-uv venv /path/to/venv-cov && uv pip install --python /path/to/venv-cov -r analysis/coverage/requirements.txt
-COVERAGE_PY=/path/to/venv-cov/bin/python BSC_ROOT=<where bsc fetch put data/> \
-  COVERAGE_WORK=/path/with/1GB/free analysis/coverage/run_all.sh
-uv run bsc coverage      # structure split, rank coverage and the page figures from results/coverage/
+uv venv /path/to/venv-cov && uv pip install --python /path/to/venv-cov -r analysis/coverage/requirements.txt \
+  --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
+curl -sSfL -o mmseqs.tar.gz https://github.com/soedinglab/MMseqs2/releases/download/18-8cc5c/mmseqs-linux-avx2.tar.gz
+COVERAGE_PY=/path/to/venv-cov/bin/python BSC_ROOT=<where bsc fetch put data/> MMSEQS=/path/to/mmseqs/bin/mmseqs \
+  COVERAGE_WORK=/path/with/2GB/free analysis/coverage/run_all.sh
+uv run bsc coverage      # structure split, closeness to training data, categories and the page figures
 ```
 
 Scripts 14 and 15 need the MMseqs2 binary (`MMSEQS`; the static `mmseqs-linux-avx2` release build was used,

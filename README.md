@@ -30,11 +30,18 @@ Swiss-Prot), the SAXS set covers common folds and few rare ones (34 of the 50 mo
 superfamilies, 43 of the 4,630 ranked beyond 2,000), over-represents mainly-β domains, human proteins and
 disorder, under-represents α/β enzyme folds, and consists of fragments of at most 500 residues cut from long
 multidomain proteins; 26% of the mapped constructs have no experimental structure covering half of them.
-These skews lie where BioEmu-1's training data (predicted structures with mostly-coil clusters removed,
-simulations of 50–200-residue domains, stabilities of small domains) were thin by construction; overlap
-with the training data was not measured. Whether a construct has an experimental structure does not explain
-the raw error once the disorder class is accounted for (class-stratified van Elteren p = 0.39; pooled
-Mann–Whitney p = 0.014).
+Measured against BioEmu-1's own training data (the 50,228 AFDB pre-training clusters, the simulated CATH and
+MegaSim systems, the MEGAscale wild types), disorder is nearly absent from training (1.7% of AFDB input chains
+and 0.3% of simulated domains predicted mostly disordered, against 15.5% of the constructs), pre-training is
+81% bacterial with 0.2% human clusters, mainly-β domains are thin, and no simulated chain reaches 200
+residues; α/β enzyme folds are not thin in training. Few measured proteins are close to the training data:
+165 of the 399 profiles have a training sequence of at least 30% identity over half the construct, 23 of at
+least 90%. Pooled, the raw fit improves with closeness, but within each disorder class no measure of the error
+varies with it (12 Spearman tests, every Holm-adjusted p ≥ 0.35), and superfamily presence in the training data
+does not separate the errors. Whether a construct has an experimental structure does not explain the raw error
+once the disorder class is accounted for either (class-stratified van Elteren p = 0.39). These results open the
+recommendation section of the page, which lists the protein data to collect with their evidence: disordered
+proteins, folded proteins with long disordered regions, and full-length multidomain proteins above 500 residues.
 
 ![error map](results/figures/fig_error_map.png)
 
@@ -64,7 +71,7 @@ reversed, two not met. The additions made after the first run are listed, dated,
 | `bsc analyse` | error map by class, the four expectations, the four kinds, model comparison, the design's priority score (reported and tested, not used to select systems), bootstrap intervals, near-duplicate clusters, NRMSD orderings |
 | `bsc select_eval` | retrospective evaluation of the selection rule on held-out folds grouped by sequence cluster |
 | `bsc predict` | can the error be predicted before measuring: grouped, repeated cross-validation of baselines, linear models and small trees |
-| `bsc coverage` | where the SAXS set sits in structure space, and the raw fit split by PDB coverage of the construct, pooled and within each disorder class; reads only `results/coverage/` and `results/resolvability.csv` |
+| `bsc coverage` | where the SAXS set sits in structure space and against BioEmu-1's training data, the raw fit split by PDB coverage of the construct and by closeness to the training data (pooled and within each disorder class), and the error on candidate protein categories for data collection; reads only `results/coverage/` and `results/resolvability.csv` |
 | `bsc envelopes` | DENSS ab initio envelopes of the three worked examples (needs the DENSS environment, see below; skipped with a notice otherwise) |
 | `bsc report` | figures, `docs/CAMPAIGN.md` and the campaign arms from `results/` |
 
@@ -89,15 +96,19 @@ the figures) let `analyse`, `select_eval`, `predict`, `report` and the page rebu
 ### The coverage analysis
 
 `analysis/coverage/` maps every construct to a UniProtKB region and compares the set with CATH, the PDB and
-Swiss-Prot (scripts 00–10, described with database versions in
-[`analysis/coverage/README.md`](analysis/coverage/README.md)). It needs network access, about 0.9 GB of
-downloads and its own requirements (`analysis/coverage/requirements.txt`, not part of the main environment).
-Its small outputs (the per-entry mapping, the summary of all comparisons, the database versions and a CATH
-superfamily rank table) are tracked in `results/coverage/`, so `bsc coverage` and the page rebuild without it.
+Swiss-Prot (scripts 00–10), then obtains BioEmu-1's public training data (AFDB cluster definitions, the
+simulated systems read out of the Zenodo archives by HTTP range requests, MEGAscale) and compares it with the
+SAXS set and searches every construct against it with MMseqs2 (scripts 11–17); both are described with
+database versions in [`analysis/coverage/README.md`](analysis/coverage/README.md). It needs network access,
+about 1 GB of downloads, its own requirements (`analysis/coverage/requirements.txt`, not part of the main
+environment) and the MMseqs2 binary. Its small outputs (the per-entry mapping, the summary of all comparisons,
+a CATH superfamily rank table, the per-construct nearest training sequences, the training-data summary and the
+database versions) are tracked in `results/coverage/`, so `bsc coverage` and the page rebuild without it.
 
 ```bash
 uv venv /path/to/venv-cov && uv pip install --python /path/to/venv-cov -r analysis/coverage/requirements.txt
-COVERAGE_PY=/path/to/venv-cov/bin/python COVERAGE_WORK=/path/with/1GB/free analysis/coverage/run_all.sh
+COVERAGE_PY=/path/to/venv-cov/bin/python COVERAGE_WORK=/path/with/2GB/free MMSEQS=/path/to/mmseqs \
+  BSC_ROOT=<where bsc fetch put data/> analysis/coverage/run_all.sh
 uv run bsc coverage
 ```
 
@@ -126,7 +137,7 @@ examples are extracted from the archive by `bsc coordrg -- --archive Predictions
 Tracked: everything under `results/` except the DENSS maps, and the documents. Not tracked: the Zenodo
 archives and the unpacked curves and ensembles (`data/`, rebuilt by `bsc fetch` and `bsc coordrg`),
 because they are already public under CC-BY 4.0 and are large, and the downloads of the coverage analysis
-(CATH, Swiss-Prot, PDB clusters and per-protein annotations, about 0.9 GB).
+(CATH, Swiss-Prot, PDB clusters, per-protein annotations and BioEmu-1's training data, about 1 GB).
 
 ## Licence
 
