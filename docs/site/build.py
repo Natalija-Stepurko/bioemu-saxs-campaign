@@ -324,6 +324,8 @@ details.more .result{border:0;padding:0}
 .outcome{font-family:var(--mono);font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .outcome.yes{color:var(--acc)}.outcome.no{color:var(--muted)}.outcome.rev{color:#A0521A}
 ol.refs{padding-left:22px;font-size:13.5px;color:var(--muted)}ol.refs li{margin:0 0 6px}ol.refs a{color:var(--ink);word-break:break-all}
+ul.facts{padding-left:20px;margin:0 0 16px}ul.facts li{margin:0 0 9px}
+tr.grp td{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);background:var(--band);padding-top:6px;padding-bottom:6px}
 footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.8}
 footer a{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
@@ -351,6 +353,259 @@ GH = ('<svg viewBox="0 0 16 16" aria-hidden="true" width="17" height="17"><path 
       '-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 '
       '3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58'
       '-8-8-8Z"/></svg>')
+
+
+# BioEmu-1 training data as reported by Lewis et al. 2025 (cited facts, not results of this study)
+TRAINING = {"afdb_clusters": "about 50,000", "md_ms": "more than 200 ms", "cath2_domains": "about 1,040",
+            "cath2_lengths": "50–200", "stabilities": "about 500,000", "holdout_identity": "40%"}
+
+
+def coverage_section(n_bioemu: int) -> str:
+    """'Where the SAXS set sits in protein structure space': every number from results/coverage/,
+    with a check for every directional or comparative sentence."""
+    CV = json.load(open(RESULTS / "coverage" / "summary.json"))
+    SP = json.load(open(RESULTS / "coverage" / "structure_split.json"))
+    RC = json.load(open(RESULTS / "coverage" / "rank_coverage.json"))
+    cath, cov, comp = CV["cath_reference"], CV["coverage"], CV["composition"]
+    g3, mapc = cov["gene3d"], CV["mapping"]["clean"]
+    check(CV["n_clean"] == n_bioemu and SP["n"] + SP["n_unmapped_excluded"] == n_bioemu,
+          "coverage analysis covers the same clean BioEmu-1 profiles")
+    check(mapc["mapped"]["k"] == SP["n"] and mapc["by_method"]["unmapped"] == SP["n_unmapped_excluded"],
+          "mapped and unmapped counts agree between the coverage outputs")
+    ver = cath["version"].lstrip("v")
+    check(ver.startswith("4.4"), "reference is CATH v4.4")
+    # -- finding 1: common superfamilies covered, rare ones not
+    t50, t200 = cov["top50_superfamilies_present_gene3d"], cov["top200_superfamilies_present_gene3d"]
+    tail = RC["bins"][-1]
+    check(t50["share"] > t200["share"] > 3 * tail["share"] and tail["share"] < 0.02,
+          "superfamily coverage falls with rank")
+    check(all(a["share"] >= b["share"] for a, b in zip(RC["bins"][1:-1], RC["bins"][2:], strict=False)),
+          "coverage decreases monotonically beyond the top ten")
+    check(g3["share_of_cath_s35_clusters_in_represented_superfamilies"] > 5 * g3["share_of_cath_superfamilies"],
+          "the superfamilies present hold a much larger share of S35 clusters than of superfamilies")
+    # -- finding 2: class skew
+    cls = {r["class"]: r for r in comp["class"]}
+    a_, b_, ab = cls[1], cls[2], cls[3]
+    check(b_["enr_lo"] > 1 and ab["enr_hi"] < 1 and a_["enr_lo"] < 1 < a_["enr_hi"],
+          "mainly beta enriched, alpha/beta depleted, mainly alpha within its interval of CATH")
+    top_under = {r["id"]: r for r in CV["over_under"]["topology_under"]}
+    sf_under = {r["id"]: r for r in CV["over_under"]["superfamily_under"]}
+    sf_over = {r["id"]: r for r in CV["over_under"]["superfamily_over"]}
+    ross, tim, nadp = top_under["3.40.50"], top_under["3.20.20"], sf_under["3.40.50.720"]
+    check(ross["observed"] < ross["expected"] and tim["observed"] < tim["expected"] and nadp["observed"] == 0,
+          "Rossmann and TIM-barrel folds under-represented; NAD(P)-binding Rossmann absent")
+    sig = ["2.30.30.40", "1.10.238.10", "1.10.510.10", "2.30.29.30"]
+    check(all(s in sf_over and sf_over[s]["observed"] > 2 * sf_over[s]["expected"] for s in sig),
+          "SH3, EF-hand, kinase and PH superfamilies over-represented")
+    MP = pd.read_csv(RESULTS / "coverage" / "per_protein_mapping.csv")
+    MP = MP[MP["clean"].astype(str) == "True"]
+    has_sig = MP["gene3d_superfamilies"].fillna("").str.split(";").map(lambda x: bool(set(x) & set(sig)))
+    n_sig, n_sig_human = int(has_sig.sum()), int((MP.loc[has_sig, "org_group"] == "Human").sum())
+    check(n_sig_human > n_sig / 2, "most signalling-domain profiles are human")
+    # -- finding 3: organism
+    org = {r["group"]: r for r in CV["organism"]["groups"]}
+    hu = org["Human"]
+    check(hu["ours_lo"] > hu["pdb_nr30_share"] > hu["swissprot_share"], "human proteins enriched over the PDB and Swiss-Prot")
+    check(max(org, key=lambda k: org[k]["ours_share"]) == "Human", "human is the largest organism group")
+    # -- finding 4: fragments of long multidomain proteins
+    L, D = CV["length"], CV["domains_per_protein"]
+    check(L["ours_share_gt500"]["k"] == 0 and L["pdb_nr30_ge30_share_gt500"] > 0.1 and L["swissprot_share_gt500"] > 0.1,
+          "no construct above 500 residues; over a tenth of the references are")
+    check(L["ours_fulllength_parent"]["median"] > 1.5 * L["ours_construct"]["median"], "parents much longer than constructs")
+    check(D["ours_parent_fulllength_gene3d_mean"] > 2 * D["swissprot_fulllength_gene3d_mean"] > 2 * D["ours_construct_gene3d_mean"],
+          "parents carry more than twice the domains of a Swiss-Prot protein; constructs fewer than Swiss-Prot")
+    check(D["ours_parent_fulllength_gene3d"]["4+"] > 3 * D["swissprot_fulllength_gene3d"]["4+"], "parents: four or more domains far more often")
+    # -- finding 5: disorder
+    U = CV["disorder"]["uniprot_disordered_annotation"]
+    MOST, LONG = "mostly disordered (>=50% residues)", "long IDR (>=30 aa), <50%"
+    mc, sp_most = U["ours_construct"][MOST], U["swissprot_all"][MOST]
+    check(mc["ci95"][0] > 2 * sp_most, "mostly disordered constructs over twice as frequent as in Swiss-Prot")
+    par_idr = U["ours_parent_fulllength"][MOST]["share"] + U["ours_parent_fulllength"][LONG]["share"]
+    sp_idr = U["swissprot_all"][MOST] + U["swissprot_all"][LONG]
+    con_idr = U["ours_construct"][MOST]["share"] + U["ours_construct"][LONG]["share"]
+    check(par_idr > 2.5 * sp_idr and par_idr > 1.8 * con_idr, "parents carry long disordered regions that the constructs mostly leave out")
+    # -- finding 6: structure availability
+    SA = CV["structure_availability"]
+    nos, by = SA["no_pdb_ge50pct_of_construct"], SA["by_disorder_class_no_pdb_ge50"]
+    check(0.2 < nos["share"] < 0.3, "about a quarter without an experimental structure of the construct")
+    check(by["disordered"]["share"] > by["partly disordered"]["share"] > by["folded"]["share"]
+          and SA["fisher_disordered_or_partly_vs_folded"]["p"] < 0.001, "structure missing more often the more disordered")
+
+    # -- the structure split
+    P, BC = SP["pooled"], SP["by_class"]
+    check(SP["groups"] == ["pdb50", "partial", "none"], "three structure groups")
+    check(P["pdb50"]["n"] + P["partial"]["n"] + P["none"]["n"] == SP["n"], "groups add up")
+    check(P["pdb50"]["raw_fit"]["share"] > P["none"]["raw_fit"]["share"] > P["partial"]["raw_fit"]["share"]
+          and P["pdb50"]["chi2_raw_median"] < P["none"]["chi2_raw_median"] < P["partial"]["chi2_raw_median"],
+          "pooled: best fits with a structure, worst with partial overlap")
+    pt, st = SP["pooled_tests"], SP["stratified_by_class"]
+    check(pt["chi2_raw_mannwhitney_p"] < 0.05 and pt["rg_ratio_mannwhitney_p"] < 0.05, "pooled differences significant")
+    check(pt["nrmsd_raw_mannwhitney_p"] > 0.05, "pooled: no difference under NRMSD")
+    check(pt["chi2_raw_pdb50_vs_none_p"] > 0.05, "pooled: structure against no overlap not significant")
+    check(st["chi2_raw"]["p_two_sided"] > 0.05 and st["rg_ratio"]["p_two_sided"] > 0.05, "no difference stratified by class")
+    share50 = SP["pdb50_share_by_class"]
+    check(share50["folded"]["share"] > share50["partly disordered"]["share"] > share50["disordered"]["share"],
+          "structure coverage falls with disorder")
+    for c in ("folded", "partly disordered"):
+        check(BC[c]["tests"]["chi2_raw_mannwhitney_p"] > 0.05 and BC[c]["tests"]["rg_ratio_mannwhitney_p"] > 0.05,
+              f"{c}: no difference")
+    dz = BC["disordered"]
+    check(dz["tests"]["chi2_raw_mannwhitney_p"] < 0.05 < dz["tests"]["chi2_raw_holm_p"], "disordered: nominal only")
+    check(dz["pdb50"]["chi2_raw_median"] < dz["under50"]["chi2_raw_median"], "disordered: lower chi2 with a structure")
+    check(dz["tests"]["nrmsd_raw_mannwhitney_p"] > 0.05 and dz["tests"]["rg_ratio_mannwhitney_p"] > 0.05,
+          "disordered: no difference in NRMSD or Rg ratio")
+    check(1 < dz["pdb50"]["rg_ratio_median"] < dz["under50"]["rg_ratio_median"] and dz["pdb50"]["rg_ratio_ci95"][0] < 1
+          and dz["under50"]["rg_ratio_ci95"][0] > 1, "disordered: still above 1 with a structure, interval reaching 1")
+    check(BC["partly disordered"]["pdb50"]["chi2_raw_median"] > BC["partly disordered"]["under50"]["chi2_raw_median"],
+          "partly disordered: median higher with a structure (stated)")
+
+    def ps(r):          # share with Wilson interval
+        return f'{pct(r["share"])} ({pct(r["ci95"][0])}–{pct(r["ci95"][1])})'
+
+    def row(name, r, cls_=""):
+        nf = r["target_not_reached"]
+        return (f'<tr{cls_}><td>{name}</td><td class="num">{r["n"]}</td><td class="num">{ps(r["raw_fit"])}</td>'
+                f'<td class="num">{f1(r["chi2_raw_median"])} ({ci(r["chi2_raw_ci95"], f1)})</td>'
+                f'<td class="num">{f3(r["nrmsd_raw_median"])}</td>'
+                f'<td class="num">{f2(r["rg_ratio_median"])} ({ci(r["rg_ratio_ci95"])})</td>'
+                f'<td class="num">{pct(nf["share"])}</td></tr>')
+    GL = {"pdb50": "PDB ≥ 50%", "partial": "partial", "none": "no PDB"}
+    rows = '<tr class="grp"><td colspan="7">all classes</td></tr>' + "".join(row(GL[g], P[g]) for g in SP["groups"])
+    for c in CLASSES:
+        t = BC[c]["tests"]
+        rows += (f'<tr class="grp"><td colspan="7">{c} · Mann–Whitney, PDB ≥ 50% against the rest: χ² p {pv(t["chi2_raw_mannwhitney_p"])}, '
+                 f'Rg ratio p {pv(t["rg_ratio_mannwhitney_p"])}</td></tr>' + "".join(row(GL[g], BC[c][g]) for g in SP["groups"]))
+    split_table = ('<div class="scroll"><table class="wide split"><thead><tr><th>construct structure</th><th>n</th><th>χ² ≤ 2 (95%)</th>'
+                   '<th>median raw χ² (95%)</th><th>median NRMSD</th><th>median Rg ratio (95%)</th><th>target fit not reached</th></tr></thead><tbody>'
+                   + rows + '</tbody></table></div><p class="note">PDB ≥ 50%: experimental chains (X-ray, electron microscopy or NMR) cover at least half of the construct; partial: some overlap, under half; no PDB: no overlap. '
+                   f'Shares: Wilson 95% intervals; medians: percentile bootstrap over entries (2,000 resamples). {SP["n_unmapped_excluded"]} profiles without a UniProt mapping are left out.</p>')
+
+    # -- details: composition tables
+    def ou_rows(lst, k=8):
+        return "".join(f'<tr><td>{r["id"]}</td><td class="dim">{r["name"] or "unnamed"}</td><td class="num">{r["observed"]}</td>'
+                       f'<td class="num">{r["expected"]:.1f}</td><td class="num">{r["cath_s35"]:,}</td><td class="num">{pv(r["p"])}</td></tr>' for r in lst[:k])
+    ou_head = '<thead><tr><th>CATH id</th><th>name</th><th>observed</th><th>expected</th><th>CATH S35 clusters</th><th>Poisson p</th></tr></thead>'
+    ou = "".join(f'<p class="note">{title}</p><div class="scroll"><table class="wide">{ou_head}<tbody>{ou_rows(CV["over_under"][key])}</tbody></table></div>'
+                 for title, key in (("Superfamilies, over-represented", "superfamily_over"), ("Superfamilies, under-represented", "superfamily_under"),
+                                    ("Topologies, over-represented", "topology_over"), ("Topologies, under-represented", "topology_under")))
+    ou_note = (f'<p class="note">Units: {CV["over_under"]["n_units"]} unique pairs of UniProt accession and CATH-Gene3D superfamily inside the constructs; '
+               'expected = units × the CATH S35 share; the Poisson tails are uncorrected and serve for ranking only.</p>')
+    cls_rows = "".join(f'<tr><td>{r["name"]}</td><td class="num">{r["ours_units"]}</td><td class="num">{pct(r["ours_share"])} ({pct(r["ours_lo"])}–{pct(r["ours_hi"])})</td>'
+                       f'<td class="num">{r["cath_s35"]:,}</td><td class="num">{pct(r["cath_share"])}</td><td class="num">{f2(r["enrichment"])} ({ci([r["enr_lo"], r["enr_hi"]])})</td></tr>'
+                       for r in comp["class"])
+    cls_table = ('<div class="scroll"><table><thead><tr><th>CATH class</th><th>SAXS units</th><th>SAXS share (95%)</th><th>CATH S35 clusters</th>'
+                 '<th>CATH share</th><th>ratio (95%)</th></tr></thead><tbody>' + cls_rows + '</tbody></table></div>'
+                 f'<p class="note">Intervals: bootstrap over UniProt accessions (2,000 resamples). {comp["n_units"]} units in classes 1–4 from {comp["n_proteins"]} proteins.</p>')
+    LQ = (("SAXS constructs", "ours_construct"), ("their full-length proteins", "ours_fulllength_parent"),
+          ("PDB 30% clusters, ≥ 30 residues", "pdb_nr30_ge30"), ("Swiss-Prot", "swissprot"))
+    len_rows = "".join(f'<tr><td>{nm}</td>' + "".join(f'<td class="num">{L[k][q]:.0f}</td>' for q in ("p10", "p25", "median", "p75", "p90")) + '</tr>' for nm, k in LQ)
+    len_table = ('<div class="scroll"><table><thead><tr><th>chain length (residues)</th><th>10th</th><th>25th</th><th>median</th><th>75th</th><th>90th</th></tr></thead><tbody>'
+                 + len_rows + '</tbody></table></div>')
+    DIS = ((MOST, "≥ 50% of residues disordered"), (LONG, "a disordered region of ≥ 30 residues, under 50%"))
+    dis_rows = "".join(f'<tr><td>{lab}</td><td class="num">{pct(U["ours_construct"][k]["share"])}</td><td class="num">{pct(U["ours_parent_fulllength"][k]["share"])}</td>'
+                       f'<td class="num">{U["swissprot_all"][k] * 100:.1f}%</td><td class="num">{pct(U["swissprot_with_pdb_xref"][k])}</td></tr>' for k, lab in DIS)
+    dis_table = ('<div class="scroll"><table><thead><tr><th>UniProt "Disordered" annotation</th><th>SAXS constructs</th><th>full-length proteins</th>'
+                 '<th>Swiss-Prot</th><th>Swiss-Prot with a PDB entry</th></tr></thead><tbody>' + dis_rows + '</tbody></table></div>'
+                 '<p class="note">UniProt REGION features with the note "Disordered", mostly MobiDB-lite predictions.</p>')
+    org_rows = "".join(f'<tr><td>{g}</td><td class="num">{org[g]["ours"]}</td><td class="num">{pct(org[g]["ours_share"])}</td>'
+                       f'<td class="num">{pct(org[g]["pdb_nr30_share"])}</td><td class="num">{org[g]["swissprot_share"] * 100:.1f}%</td></tr>' for g in org)
+    org_table = ('<div class="scroll"><table><thead><tr><th>organism</th><th>SAXS entries</th><th>SAXS share</th><th>PDB 30% clusters</th><th>Swiss-Prot</th></tr></thead><tbody>'
+                 + org_rows + '</tbody></table></div>'
+                 f'<p class="note">{CV["organism"]["n_pdb_nr30_ge30"]:,} PDB clusters of chains of at least 30 residues with an experimental entity; {CV["organism"]["n_swissprot"]:,} Swiss-Prot entries.</p>')
+    by_class_struct = "; ".join(f'{c} {by[c]["k"]} of {by[c]["n"]} ({pct(by[c]["share"])})' for c in CLASSES)
+    VER = json.load(open(RESULTS / "coverage" / "versions.json"))
+    ver_rows = "".join(f'<tr><td>{k}</td><td>{v.get("version") or v.get("release") or v.get("file_last_modified") or "REST API"}</td></tr>'
+                       for k, v in VER.items())
+    unm = mapc["unmapped_labels"]
+    repl = MP["map_detail"].fillna("").str.contains("SASBDB accession")
+    check(int(repl.sum()) == mapc["sasbdb_accession_replaced"], "corrected-accession count")
+    n_replaced_unmapped = int((repl & (MP["map_method"] == "unmapped")).sum())
+    check(len(unm) == SP["n_unmapped_excluded"], "unmapped list complete")
+    mapping_html = (
+        f'<p>{mapc["mapped"]["k"]} of {mapc["n"]} profiles map to a UniProtKB entry: {mapc["by_method"]["SASBDB"]} through the accession in the SASBDB record, '
+        f'{mapc["by_method"]["RCSB seq search + SIFTS"]} through a PDB sequence search (identity ≥ 90%) and the SIFTS reference of the hit, and '
+        f'{mapc["by_method"]["UniProt peptide search"]} through a UniProt peptide search; a local alignment to the canonical sequence then defines the construct region '
+        f'(median identity {f2(mapc["median_alignment_identity"])}). For {mapc["sasbdb_accession_replaced"]} profiles the SASBDB accession was set aside because it pointed to a '
+        f'UniProtKB entry deleted since deposition or aligned to a small part of the construct; all but {n_replaced_unmapped} of them were mapped again by sequence search. The {len(unm)} unmapped profiles are '
+        + ", ".join(f'{lab} ({short_title(nm, 46)})' for lab, nm in unm)
+        + '. Domains are CATH-Gene3D assignments whose residues lie at least half inside the construct region; PDB coverage counts residues of '
+          'atomic-model chains listed by SIFTS.</p>'
+        f'<div class="scroll"><table><thead><tr><th>source</th><th>version</th></tr></thead><tbody>{ver_rows}</tbody></table></div>'
+        f'<p class="note">CATH {cath["version"]}: {cath["n_domains"]:,} domains, {cath["n_s35_clusters"]:,} S35 clusters, {cath["n_superfamilies"]:,} superfamilies, '
+        f'{cath["n_topologies"]:,} topologies, {cath["n_architectures"]} architectures. CATH-Gene3D in InterPro is release 4.3.0; every superfamily it assigns here is present in {cath["version"]}.</p>')
+    check(g3["superfamilies_not_in_cath_v4.4"] == [], "every Gene3D superfamily present in CATH v4.4")
+
+    # -- prose
+    lead = (
+        f"<p>BioEmu-1 learned from three sources {cite('lewis')}: predicted structures for UniProt sequences from a clustered AlphaFold Database snapshot "
+        f"({TRAINING['afdb_clusters']} sequence clusters, after removing clusters whose structure representatives were all more than half coil and clusters without a confident prediction); "
+        f"{TRAINING['md_ms']} of all-atom molecular dynamics of thousands of small and medium proteins, among them {TRAINING['cath2_domains']} CATH domains of "
+        f"{TRAINING['cath2_lengths']} residues with under 50% coil and no disulfides; and {TRAINING['stabilities']} measured folding stabilities of small domains. "
+        f"As the reference for experimentally known structure space I use CATH {ver} at the S35 level (domains clustered at 35% sequence identity) for folds, "
+        f"and non-redundant PDB clusters (30% identity) and Swiss-Prot for organism, length and disorder. CATH and the PDB describe what has been solved; "
+        f"they are not BioEmu-1's training set.</p>")
+    findings = (
+        f'<ul class="facts">'
+        f'<li><strong>Common folds are covered, rare ones are not.</strong> {pct(cov["has_gene3d_superfamily"]["share"])} of the {n_bioemu} profiles carry a CATH superfamily inside the construct. '
+        f'The {g3["distinct_superfamilies"]} superfamilies present are {g3["share_of_cath_superfamilies"] * 100:.1f}% of CATH\'s {cath["n_superfamilies"]:,} but hold {pct(g3["share_of_cath_s35_clusters_in_represented_superfamilies"])} of its S35 clusters: '
+        f'{t50["k"]} of the 50 most populated superfamilies are present ({pct(t50["share"])}), {t200["k"]} of the top 200, and {tail["k"]} of the {tail["n"]:,} ranked beyond {tail["first"] - 1:,} ({tail["share"] * 100:.1f}%).</li>'
+        f'<li><strong>Mainly-β domains are enriched and α/β enzyme folds depleted.</strong> Mainly-β domains make up {pct(b_["ours_share"])} of the set against {pct(b_["cath_share"])} of CATH (ratio {f2(b_["enrichment"])}, 95% interval {ci([b_["enr_lo"], b_["enr_hi"]])}), '
+        f'α/β domains {pct(ab["ours_share"])} against {pct(ab["cath_share"])} ({f2(ab["enrichment"])}, {ci([ab["enr_lo"], ab["enr_hi"]])}). The Rossmann fold appears {ross["observed"]} times where {ross["expected"]:.0f} are expected, '
+        f'the TIM barrel {tim["observed"]} times against {tim["expected"]:.0f}, and the NAD(P)-binding Rossmann superfamily not at all. The most over-represented superfamilies include SH3, EF-hand, protein kinase and PH domains; {n_sig_human} of the {n_sig} profiles that carry one are of human proteins.</li>'
+        f'<li><strong>Human proteins dominate.</strong> {pct(hu["ours_share"])} of the profiles are of human proteins ({pct(hu["ours_lo"])}–{pct(hu["ours_hi"])}), against {pct(hu["pdb_nr30_share"])} of PDB clusters and {hu["swissprot_share"] * 100:.1f}% of Swiss-Prot.</li>'
+        f'<li><strong>The constructs are fragments of long multidomain proteins.</strong> No construct is longer than 500 residues ({pct(L["pdb_nr30_ge30_share_gt500"])} of PDB clusters and {pct(L["swissprot_share_gt500"])} of Swiss-Prot proteins are); '
+        f'the median construct has {L["ours_construct"]["median"]:.0f} residues, the full-length protein it comes from {L["ours_fulllength_parent"]["median"]:.0f}. The full-length proteins carry {f1(D["ours_parent_fulllength_gene3d_mean"])} CATH domains on average, '
+        f'{pct(D["ours_parent_fulllength_gene3d"]["4+"])} of them four or more, against {f1(D["swissprot_fulllength_gene3d_mean"])} and {pct(D["swissprot_fulllength_gene3d"]["4+"])} for Swiss-Prot; the constructs carry {f1(D["ours_construct_gene3d_mean"])}.</li>'
+        f'<li><strong>Disorder is over-represented.</strong> By UniProt annotation {mc["share"] * 100:.1f}% of the constructs are mostly disordered ({mc["ci95"][0] * 100:.1f}–{mc["ci95"][1] * 100:.1f}%), against {sp_most * 100:.1f}% of Swiss-Prot; '
+        f'{pct(par_idr)} of the full-length proteins carry a long disordered region or are mostly disordered, against {pct(sp_idr)} of Swiss-Prot, and the constructs keep part of it ({pct(con_idr)}).</li>'
+        f'<li><strong>A quarter of the measured constructs have no experimental structure.</strong> For {nos["k"]} of {nos["n"]} mapped profiles ({pct(nos["share"])}, {pct(nos["ci95"][0])}–{pct(nos["ci95"][1])}) no PDB structure covers half of the construct, '
+        f'and for {SA["no_pdb_overlap_at_all"]["k"]} none overlaps it. The share rises with disorder: {by_class_struct}.</li></ul>')
+    interp = (
+        f"<p><strong>Interpretation.</strong> These skews point to regions where BioEmu-1's training data were thin by construction: predicted structures of "
+        f"mostly-coil clusters were removed before pre-training, and the simulated domains have {TRAINING['cath2_lengths']} residues and under 50% coil, while the "
+        f"SAXS set adds disordered constructs, fragments of long multidomain proteins of up to 500 residues and human signalling domains. "
+        f"BioEmu-1's training set was filtered to at most {TRAINING['holdout_identity']} sequence identity to the paper's own holdout set, and these proteins were not part of "
+        f"that holdout, so some of them may be close to training data; I did not measure that overlap.</p>")
+    p50, pp_, pn = P["pdb50"], P["partial"], P["none"]
+    split_prose = (
+        f"<p>Of the {SP['n']} mapped profiles, {p50['n']} have an experimental structure covering at least half of the construct, {pp_['n']} a partial one and {pn['n']} none. "
+        f"Pooled, BioEmu-1's raw ensemble meets χ² ≤ 2 for {ps(p50['raw_fit'])} of the first group, {ps(pp_['raw_fit'])} of the second and {ps(pn['raw_fit'])} of the third, "
+        f"with median raw χ² {f1(p50['chi2_raw_median'])}, {f1(pp_['chi2_raw_median'])} and {f1(pn['chi2_raw_median'])} "
+        f"(at least half covered against the rest, two-sided Mann–Whitney p {pv(pt['chi2_raw_mannwhitney_p'])}). The groups differ in disorder: "
+        f"a structure covers at least half of the construct for {pct(share50['folded']['share'])} of folded, {pct(share50['partly disordered']['share'])} of partly disordered and "
+        f"{pct(share50['disordered']['share'])} of disordered profiles. Within classes the difference vanishes for folded (p {pv(BC['folded']['tests']['chi2_raw_mannwhitney_p'])}) "
+        f"and partly disordered proteins (p {pv(BC['partly disordered']['tests']['chi2_raw_mannwhitney_p'])}; here the median χ² is higher with a structure, "
+        f"{f1(BC['partly disordered']['pdb50']['chi2_raw_median'])} against {f1(BC['partly disordered']['under50']['chi2_raw_median'])}), and a rank test stratified by class finds no difference "
+        f"in raw χ² (van Elteren p {pv(st['chi2_raw']['p_two_sided'])}) or in the Rg ratio (p {pv(st['rg_ratio']['p_two_sided'])}). NRMSD does not differ even pooled "
+        f"(p {pv(pt['nrmsd_raw_mannwhitney_p'])}).</p>"
+        f"<p>Among disordered proteins, raw χ² is lower when a structure exists (median {f1(dz['pdb50']['chi2_raw_median'])} against {f1(dz['under50']['chi2_raw_median'])}, "
+        f"p {pv(dz['tests']['chi2_raw_mannwhitney_p'])}, n = {dz['pdb50']['n']} against {dz['under50']['n']}), but the difference does not survive a Holm correction over the six "
+        f"within-class tests (p {pv(dz['tests']['chi2_raw_holm_p'])}) and is absent under NRMSD (p {pv(dz['tests']['nrmsd_raw_mannwhitney_p'])}). At the median these ensembles remain "
+        f"larger than measured: Rg ratio {f2(dz['pdb50']['rg_ratio_median'])} with a structure (95% interval {ci(dz['pdb50']['rg_ratio_ci95'])}, which reaches 1) and "
+        f"{f2(dz['under50']['rg_ratio_median'])} ({ci(dz['under50']['rg_ratio_ci95'])}) without; the two do not differ (p {pv(dz['tests']['rg_ratio_mannwhitney_p'])}). Whether the construct has an experimental structure does not explain BioEmu-1's "
+        f"raw error beyond what the disorder class explains.</p>")
+
+    return f"""
+<h2 id="space">Where the SAXS set sits in protein structure space</h2>
+{lead}
+{findings}
+{fig("fig_coverage_space", "Figure 4 · fold coverage of the SAXS set",
+     f"A: CATH {ver} superfamilies ranked by their number of S35 clusters, in bins; the bar is the share present in the SAXS set (a CATH-Gene3D domain inside a construct), with Wilson 95% intervals and counts. B: CATH class composition of the {comp['n_units']} unique protein–superfamily units in the set against the CATH S35 clusters, with bootstrap intervals over proteins; the few-secondary-structure class (about 1% of both) is not drawn.",
+     "In A a set that sampled fold space evenly by cluster would show bars of similar height. In B a ratio above 1 marks a class more frequent in the SAXS set than among solved domains.")}
+{fig("fig_coverage_sources", "Figure 5 · organism and domain architecture",
+     "A: source organism of the SAXS profiles (with Wilson 95% intervals), of PDB 30% clusters of chains of at least 30 residues, and of Swiss-Prot entries. B: CATH-Gene3D domains per protein in the SAXS construct, in the full-length UniProt protein it was cut from, and in Swiss-Prot proteins.",
+     None)}
+{interp}
+{details("Architectures, over- and under-represented superfamilies, class table", fig("fig_coverage_architecture", "CATH architectures", "Ratio of the SAXS share to the CATH S35 share for each architecture with a CATH share of at least 1% or at least three units in the set; units in brackets; intervals from the bootstrap over proteins.") + cls_table + ou_note + ou)}
+{details("Length, disorder and organism tables", len_table + dis_table + org_table)}
+{details("Mapping, definitions and database versions", mapping_html)}
+<h3>Does a solved structure matter?</h3>
+{split_prose}
+{split_table}
+{fig("fig_structure_split", "Figure 6 · raw χ² by availability of an experimental structure, within each class",
+     "One point per profile, raw reduced χ² of the BioEmu-1 ensemble (log scale), by disorder class and by PDB coverage of the construct: at least half (filled), partial (light) and none (open). Bars: group median and its 95% bootstrap interval (groups of five or more). The p value above each class compares at least half covered against the rest.",
+     "Within a class, a solved structure would help if the filled group sat lower than the other two.")}
+"""
 
 
 def build():
@@ -653,9 +908,10 @@ def build():
                 '<th>Rg reweighted</th><th>Cα inside, protein / particle level</th><th>chain breaks</th>'
                 '<th>DENSS χ²</th><th>resolution (Å)</th></tr></thead><tbody>' + "".join(ex_row(c) for c in CLASSES)
                 + '</tbody></table></div>')
+    cov_html = coverage_section(n_bioemu)
     nav = "".join(f'<li><a href="#{a}">{t}</a></li>' for a, t in [
         ("method", "Method"), ("expectations", "Expectations"), ("fit", "Raw fit"), ("examples", "Examples"),
-        ("size", "Size"), ("reweight", "Reweighting"), ("guide", "Guidance"), ("next", "Next"),
+        ("size", "Size"), ("space", "Coverage"), ("reweight", "Reweighting"), ("guide", "Guidance"), ("next", "Next"),
         ("models", "Other models"), ("limits", "Limits"), ("repro", "Code")])
     refs_html = "".join(f'<li id="ref-{k}">{t} <a href="{u}">{u.replace("https://", "")}</a></li>' for k, t, u in REFS)
     today = date.today()
@@ -750,10 +1006,11 @@ def build():
      "Above the dashed line the model's ensemble is larger than the protein in solution. The expectation was over-compaction (below the line); the disordered median lies above it.")}
 <p>E4 expected the usual failure of models trained on folded data, over-compaction of disordered chains. The data show the opposite: the median ratio is {f2(rg_dis)} (95% interval {ci(rg_ci)}, two-sided Wilcoxon p {pv(E['E4']['p_two_sided'])}, n = {E['E4']['n']}), and {pct(1 - E['E4']['share_below_1'])} of disordered entries lie above 1; folded proteins sit at {f2(CLS['folded']['rg_ratio_median'])}. The size discrepancy is also present in coordinate-derived radii: the Cα radius of the sampled conformers is {f2(cr_d['coord_over_exp_median'])} times the measured value ({ci(cr_d['coord_over_exp_ci95'])}). Cα, full-atom and SAXS-derived radii are different observables, however: for folded proteins the Cα ratio is {f2(cr_f['coord_over_exp_median'])} where the curve gives {f2(cr_f['curve_over_exp_median'])}, an offset because the curve includes side chains and a hydration layer that the Cα radius leaves out. The {pct(ext_coord)} is therefore not to be read as an exact physical excess; it shows that the extension is present in the conformers before any curve is computed.</p>
 {details("Robustness of the size finding and absolute radii", robust_table + fig("fig_rg", "Ensemble Rg against measured Rg", "Radius of gyration of the BioEmu-1 ensemble curve against the Guinier radius of the measured profile, one point per profile, log axes.") + '<div class="scroll"><table><thead><tr><th>entry</th><th>entry</th><th>5-mer Jaccard</th><th>containment</th></tr></thead><tbody>' + dup_rows + '</tbody></table></div>')}
+{cov_html}
 
 <h2 id="reweight">Can the disagreement be corrected by changing conformer populations?</h2>
 <p>Reweighting keeps every conformer fixed and adjusts only how often each one occurs, until the averaged curve matches the profile. Maximum-entropy reweighting {cite('bottaro')} does this while keeping the weights as close to uniform as the data allow; relaxing that constraint step by step traces a path from the raw ensemble towards a full fit. The effective sample fraction φ measures how much of the ensemble still carries weight: 1 for uniform weights, near 0 when a few conformers carry it all. The four kinds are read where the path first reaches χ² ≤ 2: <em>raw fit</em> (already there), <em>modestly reweightable</em> (reached with φ ≥ 0.5), <em>strongly reweightable</em> (reached only with φ &lt; 0.5, which requires substantial population changes) and <em>target fit not reached</em> (by the tested reweighting procedure).</p>
-{fig("fig_kinds", "Figure 4 · the four kinds, and one reweighting path",
+{fig("fig_kinds", "Figure 7 · the four kinds, and one reweighting path",
      f"Left: the {n_bioemu} profiles by kind. Right: χ² against φ along the path of {rep}, the strongly reweightable entry with the median φ of its kind; the open circle marks where χ² first falls to 2.",
      None)}
 <p>Reweighting brings {rew} more profiles to χ² ≤ 2, {strong} of them only with φ &lt; 0.5; for {notfit} the target is not reached.</p>
@@ -762,7 +1019,7 @@ def build():
 
 <h2 id="guide">Can the error map guide experiments on proteins that have not been measured?</h2>
 <p>An error map needs the measurement. Choosing a new experiment needs the error predicted before the measurement exists. I fitted predictors of the raw error (log₁₀ χ²) from quantities known before a profile exists: chain length, disorder score and class, sequence composition, the Rg expected from length by scaling laws {cite('kohn')}, and the model's own ensemble Rg and conformer spread. Evaluation is 5-fold cross-validation grouped by sequence cluster, repeated five times. I then asked which entries each acquisition policy would pick from held-out folds and scored the picks by the high-discrepancy target yield: the share that are strongly reweightable or whose target fit is not reached. The yield is a proxy for where the model is wrong, not a measure of training value.</p>
-{fig("fig_predict", "Figure 5 · predicting the error, and what each policy picks",
+{fig("fig_predict", "Figure 8 · predicting the error, and what each policy picks",
      f"A: observed against predicted log₁₀ raw χ² on held-out folds ({'ridge regression' if P['best_regressor'] == 'ridge' else 'boosted trees'}), coloured by class. B: high-discrepancy target yield among the top {k10} picks; error bars are the sd over five repeats, and for random the sd of a single random pick of {k10}. The oracle ranking uses the measured SAXS and is shown as a ceiling; it is not a deployable policy.",
      "In A a predictive model would spread the points along the diagonal; here they form a vertical band. In B a policy is useful when it stands clear of the random bar and its spread.")}
 <p>The best model explains {pct(r2_best)} of held-out variation in the raw error (R² = {f2(r2_best)}; class means alone {f2(P['regression']['class_mean']['r2']['mean'])}), and the tree classifier of the high-discrepancy kinds reaches an AUC of {f2(auc_hgb)}. Random picks of ten give a yield of {f2(y['random']['mean'])}, with a spread of ±{f2(rnd_sd)} for any single pick. Ranking by predicted error gives {f2(y['predicted error']['mean'])} ± {f2(y['predicted error']['sd'])}, {gain_err:+.2f} over random, within about one sd of a single random pick. The acquisition policy fed predictions, the campaign's priority rule with predicted inputs, gives {f2(pp['mean'])} ± {f2(pp['sd'])}. The oracle ranking, which uses the measured SAXS, reaches {f2(y['observed priority (ceiling)']['mean'])}: the rule separates the kinds when it sees the measurement, and the missing piece is a predictor of them. The map therefore supports controlled replication of known failures; it does not support a new-protein campaign driven by predicted error.</p>
@@ -789,13 +1046,13 @@ def build():
 
 <h2 id="models">How does BioEmu-1 compare with other ensemble generators?</h2>
 <p>The archive carries computed curves from other models for the same entries, scored here identically and without reweighting: the ensemble generators {", ".join(MODEL_NAME[m] for m in gens)}, and the single-structure predictors {" and ".join(MODEL_NAME[m] for m in singles)} as reference baselines. On the shared entries BioEmu-1 has the lowest median raw χ² of the seven, and the ordering is kept under NRMSD. PepTron comes closest: it beats BioEmu-1 on {pct(pep['share_better_than_bioemu'])} of the {pep['n']} shared entries (95% interval {pct(pep['ci95_share_better'][0])}–{pct(pep['ci95_share_better'][1])}). BioEmu-1 is the only tested model with a disordered median Rg ratio above 1.1; PepTron sits at {f2(others_rg['peptron'])}.</p>
-{fig("fig_models", "Figure 6 · seven models on the same profiles",
+{fig("fig_models", "Figure 9 · seven models on the same profiles",
      "Left: median raw reduced χ² of each model's unweighted ensemble by disorder class, on the profiles that pass quality checks; BioEmu-1 and PepTron emphasised, single-structure predictors grouped below. Right: median Rg ratio of each model on the disordered entries; solid line 1, dashed line 1.1.",
      None)}
 {details("Paired comparison table", comp_html + f'<p class="note">Five further folders in the archive are not used: Boltz-1x and ESMFlow are superseded by models already included, idpGAN and IDP-o are disorder-only generators represented here by idpSAM, and PepTron-base is the un-finetuned PepTron. AF-CALVADOS {cite("bulow")} was evaluated on this benchmark but its predictions were not in the archive.</p>')}
 
 <h2 id="limits">Limits</h2>
-<p>The ensembles are those in the PeptoneBench archive, which records the BioEmu code version but not the checkpoint; re-sampling with the current v1.2 checkpoint is the first follow-up. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so part of the raw error is condition mismatch. The forward model is treated as exact; its hydration-shell parameters bias Rg by a few per cent, which is why modestly reweightable cases are read with care. Disorder classes come from a sequence-based predictor. The model comparison is restricted to the six comparators on the shared entries. The prediction and selection tests are retrospective and use {n_bioemu} entries; a predictor that fails at this size could succeed with more data or with richer features of the model's own ensemble. Profiles with a low-angle upturn above {int(100 * A['thresholds']['aggregation_upturn'])}%, an intensity more than three standard errors below zero, no valid Guinier region, or a measured mass above 1.6 times the sequence mass are kept out of every statistic ({A['n_flag_aggregation']}, {A['n_flag_negative']}, {A['n_guinier_invalid']} and {A['n_flag_oligomer']} profiles).</p>
+<p>The ensembles are those in the PeptoneBench archive, which records the BioEmu code version but not the checkpoint; re-sampling with the current v1.2 checkpoint is the first follow-up. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so part of the raw error is condition mismatch. The forward model is treated as exact; its hydration-shell parameters bias Rg by a few per cent, which is why modestly reweightable cases are read with care. Disorder classes come from a sequence-based predictor. The model comparison is restricted to the six comparators on the shared entries. CATH and the PDB serve as the reference for experimentally known structure space; they are not BioEmu-1's training set, and the overlap between these proteins and BioEmu-1's training data was not measured. PDB coverage of a construct comes from SIFTS residue ranges, which count residues listed in the structure record and can include residues not modelled in the coordinates. The prediction and selection tests are retrospective and use {n_bioemu} entries; a predictor that fails at this size could succeed with more data or with richer features of the model's own ensemble. Profiles with a low-angle upturn above {int(100 * A['thresholds']['aggregation_upturn'])}%, an intensity more than three standard errors below zero, no valid Guinier region, or a measured mass above 1.6 times the sequence mass are kept out of every statistic ({A['n_flag_aggregation']}, {A['n_flag_negative']}, {A['n_guinier_invalid']} and {A['n_flag_oligomer']} profiles).</p>
 
 <h2 id="repro">Reproducibility</h2>
 <p>The pipeline runs in named stages (download, score, coordinate radii, analysis, selection test, prediction, envelopes, report) from a locked environment, with unit tests on synthetic data. Derived results are tracked in the repository, and the page build reads every number from them and stops if a sentence that states a direction or a comparison no longer matches. Key code: <a href="{REPO}/blob/main/src/bsc/coordrg.py">coordinate radii</a>, <a href="{REPO}/blob/main/src/bsc/select_eval.py">acquisition policies</a>, <a href="{REPO}/blob/main/src/bsc/predict.py">error prediction</a>. The ensembles and computed curves are those published by the PeptoneBench authors {cite('invernizzi')} (Zenodo 17306061, CC-BY 4.0).</p>
