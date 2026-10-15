@@ -1,0 +1,73 @@
+{
+ "calvados3_residues": {
+  "url": "https://raw.githubusercontent.com/KULL-Centre/CALVADOS/69815423632cb9b9b08f4b0aea34d8ba43a057c4/examples/single_MDP/input/residues_CALVADOS3.csv",
+  "sha256": "dae71e1911c3a2a89e9c6b93391ceb787ce2dc43293b5e2667468231458f3a14"
+ },
+ "pulchra": {
+  "url": "https://raw.githubusercontent.com/KULL-Centre/papers/85979b1b4123b6b5391b617d16551969eda9f56e/2021/CG-IDPs-Tesei-et-al/pulchra_306.tgz",
+  "sha256": "7b3deb43d3956dad7e49327ed21b85faae529ed2d2c0992a0dc4b5f03d8d58c1"
+ },
+ "pepsi_saxs": {
+  "url": "https://files.inria.fr/NanoDFiles/Website/Software/Pepsi-SAXS/Linux/3.0/Pepsi-SAXS-Linux.zip",
+  "sha256": "5968467a60ed09daf87c46f80fb09389c7cb471ce293d13c10529f142a22dd0d",
+  "version": "3.0, May 2020"
+ },
+ "calvados_sets": [
+  {
+   "set": "CALVADOS 1",
+   "role": "training",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/papers/85979b1b4123b6b5391b617d16551969eda9f56e/2021/CG-IDPs-Tesei-et-al/optimization/5_M1/o1_init_proteinsRgs.pkl",
+   "sha256": "5eebdbc132391402dee89879d55c2d3642c267be8db53d1d215aad9a4ec6300c",
+   "n": 42
+  },
+  {
+   "set": "CALVADOS 1",
+   "role": "training",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/papers/85979b1b4123b6b5391b617d16551969eda9f56e/2021/CG-IDPs-Tesei-et-al/optimization/5_M1/o1_init_proteins.pkl",
+   "sha256": "d6caafeee7e4980e4198b15e2132ad358ff03e3e93d86e6816d7797bee834e5a",
+   "n": 6
+  },
+  {
+   "set": "CALVADOS 2",
+   "role": "training",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/papers/85979b1b4123b6b5391b617d16551969eda9f56e/2022/CG-cutoffs-Tesei-et-al/optimization/M1_20/1_init_proteinsRgs.pkl",
+   "sha256": "eafef356299076493af30d58110486d55894cfad6dca81d1c299724400634978",
+   "n": 51
+  },
+  {
+   "set": "CALVADOS 2",
+   "role": "training",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/papers/85979b1b4123b6b5391b617d16551969eda9f56e/2022/CG-cutoffs-Tesei-et-al/optimization/M1_20/1_init_proteins.pkl",
+   "sha256": "751d2cd637902ab8bcd22e70445c66291b59ad41d9f64e5f204ef87ea5c64638",
+   "n": 5
+  },
+  {
+   "set": "CALVADOS 3",
+   "role": "training",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/_2024_Cao_CALVADOSCOM/51564e0edd126c44d6a7299fbe4414c579394ef4/data/IDPs_MDPsCOM_2.2_0.08_2/allproteins.pkl",
+   "sha256": "667619dbe74fa82012a1bf36fa0f9a33b0ba6b7fa25dd57a26f066659988a76d",
+   "n": 70
+  },
+  {
+   "set": "CALVADOS 3",
+   "role": "validation",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/_2024_Cao_CALVADOSCOM/51564e0edd126c44d6a7299fbe4414c579394ef4/data/IDPs_MDPsCOM_2.2_0.08_2_validate/allproteins_validate.pkl",
+   "sha256": "d804d36a85ba490f3c5b54b17cbf1b0477271b16868032e2f60bd0421afffa5e",
+   "n": 129
+  },
+  {
+   "set": "CALVADOS 3",
+   "role": "validation",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/_2024_Cao_CALVADOSCOM/51564e0edd126c44d6a7299fbe4414c579394ef4/data/IDPs_MDPsCOM_2.2_0.08_2_validate/IDPsRgs_validate.pkl",
+   "sha256": "dfc2a3e30f560f00d3e42a00047f0f19482727e2f999a016d5af25c0c4f2d311",
+   "n": 76
+  },
+  {
+   "set": "CALVADOS 3",
+   "role": "validation",
+   "url": "https://raw.githubusercontent.com/KULL-Centre/_2024_Cao_CALVADOSCOM/51564e0edd126c44d6a7299fbe4414c579394ef4/data/IDPs_MDPsCOM_2.2_0.08_2_validate/MultiDomainsRgs_validate.pkl",
+   "sha256": "bcc8bea33caa31aa8962c67770c8f8c33a87e67d81996981d7037cdbf4ce263e",
+   "n": 48
+  }
+ ]
+}
