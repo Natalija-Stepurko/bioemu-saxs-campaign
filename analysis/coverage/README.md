@@ -28,8 +28,9 @@ sequence. Its small outputs are tracked in `results/coverage/`; the `bsc coverag
 | `13_training_sequences.py` | one table of training sequences by component, and a FASTA per component |
 | `14_annotate_training.py` | the same three descriptors for every set: CATH superfamilies (Gene3D for the SAXS constructs and AFDB, the domain identifier for the CATH MD systems, the best MMseqs2 hit against CATH S100 for the MEGAscale domains), predicted disorder (metapredict, also for the SAXS constructs and the CATH S35 sequences) and organism group |
 | `15_nearest_training.py` | MMseqs2 search of all 439 constructs against each training component: the nearest training sequence covering at least half of the construct, superfamily presence and accession overlap |
-| `16_compare_training.py` | composition of the training sets against the SAXS set and CATH (class, superfamilies, length, disorder, organism) and the overlap distribution, into `training_summary.json` |
+| `16_compare_training.py` | composition of the training sets against the SAXS set and CATH (class, superfamilies, length, disorder, organism) and the overlap distribution, into `training_summary.json`; the MEGAscale domains called mostly disordered, by origin (natural, designed) and length |
 | `17_export_training.py` | copies the per-construct nearest-neighbour table, the training summary and the versions into `results/coverage/` |
+| `18_sasbdb_metadata.py` | one row per entry with the SASBDB record's curve type, size-exclusion coupling, source type, instrument, cell temperature, buffer, pH, additives, concentration range, organisms and molecule names, from the summaries cached by script 01; exported to `results/coverage/sasbdb_metadata.csv` (used by `analysis/arm1/`) |
 
 Units: the domain-level comparisons count unique (UniProt accession, CATH superfamily) pairs inside the
 constructs, the protein-family analogue of a CATH S35 cluster. Single proportions carry Wilson 95% intervals.

@@ -1,0 +1,13 @@
+label,length,sasbdb_organism,molecule,uniprot,org_group,gene3d_superfamilies,dup_cluster,sequence_group,species
+SASDAG8,189,Homo sapiens,Human Filamin A Ig-like domains 20-21*/migfilin peptide complex,P21333,Human,2.60.40.10;2.60.40.10,8,8,Homo sapiens
+SASDJ84,215,Escherichia coli O127:H6 (strain E2348/69 / EPEC),"Intimin, D00-D0 domain (6xHis tagged)",P19809,E. coli,2.60.40.10,187,176,Escherichia coli
+SASDCP8,211,Homo sapiens,Ras-related protein Rab-1A,P62820,Human,3.40.50.300,75,66,Homo sapiens
+SASDPA8,200,Homo sapiens,"NFU1 iron-sulfur cluster scaffold homolog, mitochondrial (F118S, E168G)",Q9UMS0,Human,3.30.1370.70;3.30.300.130,294,275,Homo sapiens
+SASDFK8,114,Homo sapiens,EKC/KEOPS complex subunit GON7,Q9BXV9,Human,,147,137,Homo sapiens
+SASDBW2,210,Danio rerio,Zebrafish (Danio rerio) Arpin truncated C-terminal mutant (delta-C 16).,Q1LWJ6,Other,,43,39,Danio rerio
+SASDCD3,275,Homo sapiens,Nucleolysin TIA-1 isoform p40,P31483,Human,3.30.70.330;3.30.70.330;3.30.70.330,62,54,Homo sapiens
+SASDDE3,122,Human orthopneumovirus,Human respiratory syncytial virus M2-1,Q4KRW3,Viruses,1.20.120.1350,89,80,Human orthopneumovirus
+SASDEC9,257,Escherichia coli,Flagellar brake protein YcgR in complex with c-di-GMP,P76010,E. coli,2.30.110.10;2.40.10.220,115,106,Escherichia coli
+SASDC35,311,Hathewaya histolytica,Collagenase ColH segement s2as2bs3,Q46085,Other bacteria,2.60.120.380;2.60.40.10;2.60.40.10,53,47,Hathewaya histolytica
+SASDE79,314,Homo sapiens,Interleukin-18 receptor 1,Q13478,Human,2.60.40.10;2.60.40.10;2.60.40.10,109,100,Homo sapiens
+SASDDL7,128,,anti-DISC1 single-domain camelid antibody VHH B5,,Other,,97,88,
