@@ -866,5 +866,73 @@
    "rg_ratio_mannwhitney_p": 0.4068529610498146
   }
  },
- "max_construct_length": 496
+ "max_construct_length": 496,
+ "quality_checks_by_class": {
+  "n": 439,
+  "rule": "no data-quality flag raised and a valid Guinier region",
+  "by_class": {
+   "folded": {
+    "n": 268,
+    "pass": 249,
+    "share": 0.9291044776119403,
+    "ci95": [
+     0.8919346600211516,
+     0.9541467322231169
+    ],
+    "failed_by_check": {
+     "aggregation upturn": 1,
+     "negative intensities": 11,
+     "unusable errors": 0,
+     "mass above a monomer": 5,
+     "no valid Guinier region": 3
+    }
+   },
+   "partly disordered": {
+    "n": 122,
+    "pass": 112,
+    "share": 0.9180327868852459,
+    "ci95": [
+     0.855674529111497,
+     0.9548691574188283
+    ],
+    "failed_by_check": {
+     "aggregation upturn": 0,
+     "negative intensities": 1,
+     "unusable errors": 1,
+     "mass above a monomer": 5,
+     "no valid Guinier region": 4
+    }
+   },
+   "disordered": {
+    "n": 49,
+    "pass": 41,
+    "share": 0.8367346938775511,
+    "ci95": [
+     0.7096366145094091,
+     0.9148730167279078
+    ],
+    "failed_by_check": {
+     "aggregation upturn": 0,
+     "negative intensities": 0,
+     "unusable errors": 0,
+     "mass above a monomer": 8,
+     "no valid Guinier region": 0
+    }
+   }
+  },
+  "fisher_disordered_vs_folded": {
+   "table_pass_fail": [
+    [
+     41,
+     8
+    ],
+    [
+     249,
+     19
+    ]
+   ],
+   "odds_ratio": 0.3910642570281124,
+   "p_two_sided": 0.04773602966788328
+  }
+ }
 }
