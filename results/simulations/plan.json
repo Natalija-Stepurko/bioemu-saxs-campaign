@@ -1,0 +1,418 @@
+{
+ "pilot": [
+  {
+   "label": "SASDJH6",
+   "length": 51,
+   "frames": 1010,
+   "steps": 7070000,
+   "wall_hours": 0.694,
+   "steps_per_second": 2828.5,
+   "projected_hours_full_run": 0.69
+  },
+  {
+   "label": "SASDJT7",
+   "length": 180,
+   "frames": 350,
+   "steps": 3500000,
+   "wall_hours": 0.865,
+   "steps_per_second": 1124.0,
+   "projected_hours_full_run": 2.5
+  },
+  {
+   "label": "SASDLK9",
+   "length": 475,
+   "frames": 20,
+   "steps": 1360000,
+   "wall_hours": 0.878,
+   "steps_per_second": 430.4,
+   "projected_hours_full_run": 44.33
+  }
+ ],
+ "speed_fit": {
+  "a": 79549.65441621083,
+  "b": 0.8382694048419858,
+  "form": "steps/s = a * N^-b"
+ },
+ "workers": 6,
+ "budget_hours": 24.0,
+ "projected_makespan_all_full_hours": 42.0,
+ "projected_core_hours_all_full": 209.2,
+ "projected_makespan_plan_hours": 20.6,
+ "n_included": 40,
+ "n_reduced_frames": 3,
+ "excluded": [
+  "SASDLK9"
+ ],
+ "max_length_included": 439,
+ "proteins": [
+  {
+   "label": "SASDB84",
+   "length": 153,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.914,
+   "projected_hours": 1.914
+  },
+  {
+   "label": "SASDBY5",
+   "length": 217,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 4.809,
+   "projected_hours": 4.809
+  },
+  {
+   "label": "SASDBZ6",
+   "length": 404,
+   "included": true,
+   "frames_planned": 505,
+   "discard_planned": 5,
+   "projected_hours_full": 26.45,
+   "projected_hours": 13.225
+  },
+  {
+   "label": "SASDC53",
+   "length": 98,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.153,
+   "projected_hours": 1.153
+  },
+  {
+   "label": "SASDC62",
+   "length": 49,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.645,
+   "projected_hours": 0.645
+  },
+  {
+   "label": "SASDDF6",
+   "length": 169,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 2.34,
+   "projected_hours": 2.34
+  },
+  {
+   "label": "SASDEB3",
+   "length": 153,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.914,
+   "projected_hours": 1.914
+  },
+  {
+   "label": "SASDEC3",
+   "length": 178,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 2.715,
+   "projected_hours": 2.715
+  },
+  {
+   "label": "SASDED2",
+   "length": 267,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 8.392,
+   "projected_hours": 8.392
+  },
+  {
+   "label": "SASDEE2",
+   "length": 187,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 3.113,
+   "projected_hours": 3.113
+  },
+  {
+   "label": "SASDEK2",
+   "length": 38,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.521,
+   "projected_hours": 0.521
+  },
+  {
+   "label": "SASDET2",
+   "length": 99,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.162,
+   "projected_hours": 1.162
+  },
+  {
+   "label": "SASDEX2",
+   "length": 82,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.993,
+   "projected_hours": 0.993
+  },
+  {
+   "label": "SASDEX4",
+   "length": 104,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.211,
+   "projected_hours": 1.211
+  },
+  {
+   "label": "SASDF27",
+   "length": 98,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.153,
+   "projected_hours": 1.153
+  },
+  {
+   "label": "SASDF34",
+   "length": 271,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 8.884,
+   "projected_hours": 8.884
+  },
+  {
+   "label": "SASDJG6",
+   "length": 40,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.544,
+   "projected_hours": 0.544
+  },
+  {
+   "label": "SASDJH6",
+   "length": 51,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.0,
+   "projected_hours": 0.0
+  },
+  {
+   "label": "SASDJJ6",
+   "length": 191,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 3.169,
+   "projected_hours": 3.169
+  },
+  {
+   "label": "SASDJK6",
+   "length": 209,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 4.349,
+   "projected_hours": 4.349
+  },
+  {
+   "label": "SASDJT3",
+   "length": 439,
+   "included": true,
+   "frames_planned": 505,
+   "discard_planned": 5,
+   "projected_hours_full": 33.566,
+   "projected_hours": 16.783
+  },
+  {
+   "label": "SASDJT7",
+   "length": 180,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.791,
+   "projected_hours": 1.791
+  },
+  {
+   "label": "SASDK68",
+   "length": 150,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.647,
+   "projected_hours": 1.647
+  },
+  {
+   "label": "SASDKH8",
+   "length": 173,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 2.386,
+   "projected_hours": 2.386
+  },
+  {
+   "label": "SASDLF9",
+   "length": 133,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.489,
+   "projected_hours": 1.489
+  },
+  {
+   "label": "SASDLJ9",
+   "length": 62,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.785,
+   "projected_hours": 0.785
+  },
+  {
+   "label": "SASDLK9",
+   "length": 475,
+   "included": false,
+   "frames_planned": 505,
+   "discard_planned": 5,
+   "projected_hours_full": 41.209,
+   "projected_hours": 20.188
+  },
+  {
+   "label": "SASDLS4",
+   "length": 255,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 7.341,
+   "projected_hours": 7.341
+  },
+  {
+   "label": "SASDLT4",
+   "length": 410,
+   "included": true,
+   "frames_planned": 505,
+   "discard_planned": 5,
+   "projected_hours_full": 27.872,
+   "projected_hours": 13.936
+  },
+  {
+   "label": "SASDQ26",
+   "length": 64,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.806,
+   "projected_hours": 0.806
+  },
+  {
+   "label": "SASDQK7",
+   "length": 140,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.554,
+   "projected_hours": 1.554
+  },
+  {
+   "label": "SASDQN8",
+   "length": 133,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.489,
+   "projected_hours": 1.489
+  },
+  {
+   "label": "SASDRA6",
+   "length": 102,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.192,
+   "projected_hours": 1.192
+  },
+  {
+   "label": "SASDRF8",
+   "length": 89,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.063,
+   "projected_hours": 1.063
+  },
+  {
+   "label": "SASDSZ9",
+   "length": 80,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.972,
+   "projected_hours": 0.972
+  },
+  {
+   "label": "SASDTA2",
+   "length": 80,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.972,
+   "projected_hours": 0.972
+  },
+  {
+   "label": "SASDU37",
+   "length": 114,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.308,
+   "projected_hours": 1.308
+  },
+  {
+   "label": "SASDUL9",
+   "length": 76,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.931,
+   "projected_hours": 0.931
+  },
+  {
+   "label": "SASDUR3",
+   "length": 51,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.667,
+   "projected_hours": 0.667
+  },
+  {
+   "label": "SASDV46",
+   "length": 130,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 1.461,
+   "projected_hours": 1.461
+  },
+  {
+   "label": "SASDVL5",
+   "length": 62,
+   "included": true,
+   "frames_planned": 1010,
+   "discard_planned": 10,
+   "projected_hours_full": 0.785,
+   "projected_hours": 0.785
+  }
+ ]
+}

@@ -68,11 +68,13 @@ def score_curves(label: str) -> dict | None:
     )
     q, I, s = exp["q"].to_numpy(), exp["I"].to_numpy(), exp["sigma"].to_numpy()
     keep = s > 0
-    curves, q, I, s = curves[:, keep], q[keep], I[keep], s[keep]
+    ok = np.isfinite(curves).all(axis=1)  # conformers Pepsi-SAXS failed on are dropped, as in score.py
+    curves, q, I, s = curves[ok][:, keep], q[keep], I[keep], s[keep]
     raw = saxs.ensemble_curve(curves)
     g = saxs.guinier(q, raw, 0.01 * raw + 1e-9, C.GUINIER_QRG_MAX)  # as for the archive's curves (score.py)
     return {
         "n_curves": int(len(curves)),
+        "n_curves_dropped": int((~ok).sum()),
         "chi2_sim": saxs.chi2(raw, I, s),
         "nrmsd_sim": saxs.nrmsd_log(raw, I, s),
         "rg_curve_sim_A": g["rg"],

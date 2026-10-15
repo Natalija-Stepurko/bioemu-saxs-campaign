@@ -139,7 +139,17 @@ and BioEmu-1's ratio is reported on the same subset beside its value on all 41. 
 
 ## 10. Deviations
 
-None yet.
+- **2026-10-15, pilot and compute plan (§8 applied).** The pilot ran SASDJH6 (51 residues) in full, SASDJT7
+  (180) and the first 20 frames of SASDLK9 (475), one thread each, with the production settings and seeds, so
+  their frames are part of the production runs. Measured speeds: 2,828, 1,124 and 430 steps per second; the
+  power law fitted to them projects 209 single-thread hours for all 41 proteins at full length and 42 hours of
+  wall time on six workers. By the rule fixed in §8, the three proteins projected over 12 hours (404, 410 and 439
+  residues) run 505 frames (the first 5 discarded), and SASDLK9, the longest (475 residues), is left out; the
+  remaining 40 are projected at 20.6 hours of wall time. Every number here is in `results/simulations/plan.json`.
+  The speed of SASDJT7 entered the fit after 350 of its 1,010 frames.
+- **2026-10-15, conformers without a curve.** Pepsi-SAXS can return a curve of NaN values with a zero exit
+  code (seen on one frame of SASDJH6). Such conformers are dropped before averaging, as the score stage drops
+  non-finite conformer curves of the archive; the number dropped per protein is in `per_protein.csv`.
 
 ## References
 
