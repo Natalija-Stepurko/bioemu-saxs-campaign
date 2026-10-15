@@ -31,3 +31,5 @@ $PY 14_annotate_training.py
 $PY 15_nearest_training.py
 $PY 16_compare_training.py > "$COVERAGE_WORK/logs/16_compare_training.log"
 $PY 17_export_training.py
+# the SASBDB record's measurement metadata, one row per entry (script 18)
+$PY 18_sasbdb_metadata.py
