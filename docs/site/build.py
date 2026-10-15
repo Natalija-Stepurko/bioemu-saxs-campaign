@@ -275,6 +275,11 @@ h1{font-size:clamp(26px,3.4vw,36px);line-height:1.14;letter-spacing:-.02em;margi
 .repo span{font-size:.92rem;color:var(--muted);line-height:1.45;flex:1 1 24ch}.repo b{color:var(--ink)}
 .repo .repo-path{flex:0 0 auto;font-family:var(--mono);font-size:.72rem;color:var(--ink);border:1px solid var(--rule);border-radius:2px;padding:4px 9px;white-space:nowrap}
 @media(max-width:640px){.repo .repo-path{flex-basis:100%;text-align:center}}
+.repos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.repos{grid-template-columns:minmax(0,1fr)}}
+.repos .repo{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:10px;align-items:start;align-content:start}
+.repos .repo svg{grid-row:1/3;margin-top:2px}
+.repos .repo .repo-path{justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
 h2{font-size:21px;letter-spacing:-.01em;margin:52px 0 8px;font-weight:640;text-wrap:balance}
 h3{font-size:14.5px;font-weight:640;margin:22px 0 8px}
 p{margin:0 0 14px}
@@ -715,7 +720,10 @@ def build():
 <p class="abstract">{hero}</p>
 <div class="tiles">{tiles}</div>
 {flow}
+<div class="repos">
 <a class="repo" href="{REPO}">{GH}<span><b>All the code is public.</b> Every number and figure on this page comes from the pipeline in this repository, which downloads the public inputs, scores them and writes the campaign proposal.</span><span class="repo-path">Natalija-Stepurko/bioemu-saxs-campaign</span></a>
+<a class="repo" href="{SITE}"><svg viewBox="0 0 16 16" aria-hidden="true" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6.6"/><path d="M1.4 8h13.2M8 1.4c1.9 2 2.8 4.2 2.8 6.6S9.9 12.6 8 14.6M8 1.4C6.1 3.4 5.2 5.6 5.2 8s.9 4.6 2.8 6.6"/></svg><span><b>More of my work.</b> Other studies and what I am working on now.</span><span class="repo-path">natalija-stepurko.com</span></a>
+</div>
 </header>
 
 <h2 id="method">How the benchmark works</h2>
@@ -805,7 +813,6 @@ def build():
 <footer>
 <div>Data: PeptoneDB-SAXS and PeptoneBench predictions (Zenodo 17306061, CC-BY 4.0), curated from SASBDB. Downloaded at run time and not redistributed.</div>
 <div>Code: <a href="{REPO}">bioemu-saxs-campaign</a> · design: <a href="{REPO}/blob/main/docs/DESIGN.md">design document</a> · proposal: <a href="{REPO}/blob/main/docs/CAMPAIGN.md">campaign</a>.</div>
-<div>More of what I am working on is at <a href="https://natalija-stepurko.com">natalija-stepurko.com</a>.</div>
 </footer>
 </div>
 <script>{NAV_JS}</script>
