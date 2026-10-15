@@ -1,0 +1,146 @@
+{
+ "n": 399,
+ "rel_err_definition": "median sigma/I over q <= (q_min + q_max) / 2, I > 0 and sigma > 0",
+ "spearman_log_chi2_vs_rel_err": {
+  "rho": -0.540599236785431,
+  "p": 1.1701852154835948e-31
+ },
+ "spearman_nrmsd_vs_rel_err": {
+  "rho": 0.653986851550988,
+  "p": 4.717933477306998e-50
+ },
+ "rel_err_median": 0.018768330583135637,
+ "chi2_raw_by_curve": {
+  "Single concentration": {
+   "n": 161,
+   "chi2_raw_median": 3.363499912412496,
+   "rel_err_median": 0.019617292516639274
+  },
+  "SEC-SAS": {
+   "n": 138,
+   "chi2_raw_median": 2.471818853036978,
+   "rel_err_median": 0.01974550104462475
+  },
+  "Merged": {
+   "n": 66,
+   "chi2_raw_median": 3.7962328638206717,
+   "rel_err_median": 0.016713141329772835
+  },
+  "Extrapolated to infinite dilution": {
+   "n": 26,
+   "chi2_raw_median": 5.0806411287204005,
+   "rel_err_median": 0.01256187216771882
+  },
+  "Co-flow SEC-SAS": {
+   "n": 4,
+   "chi2_raw_median": 5.552552279016794,
+   "rel_err_median": 0.032068484919112406
+  },
+  "Other": {
+   "n": 4,
+   "chi2_raw_median": 8.06032751407569,
+   "rel_err_median": 0.017829395525931366
+  }
+ },
+ "chi2_raw_by_curve_kruskal_p": 0.011963399174012105,
+ "chi2_raw_by_source_type": {
+  "X-ray synchrotron": {
+   "n": 365,
+   "chi2_raw_median": 3.694011914602019,
+   "rel_err_median": 0.01802357668196549
+  },
+  "X-ray in house": {
+   "n": 31,
+   "chi2_raw_median": 1.7568446431215892,
+   "rel_err_median": 0.03924377864654297
+  },
+  "neutron source": {
+   "n": 3,
+   "chi2_raw_median": 2.3947131930192893,
+   "rel_err_median": 0.015699799590914804
+  }
+ },
+ "chi2_raw_by_source_type_kruskal_p": 0.02294683825765155,
+ "in_house_vs_synchrotron_chi2_raw_mannwhitney_p": 0.022995983583717655,
+ "arm1_against_pool": {
+  "n_pool": 101,
+  "n_listed": 12,
+  "rel_err": {
+   "listed_median": 0.007299493096023587,
+   "pool_median": 0.014212836884696378,
+   "rest_median": 0.014695526675623955,
+   "listed_median_percentile_in_pool": 15.841584158415841,
+   "mannwhitney_listed_vs_rest_p": 3.796944135746468e-05,
+   "per_system_percentile": {
+    "SASDAG8": 12.871287128712872,
+    "SASDJ84": 15.841584158415841,
+    "SASDCP8": 2.9702970297029703,
+    "SASDPA8": 26.73267326732673,
+    "SASDFK8": 16.831683168316832,
+    "SASDBW2": 4.9504950495049505,
+    "SASDCD3": 23.762376237623762,
+    "SASDDE3": 18.81188118811881,
+    "SASDEC9": 43.56435643564356,
+    "SASDC35": 11.881188118811881,
+    "SASDE79": 28.712871287128714,
+    "SASDDL7": 9.900990099009901
+   }
+  },
+  "nrmsd_raw": {
+   "listed_median": 0.0254910239181668,
+   "pool_median": 0.0261942170090882,
+   "rest_median": 0.0265454153460419,
+   "listed_median_percentile_in_pool": 45.54455445544554,
+   "mannwhitney_listed_vs_rest_p": 0.6784538235301196,
+   "per_system_percentile": {
+    "SASDAG8": 32.67326732673267,
+    "SASDJ84": 89.10891089108911,
+    "SASDCP8": 47.524752475247524,
+    "SASDPA8": 83.16831683168317,
+    "SASDFK8": 65.34653465346534,
+    "SASDBW2": 29.7029702970297,
+    "SASDCD3": 59.4059405940594,
+    "SASDDE3": 45.54455445544554,
+    "SASDEC9": 96.03960396039604,
+    "SASDC35": 19.801980198019802,
+    "SASDE79": 39.603960396039604,
+    "SASDDL7": 37.62376237623762
+   }
+  },
+  "chi2_raw": {
+   "listed_median": 41.603067131214765,
+   "pool_median": 4.329673800725375,
+   "rest_median": 3.717025780183623,
+   "listed_median_percentile_in_pool": 94.05940594059406,
+   "mannwhitney_listed_vs_rest_p": 2.1512949643670315e-08,
+   "per_system_percentile": {
+    "SASDAG8": 100.0,
+    "SASDJ84": 99.00990099009901,
+    "SASDCP8": 98.01980198019803,
+    "SASDPA8": 97.02970297029702,
+    "SASDFK8": 96.03960396039604,
+    "SASDBW2": 95.04950495049505,
+    "SASDCD3": 94.05940594059406,
+    "SASDDE3": 93.06930693069307,
+    "SASDEC9": 92.07920792079207,
+    "SASDC35": 91.08910891089108,
+    "SASDE79": 90.0990099009901,
+    "SASDDL7": 89.10891089108911
+   }
+  },
+  "listed_curve_types": {
+   "Merged": 5,
+   "Single concentration": 3,
+   "SEC-SAS": 3,
+   "Extrapolated to infinite dilution": 1
+  },
+  "listed_source_types": {
+   "X-ray synchrotron": 11,
+   "X-ray in house": 1
+  },
+  "pool_source_types": {
+   "X-ray synchrotron": 97,
+   "X-ray in house": 4
+  }
+ }
+}

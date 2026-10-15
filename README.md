@@ -102,14 +102,26 @@ SAXS set and searches every construct against it with MMseqs2 (scripts 11–17);
 database versions in [`analysis/coverage/README.md`](analysis/coverage/README.md). It needs network access,
 about 1 GB of downloads, its own requirements (`analysis/coverage/requirements.txt`, not part of the main
 environment) and the MMseqs2 binary. Its small outputs (the per-entry mapping, the summary of all comparisons,
-a CATH superfamily rank table, the per-construct nearest training sequences, the training-data summary and the
-database versions) are tracked in `results/coverage/`, so `bsc coverage` and the page rebuild without it.
+a CATH superfamily rank table, the per-construct nearest training sequences, the training-data summary, the
+SASBDB measurement metadata and the database versions) are tracked in `results/coverage/`, so `bsc coverage` and the page rebuild without it.
 
 ```bash
 uv venv /path/to/venv-cov && uv pip install --python /path/to/venv-cov -r analysis/coverage/requirements.txt
 COVERAGE_PY=/path/to/venv-cov/bin/python COVERAGE_WORK=/path/with/2GB/free MMSEQS=/path/to/mmseqs \
   BSC_ROOT=<where bsc fetch put data/> analysis/coverage/run_all.sh
 uv run bsc coverage
+```
+
+### Checks on the Arm 1 list
+
+`analysis/arm1/arm1_checks.py` asks whether the large raw χ² of the twelve Arm 1 systems reflects the precision
+of their deposited data (relative error of each curve against raw χ² and NRMSD, raw χ² by SASBDB curve and source
+type, the twelve against the eligible pool) and whether the twelve are related (organism, sequence group,
+superfamily). It reads the SASBDB metadata table written by `analysis/coverage/18_sasbdb_metadata.py` and writes
+`results/arm1/`; see [`analysis/arm1/README.md`](analysis/arm1/README.md).
+
+```bash
+BSC_ROOT=<where bsc fetch put data/> uv run python analysis/arm1/arm1_checks.py
 ```
 
 ### The DENSS environment
