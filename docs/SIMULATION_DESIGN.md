@@ -54,7 +54,7 @@ which the package's examples follow:
 | Model | CALVADOS 3 residue parameters (`residues_CALVADOS3.csv` of the package's examples), Ashbaugh–Hatch ε 0.2 kcal/mol, cutoff 2.0 nm; Debye–Hückel electrostatics, cutoff 4.0 nm; charged termini; histidine charge from pH |
 | Package | CALVADOS 0.9.0, github.com/KULL-Centre/CALVADOS at commit 6981542; OpenMM 8.4, CPU platform |
 | Integrator | Langevin, 10 fs time step, friction 0.01 ps⁻¹ (package defaults) |
-| Box | cubic, side (N − 1) × 0.38 + 4 nm, periodic, chain started as a straight line through the centre |
+| Box | cubic, side (N − 1) × 0.38 + 4 nm, periodic; the chain starts as the package builds it (a compact grid at the box centre) and is energy-minimised |
 | Length | 1,010 frames, one every 7,000 steps for N < 150, else every ⌈3 × 10⁻⁴ N²⌉ × 1,000 steps (70.7 ns for N < 150; 687 ns for N = 475) |
 | Equilibration | the first 10 frames are discarded |
 | Frames analysed | 1,000 for Rg; 100 evenly spaced for the SAXS curve |
