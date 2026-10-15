@@ -156,6 +156,16 @@ REFS = [
                   'consensus disorder and structure. <em>Biophys J</em> 2021.', "https://doi.org/10.1016/j.bpj.2021.08.039"),
     ("steinegger", 'Steinegger M, Söding J. MMseqs2 enables sensitive protein sequence searching for the analysis of '
                    'massive data sets. <em>Nat Biotechnol</em> 2017.', "https://doi.org/10.1038/nbt.3988"),
+    ("robustelli", 'Robustelli P, Piana S, Shaw DE. Developing a molecular dynamics force field for both folded and '
+                   'disordered protein states. <em>PNAS</em> 2018.', "https://doi.org/10.1073/pnas.1800690115"),
+    ("huang", 'Huang J, Rauscher S, Nawrocki G, et al. CHARMM36m: an improved force field for folded and intrinsically '
+              'disordered proteins. <em>Nat Methods</em> 2017.', "https://doi.org/10.1038/nmeth.4067"),
+    ("tesei", 'Tesei G, Schulze TK, Crehuet R, Lindorff-Larsen K. Accurate model of liquid–liquid phase behavior of '
+              'intrinsically disordered proteins from optimization of single-chain properties. <em>PNAS</em> 2021.',
+     "https://doi.org/10.1073/pnas.2111696118"),
+    ("petoukhov", 'Petoukhov MV, Franke D, Shkumatov AV, et al. New developments in the ATSAS program package for '
+                  'small-angle scattering data analysis. <em>J Appl Cryst</em> 2012.',
+     "https://doi.org/10.1107/S0021889812007662"),
 ]
 REFNO = {k: i + 1 for i, (k, _, _) in enumerate(REFS)}
 
@@ -690,6 +700,16 @@ def training_section(n_bioemu: int) -> dict:
                    f"A: CATH class of protein–superfamily units: SAXS constructs (CATH-Gene3D), AFDB pre-training clusters (CATH-Gene3D of the input chain, {comp['AFDB']['n_units']:,} units), simulated CATH domains ({comp['CATH MD']['n_units']:,}) and CATH S35 clusters. "
                    "B: chain length. C: predicted disorder (metapredict), share of chains mostly disordered and share with a disordered run of at least 30 residues. D: source organism; the reference is the PDB 30% clusters. MEGAscale domains are in the tables below.",
                    "A bar of the SAXS set far from the AFDB and simulated bars marks a region the archive measures and the training data barely contain.")
+    MG = T["megascale_mostly_disordered"]
+    mg_nat, mg_des, mg_lc, mg_ln = MG["natural"], MG["designed"], MG["length_called"], MG["length_not_called"]
+    check(mg_nat["k"] + mg_des["k"] == mg_lc["n"] == len(MG["called"]) and mg_nat["n"] + mg_des["n"] == T["sets"]["MEGAscale"]
+          and abs(mg_lc["n"] / T["sets"]["MEGAscale"] - dis["MEGAscale"][MOST]["share"]) < 1e-3, "MEGAscale disorder split adds up")
+    check(MG["fisher_designed_vs_natural_p"] > 0.05, "MEGAscale: natural and designed domains called disordered at similar rates")
+    check(mg_lc["median"] < mg_ln["median"] and MG["length_mannwhitney_p"] < 0.05, "MEGAscale: the domains called disordered are shorter")
+    mg_note = (f'These domains were selected for folding-stability measurements, yet the predictor calls {p1(dis["MEGAscale"][MOST]["share"])} of them mostly disordered: '
+               f'{mg_nat["k"]} of {mg_nat["n"]} natural ({p1(mg_nat["share"])}) and {mg_des["k"]} of {mg_des["n"]} designed domains ({p1(mg_des["share"])}; Fisher p {pv(MG["fisher_designed_vs_natural_p"])}). '
+               f'The domains so called are shorter than the rest (median {mg_lc["median"]:.0f} residues, range {mg_lc["min"]}–{mg_lc["max"]}, against {mg_ln["median"]:.0f}; Mann–Whitney p {pv(MG["length_mannwhitney_p"])}). '
+               'A sequence-based call does not show whether a domain is disordered in solution, and these numbers do not tell whether the call reflects disorder or the short length.')
     sets_t = ("SAXS", "AFDB", "CATH MD", "MEGAscale", "CATH S35")
     names_t = {"SAXS": "SAXS constructs", "AFDB": "AFDB clusters", "CATH MD": "simulated CATH domains", "MEGAscale": "MEGAscale domains", "CATH S35": "CATH S35"}
     rows_c = "".join(f'<tr><td>{names_t[k]}</td><td class="num">{T["sets"][k]:,}</td><td class="num">{comp[k]["n_superfamilies"]:,}</td>'
@@ -701,7 +721,7 @@ def training_section(n_bioemu: int) -> dict:
                   '<th>Rossmann</th><th>TIM barrel</th><th>median length</th><th>&gt; 500</th><th>mostly disordered</th><th>disordered run ≥ 30</th></tr></thead><tbody>'
                   + rows_c + '</tbody></table></div>'
                   f'<p class="note">Class and fold shares are over protein–superfamily units (CATH S35: clusters). MEGAscale domains: the {cm["megascale"]} curated wild types of the MEGAscale study and the MegaSim wild types, one row per distinct sequence, superfamilies from the best sequence hit in CATH; '
-                  f'{pct(org["MEGAscale"]["Designed"]["share"])} of them are de novo designs. Octapeptides ({cm["octapeptides"]:,} systems, 8 residues) are counted and not compared.</p>')
+                  f'{pct(org["MEGAscale"]["Designed"]["share"])} of them are de novo designs. {mg_note} Octapeptides ({cm["octapeptides"]:,} systems, 8 residues) are counted and not compared.</p>')
     org_rows = "".join(f'<tr><td>{g}</td>' + "".join(f'<td class="num">{p1(org[k][g]["share"])}</td>' for k in ("SAXS", "AFDB", "CATH MD", "MEGAscale", "PDB 30%")) + '</tr>'
                        for g in ("Human", "Mouse", "E. coli", "Yeast", "Other bacteria", "Viruses", "Plants", "Other", "Designed"))
     org_table = ('<div class="scroll"><table><thead><tr><th>organism</th><th>SAXS</th><th>AFDB</th><th>simulated CATH</th><th>MEGAscale</th><th>PDB 30%</th></tr></thead><tbody>'
@@ -879,8 +899,28 @@ def training_section(n_bioemu: int) -> dict:
         "A SAXS observable could enter the same way, as the radius of gyration of the sampled conformers or, through a differentiable forward model, as the scattering curve. "
         "Reweighting the ensemble toward a measured profile, as in the reweighting section, gives a second route: the reweighted conformers serve as conformer-level targets. "
         "Neither route was tried in this study; the rows above are where either would add information the training data lack.</p>")
+    QC = CE["quality_checks_by_class"]
+    qd, qf, qfis = QC["by_class"]["disordered"], QC["by_class"]["folded"], QC["fisher_disordered_vs_folded"]
+    check(QC["n"] == 439 and sum(v["n"] for v in QC["by_class"].values()) == QC["n"], "quality checks cover all entries")
+    check(qd["pass"] == E["E4"]["n"], "disordered entries passing the checks are the clean disordered BioEmu-1 profiles")
+    check(qd["share"] < qf["share"] and qfis["p_two_sided"] < 0.05, "disordered entries drop out more often than folded ones")
+    n_fail_d = qd["n"] - qd["pass"]
+    check(qd["failed_by_check"]["mass above a monomer"] == n_fail_d and sum(qd["failed_by_check"].values()) == n_fail_d,
+          "every disordered failure is the mass check")
+    feas_note = (
+        '<div class="feas" role="note"><p class="feas-title">Feasibility · disordered and full-length proteins</p><ul>'
+        '<li>Disordered proteins are hard to produce and to measure well: they are degraded by proteases, some aggregate, and they scatter weakly, '
+        'so the data need size-exclusion-coupled SAXS and a concentration series. Crystallography cannot resolve them.</li>'
+        f'<li>The archive shows such data can be obtained but drop out more often: {qd["pass"]} of {qd["n"]} disordered entries ({pct(qd["share"])}, 95% interval {pct(qd["ci95"][0])}–{pct(qd["ci95"][1])}) '
+        f'pass the quality checks, against {qf["pass"]} of {qf["n"]} folded entries ({pct(qf["share"])}, {pct(qf["ci95"][0])}–{pct(qf["ci95"][1])}; two-sided Fisher exact p {qfis["p_two_sided"]:.3f}). '
+        f'All {n_fail_d} disordered entries that fail do so on the mass check: the molecular mass recorded with the profile exceeds 1.6 times the sequence mass.</li>'
+        '<li>NMR and single-molecule FRET are the main experimental alternatives.</li>'
+        f'<li>Simulation is a complementary source: all-atom force fields tuned for disorder, such as a99SB-disp {cite("robustelli")} and CHARMM36m {cite("huang")}, '
+        f'or the coarse-grained CALVADOS model {cite("tesei")}, validated against SAXS and NMR data that already exist.</li>'
+        f'<li>For full-length multidomain proteins the counterpart is rigid-body modelling of known domain structures against a SAXS profile, for example with CORAL {cite("petoukhov")}.</li>'
+        '</ul></div>')
     collect_html = (f'<h3 id="collect">Which protein data to collect</h3>{collect_prose}{collect_table}{collect_drop}'
-                    + details("The categories that were evaluated and dropped", drop_table) + use_prose)
+                    + details("The categories that were evaluated and dropped", drop_table) + feas_note + use_prose)
     arms_link = ("Arm 2 tests the size bias in the category this analysis ranks first, disordered proteins; Arm 1 checks that deposited profiles reproduce under controlled conditions, "
                  "which any profile needs before it can serve as a training label.")
     limits = ("BioEmu-1's training data were measured from their public releases: the AFDB cluster definitions and the simulated systems are those published with the model, "

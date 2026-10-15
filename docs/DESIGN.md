@@ -223,6 +223,18 @@ beside the old ones in `results/`.
   no numeric priority is used. The coverage material moved from its own page section to the opening of "What
   should be measured next?". No pre-registered quantity changes.
 
+- **Feasibility of the first category, the MEGAscale disorder call and checks on the Arm 1 list (2026-10-15).**
+  Added after the results were seen. Stage `coverage` reports the share of all 439 entries that pass the
+  quality checks by disorder class (Wilson intervals, two-sided Fisher exact test of disordered against folded,
+  and the check that stops each entry); the page's feasibility note on disordered proteins reads it. Script 16
+  of `analysis/coverage/` splits the MEGAscale domains that metapredict calls mostly disordered by origin
+  (natural, de novo designed) and compares their length with the rest; the composition table's note reports it
+  without assigning a cause. `analysis/arm1/` puts two checks on the Arm 1 list into code: the experimental
+  relative error of every curve against raw χ² and NRMSD, raw χ² by SASBDB curve and source type, the twelve
+  listed systems against the eligible pool; and the organisms, sequence groups and superfamilies of the twelve.
+  The SASBDB metadata it uses are a table written by script 18 of `analysis/coverage/`. No pre-registered
+  quantity changes, and the Arm 1 list is unchanged.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.
