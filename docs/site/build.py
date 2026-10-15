@@ -805,6 +805,7 @@ def build():
 <footer>
 <div>Data: PeptoneDB-SAXS and PeptoneBench predictions (Zenodo 17306061, CC-BY 4.0), curated from SASBDB. Downloaded at run time and not redistributed.</div>
 <div>Code: <a href="{REPO}">bioemu-saxs-campaign</a> · design: <a href="{REPO}/blob/main/docs/DESIGN.md">design document</a> · proposal: <a href="{REPO}/blob/main/docs/CAMPAIGN.md">campaign</a>.</div>
+<div>More of what I am working on is at <a href="https://natalija-stepurko.com">natalija-stepurko.com</a>.</div>
 </footer>
 </div>
 <script>{NAV_JS}</script>
