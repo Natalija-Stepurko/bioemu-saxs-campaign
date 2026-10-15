@@ -1311,6 +1311,252 @@
   },
   "predictor": "metapredict v3, residue score >= 0.5; mostly: >= 50% of residues; long region: >= 30 consecutive, under 50%"
  },
+ "megascale_mostly_disordered": {
+  "natural": {
+   "k": 22,
+   "n": 317,
+   "share": 0.0694,
+   "ci95": [
+    0.0463,
+    0.1028
+   ]
+  },
+  "designed": {
+   "k": 8,
+   "n": 160,
+   "share": 0.05,
+   "ci95": [
+    0.0256,
+    0.0956
+   ]
+  },
+  "fisher_designed_vs_natural_p": 0.5494323221131505,
+  "length_called": {
+   "p10": 36.0,
+   "p25": 40.0,
+   "median": 43.0,
+   "p75": 63.0,
+   "p90": 65.0,
+   "n": 30,
+   "share_gt500": 0.0,
+   "max": 72,
+   "min": 32
+  },
+  "length_not_called": {
+   "p10": 43.0,
+   "p25": 44.0,
+   "median": 56.0,
+   "p75": 63.5,
+   "p90": 69.0,
+   "n": 447,
+   "share_gt500": 0.0,
+   "max": 74,
+   "min": 33
+  },
+  "length_mannwhitney_p": 0.006586389983800339,
+  "length_natural": {
+   "p10": 43.6,
+   "p25": 54.0,
+   "median": 59.0,
+   "p75": 65.0,
+   "p90": 70.0,
+   "n": 317,
+   "share_gt500": 0.0,
+   "max": 74
+  },
+  "length_designed": {
+   "p10": 40.0,
+   "p25": 43.0,
+   "median": 43.0,
+   "p75": 47.0,
+   "p90": 51.099999999999994,
+   "n": 160,
+   "share_gt500": 0.0,
+   "max": 70
+  },
+  "called": [
+   {
+    "system": "1I6C",
+    "length": 39,
+    "dis_frac": 1.0,
+    "designed": false
+   },
+   {
+    "system": "1OPS_T53S",
+    "length": 63,
+    "dis_frac": 0.968,
+    "designed": false
+   },
+   {
+    "system": "1OPS_V44A",
+    "length": 63,
+    "dis_frac": 0.778,
+    "designed": false
+   },
+   {
+    "system": "1YU5",
+    "length": 65,
+    "dis_frac": 0.692,
+    "designed": false
+   },
+   {
+    "system": "2D1U",
+    "length": 72,
+    "dis_frac": 0.625,
+    "designed": false
+   },
+   {
+    "system": "2JTV",
+    "length": 63,
+    "dis_frac": 1.0,
+    "designed": false
+   },
+   {
+    "system": "2LQK",
+    "length": 62,
+    "dis_frac": 1.0,
+    "designed": false
+   },
+   {
+    "system": "2LX2_I32A",
+    "length": 65,
+    "dis_frac": 1.0,
+    "designed": false
+   },
+   {
+    "system": "2M8E",
+    "length": 38,
+    "dis_frac": 0.842,
+    "designed": false
+   },
+   {
+    "system": "2M8I",
+    "length": 43,
+    "dis_frac": 0.512,
+    "designed": false
+   },
+   {
+    "system": "2M8J",
+    "length": 43,
+    "dis_frac": 0.512,
+    "designed": false
+   },
+   {
+    "system": "2M9I",
+    "length": 34,
+    "dis_frac": 0.971,
+    "designed": false
+   },
+   {
+    "system": "2YSB",
+    "length": 43,
+    "dis_frac": 0.605,
+    "designed": false
+   },
+   {
+    "system": "5UP5",
+    "length": 39,
+    "dis_frac": 0.564,
+    "designed": false
+   },
+   {
+    "system": "5XR0_T53S",
+    "length": 63,
+    "dis_frac": 1.0,
+    "designed": false
+   },
+   {
+    "system": "EHEE_rd2_0152",
+    "length": 40,
+    "dis_frac": 0.775,
+    "designed": true
+   },
+   {
+    "system": "EHEE_rd2_0196",
+    "length": 40,
+    "dis_frac": 0.7,
+    "designed": true
+   },
+   {
+    "system": "EHEE_rd2_1257",
+    "length": 40,
+    "dis_frac": 0.6,
+    "designed": true
+   },
+   {
+    "system": "EHEE_rd1_0101",
+    "length": 40,
+    "dis_frac": 0.925,
+    "designed": true
+   },
+   {
+    "system": "EHEE_rd1_0459",
+    "length": 40,
+    "dis_frac": 0.925,
+    "designed": true
+   },
+   {
+    "system": "EHEE_rd2_1106",
+    "length": 40,
+    "dis_frac": 0.8,
+    "designed": true
+   },
+   {
+    "system": "HHH_rd1_0244",
+    "length": 43,
+    "dis_frac": 0.907,
+    "designed": true
+   },
+   {
+    "system": "1WR4",
+    "length": 36,
+    "dis_frac": 0.889,
+    "designed": false
+   },
+   {
+    "system": "HHH_rd1_0493",
+    "length": 43,
+    "dis_frac": 0.884,
+    "designed": true
+   },
+   {
+    "system": "1OPS",
+    "length": 63,
+    "dis_frac": 0.54,
+    "designed": false
+   },
+   {
+    "system": "1VII",
+    "length": 36,
+    "dis_frac": 1.0,
+    "designed": false
+   },
+   {
+    "system": "2M9E",
+    "length": 32,
+    "dis_frac": 0.812,
+    "designed": false
+   },
+   {
+    "system": "5XR0",
+    "length": 63,
+    "dis_frac": 0.762,
+    "designed": false
+   },
+   {
+    "system": "2LX2",
+    "length": 65,
+    "dis_frac": 1.0,
+    "designed": false
+   },
+   {
+    "system": "8MSI",
+    "length": 64,
+    "dis_frac": 0.531,
+    "designed": false
+   }
+  ]
+ },
  "organism": {
   "SAXS": {
    "Human": {
