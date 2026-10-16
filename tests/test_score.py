@@ -85,7 +85,9 @@ def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
                         "flag_bad_errors": False, "flag_oligomer": False, "mw_ratio": 1.0,
                         "sasbdb_title": "t", "sequence": "A"})
     ent.loc[0, "flag_aggregation"] = True
-    ent.to_csv(results / "entries.csv", index=False)
+    # a flagged entry with no computed curves (no rows in scores.csv) must not count as clean
+    extra = ent.iloc[[1]].assign(label="S999", flag_bad_errors=True)
+    pd.concat([ent, extra]).to_csv(results / "entries.csv", index=False)
     # disordered worse, folded chi2 rising with length, model too compact for disordered
     base = np.where(cls == "disordered", 8.0, np.where(cls == "folded", 1.5, 3.0))
     chi2_raw = base * np.exp(rng.normal(0, 0.3, n)) * np.where(cls == "folded", length / 150, 1.0)
@@ -106,6 +108,7 @@ def test_analyse_stage_on_synthetic_scores(tmp_path, monkeypatch):
     analyse.main()
     A = json.load(open(results / "analysis.json"))
     assert A["n_clean"] == n - 1
+    assert A["n_clean"] == int(analyse.clean_mask(pd.read_csv(results / "entries.csv")).sum())
     E = A["expectations"]
     assert E["E1"]["met"] and E["E2"]["met"] and E["E4"]["met"]
     assert set(A["bioemu"]["resolvability_counts"]) <= set(analyse.KINDS)
