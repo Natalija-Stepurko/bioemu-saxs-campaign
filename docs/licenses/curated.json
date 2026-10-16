@@ -1,0 +1,904 @@
+{
+  "about": "Curated input of scripts/licenses.py: the environments to read, licence corrections for packages whose metadata are missing or contradicted, and the tools, data sources and services. Every entry lists the pages or files opened to confirm it, with the date. status is 'confirmed' when the licence or terms were read at those sources, 'not confirmed' otherwise (the entry then says what was found).",
+  "environments": [
+    {
+      "id": "main",
+      "venv": "/scratch/.venv-bsc",
+      "purpose": "Main pipeline (`bsc` stages, tests, page build)",
+      "direct": {
+        "kind": "pyproject",
+        "path": "pyproject.toml"
+      }
+    },
+    {
+      "id": "coverage",
+      "venv": "/scratch/.venv-cov",
+      "purpose": "Coverage analysis (`analysis/coverage/`)",
+      "direct": {
+        "kind": "requirements",
+        "path": "analysis/coverage/requirements.txt"
+      }
+    },
+    {
+      "id": "simulation",
+      "venv": "/scratch/.venv-calvados",
+      "purpose": "CALVADOS simulations (`analysis/simulations/`, scripts 02-06)",
+      "direct": {
+        "kind": "requirements",
+        "path": "analysis/simulations/requirements.txt"
+      }
+    },
+    {
+      "id": "denss",
+      "venv": "/scratch/.venv-denss",
+      "purpose": "DENSS envelopes (`bsc envelopes` runs `denss-all` from here)",
+      "direct": {
+        "kind": "list",
+        "names": [
+          "numpy",
+          "denss"
+        ],
+        "source": "the install line in README.md, section The DENSS environment (`pip install \"numpy<2\" denss`)"
+      }
+    },
+    {
+      "id": "bioemu",
+      "venv": "/scratch/.venv-bioemu",
+      "purpose": "BioEmu package for the bioemu-v1.2 re-sample analysis (local conversion of the sampled batches; sampling itself ran on Colab)",
+      "direct": {
+        "kind": "list",
+        "names": [
+          "bioemu",
+          "pandas"
+        ],
+        "source": "the install cell of `notebooks/bioemu_resample.ipynb` (`pip install \"bioemu[cuda]\" pandas`; the local environment has the CPU build)"
+      }
+    },
+    {
+      "id": "screenshots",
+      "venv": "/scratch/scfm-work/pw",
+      "purpose": "Playwright, used only to take screenshots of the project page while checking it; not part of the pipeline",
+      "direct": {
+        "kind": "list",
+        "names": [
+          "playwright"
+        ],
+        "source": "the environment's purpose (one package installed by hand)"
+      }
+    }
+  ],
+  "package_corrections": {
+    "bioemu": {
+      "licence": "MIT",
+      "note": "The wheel's metadata carry no License field or classifier; the LICENSE file of the repository is MIT.",
+      "sources": [
+        {
+          "what": "microsoft/bioemu LICENSE",
+          "url": "https://github.com/microsoft/bioemu/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "namex": {
+      "licence": "Apache-2.0",
+      "note": "No licence in the metadata; the LICENSE file shipped in the wheel and the one in the repository are Apache 2.0.",
+      "sources": [
+        {
+          "what": "fchollet/namex LICENSE",
+          "url": "https://github.com/fchollet/namex/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "openmm": {
+      "licence": "MIT (API, Reference and CPU platforms) AND LGPL (CUDA and OpenCL platforms)",
+      "note": "The metadata say 'Python Software Foundation License (BSD-like)'; OpenMM's Licenses.txt gives MIT for the API, Reference and CPU platforms and the LGPL for the CUDA and OpenCL platforms. The installed wheel ships the OpenCL plugin libraries; the simulations used the CPU platform.",
+      "sources": [
+        {
+          "what": "OpenMM Licenses.txt",
+          "url": "https://github.com/openmm/openmm/blob/master/docs-source/licenses/Licenses.txt",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "mmtf-python": {
+      "licence": "Apache-2.0",
+      "note": "The License field says Apache 2.0 and the classifier says MIT; the repository's LICENSE.txt is Apache 2.0.",
+      "sources": [
+        {
+          "what": "rcsb/mmtf-python LICENSE.txt",
+          "url": "https://github.com/rcsb/mmtf-python/blob/master/LICENSE.txt",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "scipy": {
+      "licence": "BSD-3-Clause",
+      "note": "Metadata give the licence text and the BSD classifier without the variant; the repository's LICENSE.txt is BSD 3-Clause.",
+      "sources": [
+        {
+          "what": "scipy/scipy LICENSE.txt",
+          "url": "https://github.com/scipy/scipy/blob/main/LICENSE.txt",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "mrcfile": {
+      "licence": "BSD-3-Clause",
+      "note": "Metadata say 'BSD'; the repository's LICENSE.txt is BSD 3-Clause.",
+      "sources": [
+        {
+          "what": "ccpem/mrcfile LICENSE.txt",
+          "url": "https://github.com/ccpem/mrcfile/blob/master/LICENSE.txt",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "jinja2": {
+      "licence": "BSD-3-Clause",
+      "note": "Metadata carry only the BSD classifier; the repository's LICENSE.txt is BSD 3-Clause.",
+      "sources": [
+        {
+          "what": "pallets/jinja LICENSE.txt",
+          "url": "https://github.com/pallets/jinja/blob/main/LICENSE.txt",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "numba": {
+      "licence": "BSD-2-Clause",
+      "note": "Metadata say 'BSD'; the repository's LICENSE is BSD 2-Clause.",
+      "sources": [
+        {
+          "what": "numba/numba LICENSE",
+          "url": "https://github.com/numba/numba/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "numpy": {
+      "licence": "BSD-3-Clause",
+      "versions": [
+        "1.26.4"
+      ],
+      "note": "Version 1.26.4 (DENSS environment) gives the licence text and the BSD classifier; LICENSE.txt at v1.26.4 is BSD 3-Clause. Later versions carry a License-Expression and need no correction.",
+      "sources": [
+        {
+          "what": "numpy/numpy LICENSE.txt at v1.26.4",
+          "url": "https://github.com/numpy/numpy/blob/v1.26.4/LICENSE.txt",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    "matplotlib": {
+      "licence": "LicenseRef-Matplotlib (PSF-based, permissive)",
+      "note": "Metadata give the PSF classifier; the licence is the Matplotlib License Agreement, modelled on the PSF licence, which has no SPDX identifier.",
+      "sources": [
+        {
+          "what": "matplotlib/matplotlib LICENSE/LICENSE",
+          "url": "https://github.com/matplotlib/matplotlib/blob/main/LICENSE/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "Pepsi-SAXS",
+      "version": "3.0 (May 2020), Linux binary",
+      "use": "Computes the SAXS curve of each simulated conformer (`analysis/simulations/06_saxs.py`). The PeptoneBench authors used it to compute the archive's curves.",
+      "obtained": "Downloaded at run time by `analysis/simulations/02_fetch_sources.py` from the authors' server into `SIM_WORK` (git-ignored); sha256 in `results/simulations/sources.json`",
+      "redistributed": "No",
+      "licence": "Proprietary. Web page: \"All rights reserved. The academic version is free.\" Program banner: \"For academic use only!\"",
+      "restrictions": "Academic use only. The page publishes no terms for other use.",
+      "attribution": "Cite Grudinin, Garkavenko & Kazennov, Acta Cryst. D73 (2017) 449-464",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "Pepsi-SAXS page, section License",
+          "url": "https://team.inria.fr/nano-d/software/pepsi-saxs/",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "banner printed by the downloaded binary (--help)",
+          "url": "https://files.inria.fr/NanoDFiles/Website/Software/Pepsi-SAXS/Linux/3.0/Pepsi-SAXS-Linux.zip",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "PULCHRA",
+      "version": "3.06",
+      "use": "Rebuilds all-atom models from the CALVADOS Cα frames before Pepsi-SAXS (`06_saxs.py`)",
+      "obtained": "C source downloaded at run time from KULL-Centre/papers at a pinned commit and compiled with gcc into `SIM_WORK` (git-ignored)",
+      "redistributed": "No",
+      "licence": "MIT (LICENSE file in pulchra_306.tgz, Copyright (c) 2000-2009 Piotr Rotkiewicz)",
+      "restrictions": "None beyond keeping the notice in copies",
+      "attribution": "Keep the MIT notice in copies; cite Rotkiewicz & Skolnick, J Comput Chem 2008",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "pulchra_306.tgz, file pulchra_306/LICENSE",
+          "url": "https://raw.githubusercontent.com/KULL-Centre/papers/85979b1b4123b6b5391b617d16551969eda9f56e/2021/CG-IDPs-Tesei-et-al/pulchra_306.tgz",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "MMseqs2",
+      "version": "release 18-8cc5c, static linux-avx2 binary",
+      "use": "Sequence searches of the constructs against the training sets and CATH S100 (`analysis/coverage/14_annotate_training.py`, `15_nearest_training.py`)",
+      "obtained": "Downloaded by hand from the GitHub release into `COVERAGE_WORK/tools` (command in `analysis/coverage/README.md`)",
+      "redistributed": "No",
+      "licence": "MIT (LICENSE.md at tag 18-8cc5c)",
+      "restrictions": "None",
+      "attribution": "Cite Steinegger & Söding, Nat Biotechnol 2017",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "MMseqs2 LICENSE.md at 18-8cc5c",
+          "url": "https://github.com/soedinglab/MMseqs2/blob/18-8cc5c/LICENSE.md",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "DENSS",
+      "version": "1.8.7",
+      "use": "Ab initio envelopes of the three worked examples; `bsc envelopes` runs the `denss-all` program as a separate process",
+      "obtained": "Python package in its own environment (`/scratch/.venv-denss`); maps written to `results/denss/` (git-ignored)",
+      "redistributed": "No; only fit statistics (`results/denss_stats.json`) and the figure drawn from the maps are tracked",
+      "licence": "GPL-3.0 (package metadata 'GPLv3'; repository LICENSE is GPL version 3)",
+      "restrictions": "Copyleft applies to anyone who distributes DENSS or a work based on it; the repo calls it as a program and ships none of it",
+      "attribution": "Cite Grant, Nat Methods 2018",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "tdgrant1/denss LICENSE",
+          "url": "https://github.com/tdgrant1/denss/blob/master/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "CALVADOS (code)",
+      "version": "commit 6981542 (package 0.9.0)",
+      "use": "Coarse-grained simulations; imported by `analysis/simulations/05_run.py`",
+      "obtained": "Installed into the simulation environment from GitHub at the pinned commit (`analysis/simulations/requirements.txt`)",
+      "redistributed": "No",
+      "licence": "GPL-3.0 (LICENSE at the pinned commit; package metadata GPL-3.0-only)",
+      "restrictions": "Copyleft applies to anyone who distributes CALVADOS or a work based on it. The repo's scripts import it but ship none of its code",
+      "attribution": "Cite Tesei et al. PNAS 2021; Tesei & Lindorff-Larsen, Open Res Europe 2022; Cao et al. Protein Sci 2024",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "KULL-Centre/CALVADOS LICENSE at 6981542",
+          "url": "https://github.com/KULL-Centre/CALVADOS/blob/69815423632cb9b9b08f4b0aea34d8ba43a057c4/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "CALVADOS 3 residue parameters",
+      "version": "residues_CALVADOS3.csv at commit 6981542",
+      "use": "Force-field parameters of the simulations; `07_analyse.py` reads the residue masses from it",
+      "obtained": "Downloaded at run time by `02_fetch_sources.py` into `SIM_WORK` (git-ignored); sha256 in `results/simulations/sources.json`",
+      "redistributed": "No",
+      "licence": "GPL-3.0 (the file is part of the CALVADOS repository, whose LICENSE covers it; no separate licence for the parameters was found)",
+      "restrictions": "As for the CALVADOS code",
+      "attribution": "Cite Cao et al. Protein Sci 2024",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "KULL-Centre/CALVADOS repository at 6981542 (LICENSE at the root, no other licence file)",
+          "url": "https://github.com/KULL-Centre/CALVADOS/tree/69815423632cb9b9b08f4b0aea34d8ba43a057c4",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "OpenMM",
+      "version": "8.4.0.post2, CPU platform",
+      "use": "Simulation engine under CALVADOS",
+      "obtained": "Python package in the simulation environment",
+      "redistributed": "No",
+      "licence": "MIT for the API, Reference and CPU platforms; LGPL for the CUDA and OpenCL platforms (the wheel ships the OpenCL plugins)",
+      "restrictions": "None for use; LGPL terms bind redistribution of the CUDA and OpenCL platforms",
+      "attribution": "Cite Eastman et al. J Phys Chem B 2024 (OpenMM 8)",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "OpenMM Licenses.txt",
+          "url": "https://github.com/openmm/openmm/blob/master/docs-source/licenses/Licenses.txt",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "metapredict",
+      "version": "3.1.1",
+      "use": "Predicted disorder of the constructs, training sequences and CATH S35 sequences (`14_annotate_training.py`)",
+      "obtained": "Python package in the coverage environment; its network weights ship inside the package",
+      "redistributed": "No",
+      "licence": "MIT (package metadata and repository LICENSE)",
+      "restrictions": "None",
+      "attribution": "Cite Emenecker et al. Biophys J 2021",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "idptools/metapredict LICENSE",
+          "url": "https://github.com/idptools/metapredict/blob/master/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "BioEmu (code)",
+      "version": "archive ensembles: commit ac7455d (by the PeptoneBench authors); Colab re-sample: unpinned `bioemu[cuda]`; local: 1.4.1",
+      "use": "The model under study. The archive's ensembles were generated by the PeptoneBench authors; the notebook re-samples with bioemu-v1.2 on Colab; the local environment converts the sampled batches",
+      "obtained": "Python package (Colab and `/scratch/.venv-bioemu`)",
+      "redistributed": "No",
+      "licence": "MIT. The package bundles code derived from ColabFold (MIT), a patched subset of AlphaFold2 (Apache-2.0) and OpenFold code (Apache-2.0), as listed in its README",
+      "restrictions": "None",
+      "attribution": "Cite Lewis et al. Science 2025",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "microsoft/bioemu LICENSE",
+          "url": "https://github.com/microsoft/bioemu/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "microsoft/bioemu README, third-party code",
+          "url": "https://github.com/microsoft/bioemu#readme",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "BioEmu checkpoints",
+      "version": "bioemu-v1.0, v1.1, v1.2",
+      "use": "Model weights; the notebook samples with bioemu-v1.2. The archive does not record which checkpoint it used",
+      "obtained": "Downloaded at run time from Hugging Face by `bioemu.sample`",
+      "redistributed": "No",
+      "licence": "MIT. The Hugging Face model repository, which holds all three checkpoints, declares `license: mit` and its card states 'License: MIT License'; no separate terms for any checkpoint were found",
+      "restrictions": "None",
+      "attribution": "Cite Lewis et al. Science 2025",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "Hugging Face model card microsoft/bioemu",
+          "url": "https://huggingface.co/microsoft/bioemu",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "Hugging Face API record (cardData.license, file list)",
+          "url": "https://huggingface.co/api/models/microsoft/bioemu",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "AlphaFold2 parameters",
+      "version": "alphafold_params_2021-07-14.tar",
+      "use": "BioEmu computes its sequence embeddings with AlphaFold2 and downloads these weights on first use",
+      "obtained": "Downloaded at run time by BioEmu (Colab) from storage.googleapis.com",
+      "redistributed": "No",
+      "licence": "CC-BY-4.0 for the AlphaFold parameters; Apache-2.0 for the AlphaFold code. The README's statement covers 'the AlphaFold parameters' without naming release files",
+      "restrictions": "None beyond attribution",
+      "attribution": "Cite Jumper et al. Nature 2021",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "google-deepmind/alphafold README, Model Parameters License",
+          "url": "https://github.com/google-deepmind/alphafold#model-parameters-license",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "ColabFold MMseqs2 MSA server",
+      "version": "api.colabfold.com",
+      "use": "BioEmu sends each query sequence to this server for its MSA when sampling (Colab notebook)",
+      "obtained": "External service called at run time",
+      "redistributed": "No; the MSAs stay in the sampling output",
+      "licence": "No licence or terms of service for the server were found. ColabFold's README asks that queries from a local computer be serial from a single IP and not spread over several computers. ColabFold code is MIT",
+      "restrictions": "Usage limits only, as stated in the README",
+      "attribution": "Cite Mirdita et al. Nat Methods 2022",
+      "status": "not confirmed",
+      "sources": [
+        {
+          "what": "ColabFold README, FAQ on the MSA server",
+          "url": "https://github.com/sokrypton/ColabFold#faq",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "ColabFold LICENSE",
+          "url": "https://github.com/sokrypton/ColabFold/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "Google Colab",
+      "version": "",
+      "use": "Runs `notebooks/bioemu_resample.ipynb` on a free GPU; output written to the user's Google Drive",
+      "obtained": "External service; the notebook only",
+      "redistributed": "Not applicable",
+      "licence": "Google Terms of Service plus the Colab Additional Terms of Service (last modified 14 May 2024)",
+      "restrictions": "No sharing of accounts and no resale of access; resource limits as set by Google",
+      "attribution": "",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "Colab Additional Terms of Service",
+          "url": "https://research.google.com/colaboratory/tos_v5.html",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "Kaggle notebooks",
+      "version": "",
+      "use": "The notebook also detects Kaggle and writes its output there; an alternative runtime only",
+      "obtained": "External service",
+      "redistributed": "Not applicable",
+      "licence": "Kaggle Terms of Use; the page renders with JavaScript and its text could not be read",
+      "restrictions": "",
+      "attribution": "",
+      "status": "not confirmed",
+      "sources": [
+        {
+          "what": "Kaggle Terms of Use",
+          "url": "https://www.kaggle.com/terms",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "GitHub, GitHub Actions and GitHub Pages",
+      "version": "",
+      "use": "Repository hosting; CI (`.github/workflows/ci.yml`: actions/checkout, astral-sh/setup-uv, ruff, pytest); the project page served from `docs/`",
+      "obtained": "External service",
+      "redistributed": "Not applicable",
+      "licence": "GitHub Terms of Service (effective 27 April 2026) and the additional terms for Actions and Pages. The two actions are MIT",
+      "restrictions": "Actions only for developing and testing the project; Pages not for commercial hosting; Pages sites at most 1 GB, soft limit 100 GB per month bandwidth. A public repository grants other users a licence to view and fork it through GitHub",
+      "attribution": "",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "GitHub Terms of Service",
+          "url": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "Additional product terms (Actions, Pages)",
+          "url": "https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "GitHub Pages limits",
+          "url": "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "actions/checkout LICENSE",
+          "url": "https://github.com/actions/checkout/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "astral-sh/setup-uv LICENSE",
+          "url": "https://github.com/astral-sh/setup-uv/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "uv",
+      "version": "0.11",
+      "use": "Creates the environments and runs the pipeline and CI",
+      "obtained": "Installed by hand; in CI by astral-sh/setup-uv",
+      "redistributed": "No",
+      "licence": "Apache-2.0 OR MIT (the repository carries LICENSE-APACHE and LICENSE-MIT)",
+      "restrictions": "None",
+      "attribution": "",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "astral-sh/uv LICENSE-APACHE",
+          "url": "https://github.com/astral-sh/uv/blob/main/LICENSE-APACHE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "CPython",
+      "version": "3.11 (main, coverage, DENSS, BioEmu), 3.12 (simulation, screenshots)",
+      "use": "Interpreter of every environment",
+      "obtained": "Installed by uv",
+      "redistributed": "No",
+      "licence": "PSF-2.0",
+      "restrictions": "None",
+      "attribution": "",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "Python licence page",
+          "url": "https://docs.python.org/3/license.html",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "GCC",
+      "version": "system compiler",
+      "use": "Compiles PULCHRA (`02_fetch_sources.py`)",
+      "obtained": "System package",
+      "redistributed": "No; the compiled PULCHRA binary stays in `SIM_WORK`",
+      "licence": "GPL-3.0 with the GCC Runtime Library Exception 3.1",
+      "restrictions": "None for compiling; the exception leaves the compiled program under its own licence (MIT for PULCHRA)",
+      "attribution": "",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "GCC runtime library licence",
+          "url": "https://gcc.gnu.org/onlinedocs/libstdc++/manual/license.html",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "Playwright and Chromium",
+      "version": "playwright 1.63.0, Chromium build 1243",
+      "use": "Screenshots of the project page while checking it; not part of the pipeline",
+      "obtained": "Python package in `/scratch/scfm-work/pw`; Playwright downloads its browser builds to a local folder",
+      "redistributed": "No; no screenshots are tracked",
+      "licence": "Playwright: Apache-2.0. Chromium: BSD-3-Clause, with the third-party notices shipped in the build's LICENSE.headless_shell",
+      "restrictions": "None",
+      "attribution": "",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "microsoft/playwright-python LICENSE",
+          "url": "https://github.com/microsoft/playwright-python/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "Chromium LICENSE",
+          "url": "https://chromium.googlesource.com/chromium/src/+/main/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "PeptoneBench code",
+      "version": "",
+      "use": "Not installed or imported. The score conventions in `src/bsc/saxs.py` and the Pepsi-SAXS flag in `analysis/simulations/common.py` follow it",
+      "obtained": "Not obtained",
+      "redistributed": "No",
+      "licence": "Apache-2.0",
+      "restrictions": "None",
+      "attribution": "Cited as Invernizzi et al. 2025",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "PeptoneLtd/peptonebench LICENSE",
+          "url": "https://github.com/PeptoneLtd/peptonebench/blob/main/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    }
+  ],
+  "data": [
+    {
+      "name": "PeptoneBench archive, Zenodo 17306061",
+      "version": "published 2025-10-09; PeptoneDBs.tar.gz, Predictions.tar.gz",
+      "use": "The 439 SAXS profiles with sequences, pH and disorder scores (PeptoneDB-SAXS, curated from SASBDB), and the ensembles and Pepsi-SAXS curves of BioEmu-1 and six other models (AlphaFold2, ESMFold, Boltz-2, IDPFold, idpSAM, PepTron)",
+      "licence": "CC-BY-4.0",
+      "attribution": "Invernizzi et al. 2025 (bioRxiv 10.1101/2025.10.18.680935) and the Zenodo record; the profiles also carry SASBDB's attribution to their depositors",
+      "tracked": "Derived results: scores, reweighting paths, radii of gyration, classes, figures. Also copied as columns: the construct sequences (`results/entries.csv`, `results/simulations/inputs.csv`, `notebooks/resample_list.csv`) and the SASBDB entry titles",
+      "raw_redistributed": "No profiles, curves or ensembles. Construct sequences are copied as table columns, which CC-BY-4.0 permits with attribution",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "Zenodo record 17306061 (API, rights field)",
+          "url": "https://zenodo.org/records/17306061",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "SASBDB data and REST API",
+      "version": "entry summaries fetched 2026-10-13",
+      "use": "Entry summaries of the 439 profiles: measurement conditions, molecular weight, Dmax, organisms, UniProt codes (`bsc fetch`, `analysis/coverage/01_fetch_sasbdb.py`, `18_sasbdb_metadata.py`)",
+      "licence": "\"The data and models deposited in SASBDB are free of all copyright restrictions and made fully and freely available for both non-commercial and commercial use.\" No terms specific to the REST API were found",
+      "attribution": "\"Users of the data should attribute the original authors.\" Each entry is identified by its SASBDB code and the page links every code to its record; cite Kikhney et al. Protein Sci 2020",
+      "tracked": "`results/coverage/sasbdb_metadata.csv` (curve type, instrument, buffer, pH, concentration, organisms, molecule names, project titles and contributor names per entry) and entry titles in `results/candidates.csv` and `results/entries.csv`",
+      "raw_redistributed": "No scattering profiles. Entry metadata are copied as tables, which the SASBDB statement permits with attribution",
+      "status": "confirmed (data); not confirmed (API-specific terms)",
+      "sources": [
+        {
+          "what": "SASBDB About page",
+          "url": "https://www.sasbdb.org/about/",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "SASBDB policies (retraction policy only)",
+          "url": "https://www.sasbdb.org/policies/",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "BioEmu MD training sets, Zenodo 15629740, 15641199, 15641184",
+      "version": "CATH1 and CATH2; octapeptides; MegaSim (published June 2025)",
+      "use": "Zip listings and the `topology.pdb` of each CATH and MegaSim wild-type system, read through HTTP range requests; no trajectories",
+      "licence": "CDLA-Permissive-2.0",
+      "attribution": "None required for Results (section 3.1: no restriction or obligation on the use, modification or sharing of Results); whoever shares the Data must include the agreement text. Cite Lewis et al. Science 2025",
+      "tracked": "Derived results only: nearest-training identifiers and identities (`results/coverage/training_nearest.csv`), counts and compositions (`training_summary.json`)",
+      "raw_redistributed": "No",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "Zenodo record 15629740 (rights field)",
+          "url": "https://zenodo.org/records/15629740",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "Zenodo record 15641199 (rights field)",
+          "url": "https://zenodo.org/records/15641199",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "Zenodo record 15641184 (rights field)",
+          "url": "https://zenodo.org/records/15641184",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "CDLA-Permissive-2.0 text",
+          "url": "https://cdla.dev/permissive-2-0/",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "BioEmu AFDB cluster definitions",
+      "version": "microsoft/bioemu dev/afdb_cluster_definitions at commit 6f059c4",
+      "use": "The 50,228 pre-training clusters and their 179,422 AFDB v4 members (`11_download_bioemu_training.py`)",
+      "licence": "MIT (the repository LICENSE at that commit; the folder's README states no other licence). The members are AlphaFold DB entries (CC-BY-4.0)",
+      "attribution": "Cite Lewis et al. Science 2025",
+      "tracked": "Derived results only (cluster counts, compositions, nearest-member identifiers)",
+      "raw_redistributed": "No",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "microsoft/bioemu LICENSE at 6f059c4",
+          "url": "https://github.com/microsoft/bioemu/blob/6f059c41017a2c653ef1567ce79d7fa260ad3670/LICENSE",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "dev/afdb_cluster_definitions/README.md at 6f059c4",
+          "url": "https://github.com/microsoft/bioemu/tree/6f059c41017a2c653ef1567ce79d7fa260ad3670/dev/afdb_cluster_definitions",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "AlphaFold DB",
+      "version": "v4 entries",
+      "use": "Not downloaded. The BioEmu clusters are AFDB v4 entries identified by UniProt accession, and TED's domains are cut from AFDB models",
+      "licence": "CC-BY-4.0 (\"Data is available for academic and commercial use, under a CC-BY-4.0 license\"); use of the site is subject to the EMBL-EBI Terms of Use",
+      "attribution": "Cite Jumper et al. Nature 2021 (the AlphaFold methods paper, as the licence page asks)",
+      "tracked": "AFDB-derived identifiers and counts only",
+      "raw_redistributed": "No",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "AlphaFold DB License and Disclaimer (PDF)",
+          "url": "https://alphafold.ebi.ac.uk/assets/License-Disclaimer.pdf",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "MEGAscale, Zenodo 7992926",
+      "version": "v2_230420; Tsuboyama2023_Dataset2_Dataset3_20230416.csv",
+      "use": "The curated stability table and its wild-type domains (one zip member read through HTTP range requests)",
+      "licence": "CC-BY-4.0",
+      "attribution": "Cite Tsuboyama et al. Nature 2023 and the Zenodo record",
+      "tracked": "Derived results only",
+      "raw_redistributed": "No",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "Zenodo record 7992926 (rights field)",
+          "url": "https://zenodo.org/records/7992926",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "CATH",
+      "version": "v4.4.0 classification files; v4.3.0 S35 list (sensitivity check)",
+      "use": "Superfamily classification, S35 clusters and S100 sequences (`00_download_cath.sh`, `08_compare.py`, `14_annotate_training.py`)",
+      "licence": "CC-BY-4.0 for the data. The CATH wiki text itself is CC BY-NC-SA 4.0",
+      "attribution": "Attribute to I. Sillitoe, N. Dawson, T. Lewis, D. Lee, J. Lees, C. Orengo, based on work at cath.biochem.ucl.ac.uk",
+      "tracked": "`results/coverage/cath_superfamily_rank.csv.gz` (superfamily identifiers, S35 cluster counts, rank and CATH superfamily names) and derived comparisons",
+      "raw_redistributed": "No classification files. Superfamily names and cluster counts are copied as table columns, which CC-BY-4.0 permits with attribution",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "CATH licence page",
+          "url": "https://www.cathdb.info/wiki?id=data:licence",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "InterPro, Pfam and CATH-Gene3D (InterPro API)",
+      "version": "InterPro 110.0, Pfam 38.2, CATH-Gene3D 4.3.0",
+      "use": "Domain locations per UniProt accession (`04_fetch_annotations.py`)",
+      "licence": "InterPro and Pfam data: CC0-1.0 (\"All of the InterPro, Pfam, PRINTS and SFLD downloadable data ... CC0 1.0\"). CATH-Gene3D is not named in that statement; CATH's own data are CC-BY-4.0",
+      "attribution": "Cite InterPro and the member databases (requested by InterPro); EMBL-EBI expects attribution",
+      "tracked": "Gene3D superfamily identifiers and Pfam accessions per construct (`results/coverage/per_protein_mapping.csv`, `results/arm1/relatedness.csv`)",
+      "raw_redistributed": "No",
+      "status": "confirmed (InterPro, Pfam); not confirmed (CATH-Gene3D as served by InterPro)",
+      "sources": [
+        {
+          "what": "InterPro licence page",
+          "url": "https://interpro-documentation.readthedocs.io/en/latest/license.html",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "EMBL-EBI Terms of Use",
+          "url": "https://www.ebi.ac.uk/about/terms-of-use/",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "UniProtKB, Swiss-Prot, UniParc, ID mapping, peptide search, taxonomy",
+      "version": "release 2026_03",
+      "use": "Mapping constructs to accessions, sequences of the AFDB cluster members and named MD proteins, the Swiss-Prot reference set, organism lineages",
+      "licence": "CC-BY-4.0 for all copyrightable parts of the databases; no separate terms for the REST services were found",
+      "attribution": "Cite UniProt as on its citation page",
+      "tracked": "Accessions, isoforms, ranges, organism and lineage per construct (`results/coverage/per_protein_mapping.csv`) and derived comparisons",
+      "raw_redistributed": "No flat files or sequences from UniProt",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "UniProt License & disclaimer (help page)",
+          "url": "https://rest.uniprot.org/help/license",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "RCSB PDB: search API, data API, clusters-by-entity-30, FASTA",
+      "version": "cluster file of 4 October 2026",
+      "use": "Sequence search for unmapped constructs, polymer-entity data, the 30% clusters with their representatives, and the FASTA of the twelve DESRES fast-folder PDB entries",
+      "licence": "CC0-1.0 for PDB archive files and data from the RCSB PDB APIs",
+      "attribution": "Encouraged, not required: the original authors of the structures",
+      "tracked": "PDB identifiers and derived counts",
+      "raw_redistributed": "No",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "RCSB PDB usage policy",
+          "url": "https://www.rcsb.org/pages/usage-policy",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "PDBe SIFTS (best_structures API)",
+      "version": "live API, weekly update",
+      "use": "Structure coverage of each construct (`04_fetch_annotations.py`, `07_build_protein_table.py`)",
+      "licence": "No SIFTS-specific licence was found. The EMBL-EBI Terms of Use place no restrictions beyond those of the original data owners and expect attribution",
+      "attribution": "The SIFTS page asks users to cite Dana et al. NAR 2019 (or Velankar et al. NAR 2013)",
+      "tracked": "Derived coverage per construct (`has_pdb_50` and coverage fractions in `results/coverage/per_protein_mapping.csv`)",
+      "raw_redistributed": "No",
+      "status": "not confirmed",
+      "sources": [
+        {
+          "what": "SIFTS page",
+          "url": "https://www.ebi.ac.uk/pdbe/docs/sifts/",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "EMBL-EBI Terms of Use",
+          "url": "https://www.ebi.ac.uk/about/terms-of-use/",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "TED (The Encyclopedia of Domains)",
+      "version": "v1, ted.cathdb.info API",
+      "use": "CATH labels of domains in the AFDB model of each accession (`04_fetch_annotations.py`)",
+      "licence": "The TED data release on Zenodo (record 10848710) is CC-BY-4.0. The API site renders with JavaScript and no terms could be read from it",
+      "attribution": "Cite Lau et al. Science 2024 and the Zenodo record",
+      "tracked": "TED superfamily labels per construct (`ted_superfamilies` in `results/coverage/per_protein_mapping.csv`)",
+      "raw_redistributed": "No",
+      "status": "confirmed (Zenodo release); not confirmed (API terms)",
+      "sources": [
+        {
+          "what": "Zenodo record 10848710 (rights field)",
+          "url": "https://zenodo.org/records/10848710",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "TED site",
+          "url": "https://ted.cathdb.info/",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "CALVADOS training and validation protein lists",
+      "version": "KULL-Centre/papers at 85979b1; KULL-Centre/_2024_Cao_CALVADOSCOM at 51564e0",
+      "use": "The proteins the CALVADOS 1, 2 and 3 parameters were trained and validated on, for the circularity check (`02_fetch_sources.py`, `03_circularity.py`)",
+      "licence": "CALVADOS 1 lists (papers/2021/CG-IDPs-Tesei-et-al): CC-BY-4.0, from the LICENSE file in that folder. CALVADOS 2 lists (papers/2022/CG-cutoffs-Tesei-et-al): no licence file in the folder or at the repository root; the folder's README links Zenodo DOI 10.5281/zenodo.6815067, whose current version (record 7437501, an archive of the folder) is CC-BY-4.0; I did not check that the archive holds the same two files. CALVADOS 3 lists (_2024_Cao_CALVADOSCOM): MIT, Copyright (c) 2024 Linderstrøm-Lang Centre for Protein Science, University of Copenhagen",
+      "attribution": "CC-BY-4.0: cite Tesei et al. PNAS 2021 and Tesei & Lindorff-Larsen 2022. MIT: keep the copyright and permission notice with copies of the files. Cite Cao et al. Protein Sci 2024",
+      "tracked": "`results/simulations/calvados_sets.csv`: set, role, file, protein name and sequence copied from the eight list files; `circularity.csv` derived",
+      "raw_redistributed": "Yes, names and sequences. Permitted for the CC-BY-4.0 and MIT files with attribution (given here); for the CALVADOS 2 files it rests on the Zenodo deposit",
+      "status": "confirmed (CALVADOS 1, 3); not confirmed (CALVADOS 2 GitHub copy)",
+      "sources": [
+        {
+          "what": "papers/2021/CG-IDPs-Tesei-et-al/LICENSE at 85979b1",
+          "url": "https://github.com/KULL-Centre/papers/blob/85979b1b4123b6b5391b617d16551969eda9f56e/2021/CG-IDPs-Tesei-et-al/LICENSE",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "papers/2022/CG-cutoffs-Tesei-et-al at 85979b1 (README, no LICENSE)",
+          "url": "https://github.com/KULL-Centre/papers/tree/85979b1b4123b6b5391b617d16551969eda9f56e/2022/CG-cutoffs-Tesei-et-al",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "Zenodo record 7437501 (rights field)",
+          "url": "https://zenodo.org/records/7437501",
+          "checked": "2026-10-16"
+        },
+        {
+          "what": "_2024_Cao_CALVADOSCOM LICENSE at 51564e0",
+          "url": "https://github.com/KULL-Centre/_2024_Cao_CALVADOSCOM/blob/51564e0edd126c44d6a7299fbe4414c579394ef4/LICENSE",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "Folding@home COVID-19 cryptic-pockets bucket",
+      "version": "s3://fah-public-data-covid19-cryptic-pockets",
+      "use": "Only the object listing, to count the simulated systems of one of BioEmu's MD sets (`11_download_bioemu_training.py`)",
+      "licence": "CC0 (AWS Open Data Registry entry for the Folding@home COVID-19 datasets)",
+      "attribution": "",
+      "tracked": "One count (`n_exascale_systems_listed` in `results/coverage/versions.json`)",
+      "raw_redistributed": "No",
+      "status": "confirmed",
+      "sources": [
+        {
+          "what": "awslabs/open-data-registry foldingathome-covid19.yaml",
+          "url": "https://github.com/awslabs/open-data-registry/blob/main/datasets/foldingathome-covid19.yaml",
+          "checked": "2026-10-16"
+        }
+      ]
+    },
+    {
+      "name": "DESRES fast-folder simulations",
+      "version": "",
+      "use": "Cited only. No DESRES data are downloaded or used; the twelve proteins' sequences come from their PDB entries at RCSB (row above)",
+      "licence": "Not reviewed, since nothing is obtained from DESRES",
+      "attribution": "",
+      "tracked": "Nothing from DESRES",
+      "raw_redistributed": "No",
+      "status": "not applicable",
+      "sources": [
+        {
+          "what": "the code that fetches the twelve PDB sequences",
+          "url": "analysis/coverage/11_download_bioemu_training.py",
+          "checked": "2026-10-16"
+        }
+      ]
+    }
+  ]
+}
