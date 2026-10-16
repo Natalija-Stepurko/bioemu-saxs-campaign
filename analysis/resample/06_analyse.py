@@ -114,8 +114,9 @@ def fit(d: pd.DataFrame, sub: str) -> dict:
 def figure(d: pd.DataFrame) -> None:
     report.style()
     fig, ax = report.figure(560, 470)
-    lo, hi = 0.55, 2.4
-    ax.plot([lo, hi], [lo, hi], color=report.MUTED, lw=0.9, zorder=1)
+    v = d[["ratio_arch_all", "ratio_v12_all"]].to_numpy()
+    lo, hi = min(0.55, 0.92 * v.min()), max(2.4, 1.08 * v.max())     # every protein inside the axes
+    ax.plot([lo, hi], [lo, hi], color=report.MUTED, lw=0.9, zorder=1, label="same size on both sides")
     ax.axhline(1, color=report.RULE, lw=0.8, ls=(0, (3, 3)), zorder=0)
     ax.axvline(1, color=report.RULE, lw=0.8, ls=(0, (3, 3)), zorder=0)
     for cls in report.CLASS_ORDER:
@@ -133,7 +134,7 @@ def figure(d: pd.DataFrame) -> None:
                label="every v1.2 sample rejected\nby BioEmu's filter")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ticks = [0.6, 0.8, 1.0, 1.25, 1.6, 2.0]
+    ticks = [t for t in (0.5, 0.6, 0.8, 1.0, 1.25, 1.6, 2.0, 2.5) if lo <= t <= hi]
     for axis in (ax.xaxis, ax.yaxis):
         axis.set_major_locator(mticker.FixedLocator(ticks))
         axis.set_major_formatter(mticker.FixedFormatter([f"{t:g}" for t in ticks]))
@@ -142,7 +143,6 @@ def figure(d: pd.DataFrame) -> None:
     ax.set_ylim(lo, hi)
     ax.set_xlabel("archive ensemble: Cα Rg / measured Guinier Rg")
     ax.set_ylabel("bioemu-v1.2: Cα Rg / measured Guinier Rg")
-    ax.text(hi / 1.04, hi / 1.13, "same size", color=report.MUTED, ha="right", va="top", fontsize=9)
     ax.legend(loc="upper left", frameon=False, handletextpad=0.3)
     fig.tight_layout()
     report.OUT = FIG
