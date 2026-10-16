@@ -126,3 +126,15 @@ conformer, cached per conformer and resumable, in at most three worker processes
   Colab files (§2).
 
 ## 9. Deviations
+
+**2026-10-16, after the first results.**
+
+- *BioEmu release used for the conversion.* §2 asks for the release on PyPI at the time the notebook ran; that
+  date's release could not be established, so the conversion used bioemu 1.4.1 (CPU build of torch). The
+  checks of §2 decide whether this matters: the reproduction with `filter_samples=True` wrote the same files
+  as the notebook for all 51 proteins, with coordinates identical to the notebook's xtc files (largest
+  difference 0.0 Å), and every notebook frame matched its recovered sample.
+- *RMSD of the frame-by-frame check.* "Within the xtc storage precision" is set to √3 × 0.01 Å, the largest
+  RMSD two xtc copies of one conformer can differ by (each file rounds every coordinate to 0.001 nm). The
+  RMSD is computed by a float64 superposition (largest value 0.0075 Å): `mdtraj.rmsd` works in float32 and
+  gave up to 0.38 Å for the same pairs, above that bound (both in `results/resample/summary.json`).
