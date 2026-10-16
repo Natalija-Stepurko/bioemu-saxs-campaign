@@ -91,11 +91,11 @@
   "wall_seconds": 3.7
  },
  "06_analyse": {
-  "commit": "caec86bbf67e7cabd8abcd30eece37a9834b740d",
+  "commit": "580b1497b488ed7b7792064f741f412fe2b713b7",
   "min_filtered": 10,
   "n_boot": 2000,
-  "run_at": "2026-10-16T15:15:16",
+  "run_at": "2026-10-16T15:54:25",
   "seed": 20261016,
-  "wall_seconds": 2.0
+  "wall_seconds": 2.9
  }
 }
