@@ -176,6 +176,8 @@ def main() -> None:
                 conv.filter(like="max_abs_diff_A_").to_numpy(float))),
             "max_rmsd_A_colab_frame_vs_recovered_sample": float(np.nanmax(
                 conv.filter(like="max_rmsd_A_colab_vs_recovered_").to_numpy(float))),
+            "max_mdtraj_float32_rmsd_A_same_comparison": float(np.nanmax(
+                conv.filter(like="max_mdtraj_rmsd_A_colab_vs_recovered_").to_numpy(float))),
             "n_proteins_with_rmsd_check": int(conv.filter(like="max_rmsd_A_colab_vs_recovered_").notna()
                                               .any(axis=1).sum()),
         },

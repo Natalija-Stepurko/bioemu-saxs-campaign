@@ -143,6 +143,9 @@ def one(lab: str) -> tuple[dict, list[dict]]:
         r[f"frames_expected_{name}"] = len(idx)
         if len(idx) == tc.n_frames and tc.n_atoms == allt.n_atoms:
             r[f"max_rmsd_A_colab_vs_recovered_{name}"] = max_rmsd_angstrom(tc, allt[idx])
+            # the same comparison by mdtraj.rmsd (float32), kept to show why it is not used
+            r[f"max_mdtraj_rmsd_A_colab_vs_recovered_{name}"] = float(max(
+                10.0 * md.rmsd(tc[i], allt[j])[0] for i, j in enumerate(idx))) if len(idx) else np.nan
     r["files_match"] = all(r[f"colab_{n}"] == r[f"reproduced_{n}"] for n in XTC_NAMES)
     fails = []
     if r["n_recovered"] != N_SAMPLES:
