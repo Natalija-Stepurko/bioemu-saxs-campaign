@@ -16,6 +16,7 @@ from datetime import date
 from pathlib import Path
 from urllib.parse import quote
 
+import numpy as np
 import pandas as pd
 
 PIXEL_DENSITY = 3   # must match bsc.report.PIXEL_DENSITY; checked below
@@ -166,6 +167,10 @@ REFS = [
     ("petoukhov", 'Petoukhov MV, Franke D, Shkumatov AV, et al. New developments in the ATSAS program package for '
                   'small-angle scattering data analysis. <em>J Appl Cryst</em> 2012.',
      "https://doi.org/10.1107/S0021889812007662"),
+    ("cao", 'Cao F, von Bülow S, Tesei G, Lindorff-Larsen K. A coarse-grained model for disordered and multi-domain '
+            'proteins. <em>Protein Science</em> 2024.', "https://doi.org/10.1002/pro.5172"),
+    ("rotkiewicz", 'Rotkiewicz P, Skolnick J. Fast procedure for reconstruction of full-atom protein models from reduced '
+                   'representations. <em>J Comput Chem</em> 2008.', "https://doi.org/10.1002/jcc.20906"),
 ]
 REFNO = {k: i + 1 for i, (k, _, _) in enumerate(REFS)}
 
@@ -935,6 +940,110 @@ def training_section(n_bioemu: int) -> dict:
             "arms_link": arms_link, "limits": limits}
 
 
+SIM_COL = "#0E9F6E"      # CALVADOS 3 in the simulation figure (analysis/simulations/07_analyse.py)
+
+
+def simulation_section() -> str:
+    """'What simulation gives for disordered proteins': every number from results/simulations/, with a check for
+    every sentence that states a direction or an outcome."""
+    D = RESULTS / "simulations"
+    SM = json.load(open(D / "summary.json"))
+    PT = pd.read_csv(D / "per_protein.csv")
+    PL = json.load(open(D / "plan.json"))
+    INP = pd.read_csv(D / "inputs.csv")
+    RM = json.load(open(D / "run_metadata.json"))
+    P, n_pool = SM["primary"]["all"], len(INP)
+    n = P["n"]
+    check(n_pool == E["E4"]["n"], "the simulated pool is the clean disordered set of E4")
+    check(n == len(PT) == SM["n"] == PL["n_included"], "every planned protein simulated and analysed")
+    check(int((INP["gdmcl_m"] > 0).sum()) == 0, "the only denaturant recorded is urea")
+    check(set(INP["label"]) - set(PT["label"]) == set(PL["excluded"]), "left out: the plan's proteins only")
+    check(abs(P["bioemu_median"] - float(PT["bioemu_rg_ratio"].median())) < 1e-12, "BioEmu-1 median on the simulated proteins")
+    cm, bm, c1 = P["calvados_median"], P["bioemu_median"], P["closer_to_1"]
+    e10, e11 = P["E10_met"], P["E11_met"]
+    check(e10 == (0.9 <= cm <= 1.1) and e11 == (c1["share"] > 0.5 and c1["sign_test_p_two_sided"] < 0.05), "E10 and E11 as defined")
+    check(abs(np.log(cm)) < abs(np.log(bm)), "CALVADOS 3's median ratio is closer to 1 than BioEmu-1's")
+    exc = INP[INP["label"].isin(PL["excluded"])]
+    red = [r for r in PL["proteins"] if r["included"] and r["frames_planned"] < 1010]
+    red_len = sorted(INP.set_index("label").loc[[r["label"] for r in red], "length"])
+    excl_txt = ""
+    if len(exc):
+        excl_txt = (f" The longest chain ({int(exc['length'].max())} residues) was left out for computing time, and the "
+                    f"next {len(red)} longest ({red_len[0]}–{red_len[-1]} residues) were run at half length.")
+    lead = (f"<p>I simulated {n} of the {n_pool} disordered proteins whose profiles "
+            f"pass the quality checks with CALVADOS 3 {cite('cao', 'tesei')}, a model with one bead per residue whose parameters were fitted to SAXS radii "
+            f"and NMR data of disordered proteins, each at the temperature and pH recorded with its profile and an ionic strength read from its buffer.{excl_txt} "
+            f"The ratio of the simulated radius of gyration to the measured one has a median of {f2(cm)} (95% interval {ci(P['calvados_ci95'])}), "
+            f"against {f2(bm)} ({ci(P['bioemu_ci95'])}) for BioEmu-1 on the same proteins; the CALVADOS 3 ratio is the closer to 1 for "
+            f"{c1['k']} of {n} proteins (sign test p {pv(c1['sign_test_p_two_sided'])}).</p>")
+    def outcome(ok):
+        return f'<span class="outcome {"yes" if ok else "no"}">{"met" if ok else "not met"}</span>'
+    exp_rows = (f'<tr><td><strong>E10.</strong> CALVADOS 3\'s median Rg ratio lies within 0.90–1.10.</td>'
+                f'<td>The model\'s parameters were fitted to SAXS radii of disordered proteins.</td><td>{outcome(e10)}<br><span class="note">median {f2(cm)}, {ci(P["calvados_ci95"])}</span></td></tr>'
+                f'<tr><td><strong>E11.</strong> CALVADOS 3\'s ratio is closer to 1 than BioEmu-1\'s for most proteins (sign test p &lt; 0.05).</td>'
+                f'<td>BioEmu-1\'s training data hold almost no disordered chains, and its disordered ensembles are too extended.</td>'
+                f'<td>{outcome(e11)}<br><span class="note">{c1["k"]} of {n}, p {pv(c1["sign_test_p_two_sided"])}</span></td></tr>')
+    exp_table = ('<div class="scroll"><table class="exp"><thead><tr><th>expectation, fixed before the runs</th><th>reasoning</th><th>outcome</th></tr></thead>'
+                 f'<tbody>{exp_rows}</tbody></table></div>')
+    ktr, kva = SM["n_flag_training"], SM["n_flag_validation_only"]
+    wt, wa = SM["primary"]["without_training_overlap"], SM["primary"]["without_any_overlap"]
+    circ = (f"<p><strong>Circularity.</strong> {ktr} of the {n} simulated proteins are at least 90% identical to a protein CALVADOS was trained on, and "
+            f"{kva} more to one it was validated on. Without the {ktr} the median ratio is {f2(wt['calvados_median'])} ({ci(wt['calvados_ci95'])}, n = {wt['n']}; "
+            f"E10 {'met' if wt['E10_met'] else 'not met'}, E11 {'met' if wt['E11_met'] else 'not met'}), and without all {ktr + kva} it is "
+            f"{f2(wa['calvados_median'])} ({ci(wa['calvados_ci95'])}, n = {wa['n']}; E10 {'met' if wa['E10_met'] else 'not met'}, E11 {'met' if wa['E11_met'] else 'not met'}).</p>")
+    hours = RM["total_wall_hours_single_thread"]
+    per_h = float(np.median([r["wall_hours"] for r in RM["per_protein"] if r["label"] in set(PT["label"])]))
+    worst = PT.loc[np.abs(np.log(PT["calvados_rg_ratio"])).idxmax(), "calvados_rg_ratio"]
+    if e10 and e11 and wa["E10_met"] and wa["E11_met"]:
+        kc, kb = round(P["calvados_share_within_0.9_1.1"] * n), round(P["bioemu_share_within_0.9_1.1"] * n)
+        check(kc > kb and kc / n > 0.5, "CALVADOS 3 within 10% for most proteins, more often than BioEmu-1")
+        meaning = (f"<p><strong>For collecting data.</strong> Simulation with a model fitted to existing SAXS data puts {kc} of these {n} disordered proteins "
+                   f"within 10% of the measured size, against {kb} for BioEmu-1, at a median of {per_h:.1f} CPU hours per protein, so measured profiles of "
+                   f"disordered proteins are most needed for the others, which it misses by up to a factor of {max(worst, 1 / worst):.1f}, and for chains "
+                   f"longer than the {int(PT['length'].max())} residues simulated here.</p>")
+    elif e11:
+        meaning = ("<p><strong>For collecting data.</strong> Simulation with a model tuned for disorder narrows BioEmu-1's size error but does not reach the "
+                   "measured size within 10%, so it does not replace measurement for these proteins.</p>")
+    else:
+        meaning = ("<p><strong>For collecting data.</strong> Simulation with a model tuned for disorder does not reproduce these measured sizes better than "
+                   "BioEmu-1, so it does not replace measurement for these proteins.</p>")
+    G = SM["guinier_over_true_rg_gaussian_chain"]
+    sc, sv, X = SM["sensitivity_coordinates"], SM["sensitivity_curves"], SM["chi2"]
+    def srow(name, r):
+        return (f'<tr><td>{name}</td><td class="num">{r["n"]}</td><td class="num">{f2(r["calvados_median"])} ({ci(r["calvados_ci95"])})</td>'
+                f'<td class="num">{f2(r["bioemu_median"])} ({ci(r["bioemu_ci95"])})</td><td class="num">{r["closer_to_1"]["k"]} of {r["n"]}</td>'
+                f'<td class="num">{pv(r["closer_to_1"]["sign_test_p_two_sided"])}</td><td>{"met" if r["E10_met"] else "not met"}</td><td>{"met" if r["E11_met"] else "not met"}</td></tr>')
+    names = {"all": "all simulated proteins", "without_training_overlap": "without proteins in CALVADOS training sets",
+             "without_any_overlap": "without proteins in CALVADOS training or validation sets", "without_denaturant": "without profiles measured in urea",
+             "converged_only": "runs that pass the convergence check"}
+    sub_table = ('<div class="scroll"><table class="wide"><thead><tr><th>proteins</th><th>n</th><th>CALVADOS 3 median ratio (95%)</th><th>BioEmu-1 median ratio (95%)</th>'
+                 '<th>CALVADOS 3 closer to 1</th><th>sign test p</th><th>E10</th><th>E11</th></tr></thead><tbody>'
+                 + "".join(srow(names[k], v) for k, v in SM["primary"].items())
+                 + '<tr class="grp"><td colspan="8">the same comparison with like observables</td></tr>'
+                 + srow("bead radius against BioEmu-1's Cα radius", sc)
+                 + srow("both radii from Guinier fits of computed curves", sv)
+                 + '</tbody></table></div>')
+    conv_n, n_den = SM["n_converged"], SM["n_denaturant"]
+    T, I_ = PT["temp_k"] - 273.15, PT["ionic_m"]
+    xl = X["calvados_lower"]
+    details_body = (
+        sub_table
+        + f'<p class="note">CALVADOS 3 ratio: root-mean-square radius of gyration of the residue beads (mass-weighted) over the production frames, divided by the Guinier radius of the measured profile. BioEmu-1 ratio: the Guinier radius of its ensemble curve over the same measured radius, as in the size section. Intervals: percentile bootstrap over proteins ({SM["n_boot"]:,} resamples).</p>'
+        + f'<p><strong>Observables.</strong> The measured radius comes from a Guinier fit up to q·Rg = 1.3; applied to the scattering curve of an ideal random chain, the same fit returns {f2(G)} times its true radius. '
+          f'A bead radius carries no such offset, so the primary comparison can place a correct chain model above 1 by up to that factor. When both radii come from Guinier fits of computed curves, the CALVADOS 3 median is {f2(sv["calvados_median"])} ({ci(sv["calvados_ci95"])}).</p>'
+        + f'<p><strong>Scattering curves.</strong> Each ensemble was reduced to {int(PT["n_curves"].median())} evenly spaced frames, rebuilt to all atoms with PULCHRA {cite("rotkiewicz")} and passed to Pepsi-SAXS {cite("grudinin")} with the settings used for the archive\'s curves, then scored as BioEmu-1\'s raw ensembles are. '
+          f'Median reduced χ² {f1(X["calvados_median"])} for CALVADOS 3 against {f1(X["bioemu_median"])} for BioEmu-1; χ² ≤ 2 for {pct(X["calvados_share_le_2"])} against {pct(X["bioemu_share_le_2"])}; CALVADOS 3 has the lower χ² for {xl["k"]} of {xl["n"]} (sign test p {pv(xl["sign_test_p_two_sided"])}). '
+          'Back-mapped coarse-grained frames carry reconstruction error that all-atom conformers do not, so these χ² values are indicative.</p>'
+        + f'<p><strong>Runs and conditions.</strong> {conv_n} of {n} runs pass the convergence check (block standard error under 2% of the radius and halves within 5%). Temperatures {T.min():.0f}–{T.max():.0f} °C, ionic strengths {I_.min():.2f}–{I_.max():.2f} M; '
+          f'{n_den} profiles were measured with urea, which the model does not represent. The runs took {hours:.0f} single-thread CPU hours in total, the pilot of the chain left out included.</p>')
+    check(conv_n <= n and n_den == int(PT["denaturant"].sum()), "convergence and denaturant counts")
+    figure = fig("fig_sim_rg", "Figure 12 · simulated and BioEmu-1 radii against the measured radius, protein by protein",
+                 f"Each line joins one protein's BioEmu-1 ratio (left) to its CALVADOS 3 ratio (right), {n} disordered proteins, log scale. Open circles: proteins at least 90% identical to a protein CALVADOS was trained or validated on. Bars: medians with 95% bootstrap intervals; the band marks 0.90–1.10.",
+                 "A protein on the dashed line has the measured size. Lines that slope towards the band mark proteins where the simulation is the closer.")
+    return (f'<h3 id="simulate">What simulation gives for disordered proteins</h3>{lead}{figure}{exp_table}{circ}{meaning}'
+            + details("Subsets, like-for-like comparisons, scattering curves and runs", details_body))
+
+
 def build():
     n_bioemu = sum(RES.values())
     n_clean = A["n_clean"]
@@ -1242,10 +1351,11 @@ def build():
                 + '</tbody></table></div>')
     cov = coverage_section(n_bioemu)
     trn = training_section(n_bioemu)
+    sim = simulation_section()
     nav = "".join(f'<li><a href="#{a}">{t}</a></li>' for a, t in [
         ("method", "Method"), ("expectations", "Expectations"), ("fit", "Raw fit"), ("examples", "Examples"),
         ("size", "Size"), ("reweight", "Reweighting"), ("guide", "Guidance"), ("next", "Next"),
-        ("collect", "Data to collect"),
+        ("collect", "Data to collect"), ("simulate", "Simulation"),
         ("models", "Other models"), ("limits", "Limits"), ("repro", "Code")])
     refs_html = "".join(f'<li id="ref-{k}">{t} <a href="{u}">{u.replace("https://", "")}</a></li>' for k, t, u in REFS)
     today = date.today()
@@ -1369,6 +1479,7 @@ def build():
 {trn["closeness"]}
 {cov["split"]}
 {trn["collect"]}
+{sim}
 <h3 id="arms">The campaign</h3>
 <p>The error map identifies where BioEmu-1 disagrees with deposited data; it cannot yet say where it will disagree on a new protein. The campaign has two arms that follow from that. {trn["arms_link"]} The <a href="{REPO}/blob/main/docs/CAMPAIGN.md">full proposal</a> gives constructs, assay, scripted quality criteria, success criteria, contingencies and work packages for an external provider.</p>
 <figure class="result diagram" style="max-width:746px"><figcaption>Campaign · two arms</figcaption><div class="scroll">{decision}</div></figure>
@@ -1389,7 +1500,7 @@ def build():
 
 <h2 id="models">How does BioEmu-1 compare with other ensemble generators?</h2>
 <p>The archive carries computed curves from other models for the same entries, scored here identically and without reweighting: the ensemble generators {", ".join(MODEL_NAME[m] for m in gens)}, and the single-structure predictors {" and ".join(MODEL_NAME[m] for m in singles)} as reference baselines. On the shared entries BioEmu-1 has the lowest median raw χ² of the seven, and the ordering is kept under NRMSD. PepTron comes closest: it beats BioEmu-1 on {pct(pep['share_better_than_bioemu'])} of the {pep['n']} shared entries (95% interval {pct(pep['ci95_share_better'][0])}–{pct(pep['ci95_share_better'][1])}). BioEmu-1 is the only tested model with a disordered median Rg ratio above 1.1; PepTron sits at {f2(others_rg['peptron'])}.</p>
-{fig("fig_models", "Figure 12 · seven models on the same profiles",
+{fig("fig_models", "Figure 13 · seven models on the same profiles",
      "Left: median raw reduced χ² of each model's unweighted ensemble by disorder class, on the profiles that pass quality checks; BioEmu-1 and PepTron emphasised, single-structure predictors grouped below. Right: median Rg ratio of each model on the disordered entries; solid line 1, dashed line 1.1.",
      None)}
 {details("Paired comparison table", comp_html + f'<p class="note">Five further folders in the archive are not used: Boltz-1x and ESMFlow are superseded by models already included, idpGAN and IDP-o are disorder-only generators represented here by idpSAM, and PepTron-base is the un-finetuned PepTron. AF-CALVADOS {cite("bulow")} was evaluated on this benchmark but its predictions were not in the archive.</p>')}

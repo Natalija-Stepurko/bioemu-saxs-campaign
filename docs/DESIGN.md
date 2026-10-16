@@ -235,6 +235,16 @@ beside the old ones in `results/`.
   The SASBDB metadata it uses are a table written by script 18 of `analysis/coverage/`. No pre-registered
   quantity changes, and the Arm 1 list is unchanged.
 
+- **Simulation of the disordered proteins (2026-10-15/16).** Added after the results were seen, under its own
+  design written before any run (`docs/SIMULATION_DESIGN.md`, expectations E10 and E11, a circularity check
+  against the CALVADOS training and validation sets, a pre-declared compute rule; deviations dated there).
+  `analysis/simulations/` ran CALVADOS 3 on 40 of the 41 clean disordered profiles with a BioEmu-1 ensemble (the
+  475-residue chain left out by the compute rule, three chains of 404–439 residues at half length). Result: median
+  ratio of simulated bead Rg to measured Guinier Rg 1.04 (1.01–1.10) against BioEmu-1's 1.21 on the same proteins;
+  closer to 1 for 33 of 40; E10 and E11 met, also without the 6 proteins in CALVADOS training sets and without
+  all 11 flagged. With both radii from Guinier fits of computed curves the CALVADOS 3 median is 0.99. The page adds
+  the subsection "What simulation gives for disordered proteins". No pre-registered quantity of this design changes.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.

@@ -43,6 +43,13 @@ once the disorder class is accounted for either (class-stratified van Elteren p 
 recommendation section of the page, which lists the protein data to collect with their evidence: disordered
 proteins, folded proteins with long disordered regions, and full-length multidomain proteins above 500 residues.
 
+A coarse-grained simulation of the disordered proteins (CALVADOS 3, OpenMM, each at its recorded temperature, pH
+and buffer ionic strength; 40 of the 41 clean disordered profiles, the longest chain left out for computing time)
+gives a median ratio of simulated to measured radius of gyration of 1.04 (95% interval 1.01–1.10) against 1.21 for
+BioEmu-1 on the same proteins, closer to 1 for 33 of 40 proteins; both pre-declared expectations (E10, E11) are met,
+also without the 11 proteins that are at least 90% identical to a protein CALVADOS was trained or validated on.
+The design is [`docs/SIMULATION_DESIGN.md`](docs/SIMULATION_DESIGN.md).
+
 ![error map](results/figures/fig_error_map.png)
 
 ## What was done
@@ -122,6 +129,20 @@ superfamily). It reads the SASBDB metadata table written by `analysis/coverage/1
 
 ```bash
 BSC_ROOT=<where bsc fetch put data/> uv run python analysis/arm1/arm1_checks.py
+```
+
+### The simulations
+
+`analysis/simulations/` runs CALVADOS 3 single-chain simulations of the archive's clean disordered proteins, computes
+SAXS curves from them (PULCHRA back-mapping, Pepsi-SAXS) and compares the simulated radius of gyration with the
+measured one and with BioEmu-1's, under a design written before the runs
+([`docs/SIMULATION_DESIGN.md`](docs/SIMULATION_DESIGN.md)). It needs its own environment
+(`analysis/simulations/requirements.txt`) and about 120 single-thread CPU hours; the small outputs are tracked in
+`results/simulations/`, the trajectories are not. See [`analysis/simulations/README.md`](analysis/simulations/README.md).
+
+```bash
+SIM_PY=/path/to/venv-sim/bin/python SIM_WORK=/path/with/10GB/free BSC_ROOT=<where bsc fetch put data/> \
+  WORKERS=6 analysis/simulations/run_all.sh
 ```
 
 ### The DENSS environment
