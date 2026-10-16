@@ -149,7 +149,7 @@ beside the old ones in `results/`.
   model's own ensemble Rg against the scaling-law Rg, with matched controls. The headline became the
   question form, the method diagram and the expectations table were moved before the results, and the
   checkpoint is named as the archive records it (BioEmu at code commit ac7455d; checkpoint version not
-  recorded; re-sampling with v1.2 is the first follow-up).
+  recorded; re-sampling with v1.2 is the first follow-up; done 2026-10-16, last bullet of this section).
 - **Worked examples.** One entry per class, the one nearest the class median raw χ², with a DENSS ab
   initio envelope from the measured curve (stage `envelopes`, run in a separate environment because DENSS
   needs numpy < 2) and the highest-weight conformer docked by principal axes.
@@ -244,6 +244,18 @@ beside the old ones in `results/`.
   closer to 1 for 33 of 40; E10 and E11 met, also without the 6 proteins in CALVADOS training sets and without
   all 11 flagged. With both radii from Guinier fits of computed curves the CALVADOS 3 median is 0.99. The page adds
   the subsection "What simulation gives for disordered proteins". No pre-registered quantity of this design changes.
+- **Re-sample with the current checkpoint (2026-10-16).** Added after the results were seen, under its own design
+  written before any result (`docs/RESAMPLE_DESIGN.md`, expectations E12 and E13; deviations and post hoc
+  descriptions dated there). I ran `notebooks/bioemu_resample.ipynb` on a free Colab GPU: bioemu-v1.2, 100
+  samples for each of 51 proteins (the 41 clean disordered profiles, 9 folded, 1 partly disordered).
+  `analysis/resample/` recovered every sample from the raw output with BioEmu's own conversion, scored both sides
+  like for like (Cα radius of gyration; PULCHRA and Pepsi-SAXS for both sets of conformers) and evaluated BioEmu's
+  physical filter on both. Result: disordered median Cα-Rg ratio 1.16 (0.95–1.51) against 1.35 for the archive,
+  rising with chain length; median raw χ² 25.5 against 6.1; a median of 90% of v1.2's disordered samples rejected by
+  the filter, every sample for six chains. E12 met on the point estimate, E13 not met. The page adds the subsection
+  "Does the current checkpoint show the same bias?" to the size section (new Figure 4; later figures renumbered), and
+  the Method and Limits sentences that called the re-sample a follow-up now describe it. No pre-registered quantity
+  of this design changes.
 
 ## 8. Conventions
 
