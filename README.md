@@ -176,6 +176,8 @@ because they are already public under CC-BY 4.0 and are large, and the downloads
 
 MIT for the code. The inputs keep their own licence (CC-BY 4.0, Invernizzi et al. 2025; SASBDB data as
 deposited).
+The licence of every tool, model, data source and Python package the project uses, and what the repository holds
+of each, is in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).
 
 ## Cite
 
