@@ -138,3 +138,12 @@ conformer, cached per conformer and resumable, in at most three worker processes
   RMSD two xtc copies of one conformer can differ by (each file rounds every coordinate to 0.001 nm). The
   RMSD is computed by a float64 superposition (largest value 0.0075 Å): `mdtraj.rmsd` works in float32 and
   gave up to 0.38 Å for the same pairs, above that bound (both in `results/resample/summary.json`).
+
+**2026-10-16, added for the page after the results were seen (descriptive, no expectation attached).**
+
+- *Disordered proteins by chain length.* The Cα-Rg ratios of both sides and v1.2's rejected share for chains of
+  at most 100 residues and for longer ones (the length step the study reports for folded proteins, E2), with the
+  Spearman correlation of each with length (`length_split_disordered` in `summary.json`).
+- *All samples on the proteins of the filtered comparison.* §3 and §4 with all samples, restricted to the
+  proteins with at least 10 passing conformers on both sides, so the effect of the filter is read on one set
+  of proteins (`size_all_filtered_set`, `fit_all_filtered_set`).

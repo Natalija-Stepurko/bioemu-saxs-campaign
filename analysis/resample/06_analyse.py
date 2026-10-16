@@ -17,10 +17,13 @@ import numpy as np
 import pandas as pd
 import rslib
 from common import FIG, MIN_FILTERED, N_BOOT, OUT, RES, SEED, VERSIONS, record
+from scipy import stats
 
 from bsc import report
 
 CLASSES = ("disordered", "folded")
+LENGTH_CUT = 100      # residues; the length step the study reports for folded proteins (E2), used to describe
+                      # the disordered ratios by length (added after the first results, design §9)
 
 
 def ensemble_table(rgc: pd.DataFrame, filt: pd.DataFrame) -> pd.DataFrame:
@@ -97,6 +100,26 @@ def size(d: pd.DataFrame, sub: str) -> dict:
     for _, r in d[~d["disorder_class"].isin(CLASSES)].iterrows():
         out[f"{r['disorder_class']} ({r['label']})"] = {"ratio_v12": r[f"ratio_v12_{sub}"],
                                                          "ratio_archive": r[f"ratio_arch_{sub}"]}
+    return out
+
+
+def length_split(d: pd.DataFrame) -> dict:
+    """Disordered proteins by chain length: the Cα-Rg ratios of both sides and v1.2's rejected share, for
+    chains of at most LENGTH_CUT residues and longer ones, and the rank correlation of each with length."""
+    g = d[d["disorder_class"] == "disordered"]
+    out = {"cut_residues": LENGTH_CUT}
+    for name, h in (("short", g[g["length"] <= LENGTH_CUT]), ("long", g[g["length"] > LENGTH_CUT])):
+        out[name] = {"n": len(h), "length_min": int(h["length"].min()), "length_max": int(h["length"].max()),
+                     "ratio_v12": rslib.median_ci(h["ratio_v12_all"], SEED, N_BOOT),
+                     "ratio_archive": rslib.median_ci(h["ratio_arch_all"], SEED, N_BOOT),
+                     "n_v12_below_1": int((h["ratio_v12_all"] < 1).sum()),
+                     "n_v12_below_archive": int((h["ratio_v12_all"] < h["ratio_arch_all"]).sum()),
+                     "rejected_share_v12_median": float(h["rejected_share_v12"].median()),
+                     "n_all_rejected_v12": int((h["n_pass_v12"] == 0).sum())}
+    for key, col in (("ratio_v12", "ratio_v12_all"), ("ratio_archive", "ratio_arch_all"),
+                     ("rejected_share_v12", "rejected_share_v12")):
+        r = stats.spearmanr(g["length"], g[col])
+        out[f"spearman_length_vs_{key}"] = {"rho": float(r.statistic), "p": float(r.pvalue), "n": len(g)}
     return out
 
 
@@ -198,11 +221,15 @@ def main() -> None:
                                             d.loc[d["n_pass_v12"] > 0, "length"].median())},
         "size_all": size(d, "all"),
         "size_filtered": size(d, "filtered"),
+        # all samples, on the proteins of the filtered comparison: separates the filter from the protein set
+        "size_all_filtered_set": size(d[d["filtered_comparable"]], "all"),
+        "length_split_disordered": length_split(d),
         "n_filtered_comparable": {"total": int(d["filtered_comparable"].sum()),
                                   "by_class": d[d["filtered_comparable"]]["disorder_class"]
                                   .value_counts().to_dict()},
         "fit_all": fit(d, "all"),
         "fit_filtered": fit(d, "filtered"),
+        "fit_all_filtered_set": fit(d[d["filtered_comparable"]], "all"),
         "dropped_curves": {p: int(d[f"n_dropped_{p}_all"].sum()) for p in ("A", "B", "C")},
         "checks": {
             "archive_rg_vs_coord_rg_csv_n": int(d["rg_ca_arch_coord_rg_csv"].notna().sum()),
