@@ -348,7 +348,7 @@ def main() -> None:
     m = d[(d["model"] == C.MODEL)]
     mc = m[m["clean"]]
     summary = {
-        "n_entries": int(len(ent)), "n_clean": int(ent.shape[0] - (~m["clean"]).sum()),
+        "n_entries": int(len(ent)), "n_clean": int(clean_mask(ent).sum()),
         "n_flag_aggregation": int(ent["flag_aggregation"].sum()),
         "n_flag_negative": int(ent["flag_negative_I"].sum()),
         "n_flag_bad_errors": int(ent["flag_bad_errors"].sum()),
