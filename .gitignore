@@ -15,3 +15,6 @@ results/**/*.npz
 
 # DENSS reconstructions of the worked examples (results/denss_stats.json keeps the fit statistics)
 results/denss/
+
+# Coverage analysis: downloads and intermediate tables (analysis/coverage/README.md)
+analysis/coverage/work/

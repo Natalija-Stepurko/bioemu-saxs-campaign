@@ -1,0 +1,191 @@
+{
+  "SASBDB": {
+    "source": "https://www.sasbdb.org/rest-api/entry/summary/<LABEL>/",
+    "n_entries": 439,
+    "accessed": "2026-10-13T21:10:22Z"
+  },
+  "UniProtKB": {
+    "release": "2026_03",
+    "release_date": "02-September-2026",
+    "source": "https://rest.uniprot.org/uniprotkb/<ACC>.json",
+    "accessed": "2026-10-13T20:58:08Z"
+  },
+  "UniProtKB/Swiss-Prot flat file": {
+    "release": "UniProtKB/Swiss-Prot Release 2026_03 of 02-Sep-2026",
+    "n_entries": 575748,
+    "source": "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.dat.gz",
+    "accessed": "2026-10-13T21:11:54Z"
+  },
+  "RCSB clusters-by-entity-30": {
+    "source": "https://cdn.rcsb.org/resources/sequence/clusters/clusters-by-entity-30.txt",
+    "file_last_modified": "Sun, 04 Oct 2026 02:09:51 GMT",
+    "n_clusters_in_file": 272382,
+    "n_clusters_with_experimental_entity": 47069,
+    "accessed": "2026-10-13T21:11:02Z"
+  },
+  "InterPro:interpro": {
+    "name": "InterPro",
+    "version": "110.0",
+    "release_date": "2026-09-03T00:00:00Z",
+    "source": "https://www.ebi.ac.uk/interpro/api/",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "InterPro:cathgene3d": {
+    "name": "CATH-Gene3D",
+    "version": "4.3.0",
+    "release_date": "2020-10-21T00:00:00Z",
+    "source": "https://www.ebi.ac.uk/interpro/api/",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "InterPro:pfam": {
+    "name": "Pfam",
+    "version": "38.2",
+    "release_date": "2026-03-26T00:00:00Z",
+    "source": "https://www.ebi.ac.uk/interpro/api/",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "PDBe SIFTS best_structures": {
+    "source": "https://www.ebi.ac.uk/pdbe/api/mappings/best_structures/<ACC>",
+    "version": "live API (weekly SIFTS update)",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "TED": {
+    "source": "https://ted.cathdb.info/api/v1/uniprot/summary/<ACC>",
+    "version": "TED v1 (AFDB v4 models, CATH labels)",
+    "accessed": "2026-10-13T21:10:59Z"
+  },
+  "CATH": {
+    "version": "v4.4.0",
+    "version_date": "16.12.2024",
+    "source": "https://download.cathdb.info/cath/releases/latest-release/cath-classification-data/",
+    "n_domains": 601328,
+    "n_s35_clusters": 37350,
+    "accessed": "2026-10-13T21:11:57Z"
+  },
+  "BioEmu AFDB cluster definitions": {
+    "source": "https://github.com/microsoft/bioemu/tree/6f059c41017a2c653ef1567ce79d7fa260ad3670/dev/afdb_cluster_definitions",
+    "version": "file added 2025-04-25",
+    "n_clusters": 50228,
+    "n_structure_representatives": 179422,
+    "afdb_release": "v4",
+    "accessed": "2026-10-14T14:36:49Z",
+    "commit": "6f059c41017a2c653ef1567ce79d7fa260ad3670"
+  },
+  "Zenodo 15629740": {
+    "title": "Molecular dynamics dataset for \"scalable emulation of protein equilibrium ensembles with generative deep learning\": CATH domains",
+    "doi": "10.5281/zenodo.15629740",
+    "version": "published 2025-06-10",
+    "updated": "2025-07-17T09:19:48.158313+00:00",
+    "license": "Community Data License Agreement - Permissive - Version 2.0",
+    "files": {
+      "LICENSE.txt": 2354,
+      "MSR_cath2.zip": 27675718561,
+      "dataset-card-cath.md": 6854,
+      "ONE_cath1.zip": 2075500655
+    },
+    "accessed": "2026-10-14T14:36:52Z"
+  },
+  "UniProtKB (AFDB cluster members)": {
+    "release": "2026_03",
+    "release_date": "02-September-2026",
+    "source": "https://rest.uniprot.org/idmapping (UniProtKB_AC-ID -> UniProtKB)",
+    "accessed": "2026-10-14T14:42:32Z"
+  },
+  "Zenodo 15641199": {
+    "title": "Molecular dynamics dataset for \"scalable emulation of protein equilibrium ensembles with generative deep learning\": Octapeptides",
+    "doi": "10.5281/zenodo.15641199",
+    "version": "published 2025-06-11",
+    "updated": "2025-07-17T09:22:31.404686+00:00",
+    "license": "Community Data License Agreement - Permissive - Version 2.0",
+    "files": {
+      "ONE_octapeptides.zip": 511373011,
+      "LICENSE.txt": 2354,
+      "dataset-card-opeps.md": 6512
+    },
+    "accessed": "2026-10-14T14:49:03Z"
+  },
+  "Zenodo 15641184": {
+    "title": "Molecular dynamics dataset for \"scalable emulation of protein equilibrium ensembles with generative deep learning\": MegaSim",
+    "doi": "10.5281/zenodo.15641184",
+    "version": "published 2025-06-11",
+    "updated": "2025-07-17T09:22:08.248418+00:00",
+    "license": "Community Data License Agreement - Permissive - Version 2.0",
+    "files": {
+      "MSR_megasim_merge.zip": 1301522633,
+      "MSR_megasim_mutants_disp_allatom.zip": 8441127981,
+      "LICENSE.txt": 2354,
+      "dataset-card-megasim.md": 6986
+    },
+    "accessed": "2026-10-14T14:52:16Z"
+  },
+  "Zenodo 7992926": {
+    "title": "Mega-scale experimental analysis of protein folding stability in biology and design",
+    "doi": "10.5281/zenodo.7992926",
+    "version": "v2_230420",
+    "updated": "2023-07-20T22:20:35.622672+00:00",
+    "license": "cc-by-4.0",
+    "files": {
+      "Pipeline_qPCR_data.zip": 161511,
+      "Pipeline_figure_model.zip": 938357,
+      "Data_tables_for_figs.zip": 24125970,
+      "AlphaFold_model_PDBs.zip": 13977225,
+      "Raw_NGS_count_tables.zip": 242934040,
+      "Blueprints_for_EEHH.zip": 2438,
+      "Processed_K50_dG_datasets.zip": 1013678473,
+      "K50_dG_tables.zip": 449818840,
+      "Pipeline_K50_dG.zip": 181224338
+    },
+    "accessed": "2026-10-14T14:55:47Z"
+  },
+  "MEGAscale (Tsuboyama et al. 2023)": {
+    "source": "https://doi.org/10.5281/zenodo.7992926",
+    "member": "Processed_K50_dG_datasets.zip/Tsuboyama2023_Dataset2_Dataset3_20230416.csv",
+    "accessed": "2026-10-14T15:07:58Z"
+  },
+  "Other public MD sets (named proteins)": {
+    "source": "UniProtKB entries named in Lewis et al. 2025 Table S1 and its references; Folding@home bucket fah-public-data-covid19-cryptic-pockets (system listing)",
+    "n_exascale_systems_listed": 36,
+    "accessed": "2026-10-14T15:08:03Z"
+  },
+  "UniParc (AFDB cluster members deleted from UniProtKB)": {
+    "source": "https://rest.uniprot.org/idmapping (UniProtKB_AC-ID -> UniParc)",
+    "n_ids": 129202,
+    "n_found": 129202,
+    "accessed": "2026-10-14T16:20:56Z"
+  },
+  "DESRES fast-folder sequences": {
+    "source": "https://www.rcsb.org/fasta/entry/<PDB>",
+    "pdb_entries": {
+      "Chignolin": "5AWL",
+      "Trp-cage": "2JOF",
+      "BBA": "1FME",
+      "Villin": "2F4K",
+      "WW domain": "2F21",
+      "NTL9": "2HBA",
+      "BBL": "2WXC",
+      "Protein B": "1PRB",
+      "Homeodomain": "2P6J",
+      "Protein G": "1MI0",
+      "alpha3D": "2A3D",
+      "lambda-repressor": "1LMB"
+    },
+    "accessed": "2026-10-14T16:22:59Z"
+  },
+  "metapredict": {
+    "version": "3.1.1",
+    "source": "https://github.com/idptools/metapredict",
+    "threshold": 0.5,
+    "accessed": "2026-10-14T16:25:19Z"
+  },
+  "MMseqs2": {
+    "version": "release 18-8cc5c",
+    "commit": "8cc5ce367b5638c4306c2d7cfc652dd099a4643f",
+    "source": "https://github.com/soedinglab/MMseqs2/releases (static linux-avx2 binary)",
+    "accessed": "2026-10-14T16:25:19Z"
+  },
+  "UniProtKB (AFDB cluster members): counts": {
+    "n_ids": 179422,
+    "n_active": 50220,
+    "accessed": "2026-10-14T16:20:56Z"
+  }
+}

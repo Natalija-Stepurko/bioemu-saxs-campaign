@@ -1,5 +1,5 @@
 """Named stages with a run log: `bsc fetch`, `bsc score`, `bsc coordrg`, `bsc analyse`, `bsc select_eval`,
-`bsc predict`, `bsc envelopes`, `bsc report`, `bsc all`."""
+`bsc predict`, `bsc envelopes`, `bsc coverage`, `bsc report`, `bsc all`."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,7 @@ from pathlib import Path
 
 from bsc import config as C
 
-STAGES = ["fetch", "score", "coordrg", "analyse", "select_eval", "predict", "envelopes", "report"]
+STAGES = ["fetch", "score", "coordrg", "analyse", "select_eval", "predict", "envelopes", "coverage", "report"]
 
 
 def _git() -> dict:
@@ -64,6 +64,9 @@ def run(stage: str, argv: list[str]) -> None:
     elif stage == "envelopes":
         from bsc import envelopes
         envelopes.main()
+    elif stage == "coverage":
+        from bsc import coverage
+        coverage.main()
     elif stage == "report":
         from bsc import report
         report.main()

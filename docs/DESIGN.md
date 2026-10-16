@@ -190,6 +190,39 @@ beside the old ones in `results/`.
   predictable from pre-measurement features, and the policies fed predictions remain within the spread of a
   random pick.
 
+- **Coverage of structure space and the structure split (2026-10-14).** Added after the results were seen.
+  `analysis/coverage/` maps the 399 clean constructs to UniProtKB regions (390 mapped; 17 SASBDB accessions
+  set aside, 16 of them mapped again by sequence search; 9 unmapped) and compares the set with CATH v4.4.0 at
+  the S35 level, non-redundant PDB clusters (30% identity) and Swiss-Prot release 2026_03. CATH and the PDB are
+  the reference for experimentally known structure space. Stage `coverage` splits the clean BioEmu-1 profiles by SIFTS coverage of the construct
+  (at least 50%, partial, none) and reports the raw-fit share (Wilson intervals), bootstrap medians of raw χ²,
+  NRMSD and Rg ratio and the share whose target fit is not reached, pooled and within each disorder class;
+  two-sided Mann–Whitney tests compare at least 50% against the rest, Holm-adjusted over the six
+  within-class tests, with a class-stratified van Elteren test. Result: the pooled difference (p = 0.014)
+  does not hold within classes or stratified by class (p = 0.39); among disordered proteins the nominal
+  difference (p = 0.04) does not survive the correction (0.22). SIFTS coverage counts residues listed in the
+  structure record, which can include unmodelled ones. No pre-registered quantity changes.
+
+- **BioEmu-1's training data and the recommendation section (2026-10-14).** Added after the results were seen.
+  Scripts 11-17 of `analysis/coverage/` obtain the public training data: the AFDB pre-training cluster
+  definitions published with the model (50,228 clusters, 179,422 AFDB v4 structure representatives; sequences
+  from UniProtKB, or UniParc for the 129,202 entries deleted since), the simulated topologies of the CATH1,
+  CATH2 and MegaSim systems read out of the Zenodo archives by HTTP range requests, the curated MEGAscale wild
+  types, the named proteins of the other public MD sets, and the DESRES fast-folder sequences (used by Lewis et
+  al. for a separate model only, reported apart). Every set is described with the same descriptors (CATH
+  superfamilies, length, metapredict disorder, organism) and every construct is searched against every part
+  with MMseqs2 (nearest sequence over an alignment covering at least half of the construct). Stage `coverage`
+  relates BioEmu-1's raw χ², raw-fit share, NRMSD and Rg ratio to the nearest-training identity (bins <30,
+  30-50, 50-90, ≥90%; Spearman) and to superfamily presence (Mann-Whitney), pooled and within each disorder
+  class with Holm adjustment over the within-class tests, and evaluates candidate protein categories for data
+  collection against the training composition, the archive and the error. Results: 41% of the clean profiles
+  have a training sequence of at least 30% identity, 6% of at least 90%; the pooled association of the raw-fit
+  share with identity (ρ = 0.11, p = 0.02) does not hold within classes (every Holm-adjusted p ≥ 0.35) or
+  stratified by class (van Elteren p = 0.17). Supported categories: disordered proteins, folded proteins with
+  long disordered regions, full-length multidomain proteins above 500 residues; the ordering is a judgement,
+  no numeric priority is used. The coverage material moved from its own page section to the opening of "What
+  should be measured next?". No pre-registered quantity changes.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.

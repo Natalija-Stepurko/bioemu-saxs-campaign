@@ -1,13 +1,14 @@
 # One-command regeneration. `make all` runs every stage after the download; `make page` rebuilds
 # the project page from the tracked results/. BSC_ROOT moves data and results elsewhere;
 # BSC_DENSS_ENV points at the DENSS environment (numpy < 2); ARCHIVE at Predictions.tar.gz for coordrg.
+# `coverage` reads results/coverage/, written by analysis/coverage/run_all.sh (network, extra requirements).
 UV ?= uv run
 ARCHIVE ?=
 export BSC_N_JOBS ?= 6
 
-.PHONY: all fetch score coordrg analyse select_eval predict envelopes report page test lint
+.PHONY: all fetch score coordrg analyse select_eval predict envelopes coverage report page test lint
 
-all: score coordrg analyse select_eval predict envelopes report page
+all: score coordrg analyse select_eval predict envelopes coverage report page
 
 fetch:
 	$(UV) bsc fetch
@@ -29,6 +30,9 @@ predict:
 
 envelopes:
 	$(UV) bsc envelopes
+
+coverage:
+	$(UV) bsc coverage
 
 report:
 	$(UV) bsc report
