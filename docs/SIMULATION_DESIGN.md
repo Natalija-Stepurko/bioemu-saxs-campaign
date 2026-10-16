@@ -150,6 +150,16 @@ and BioEmu-1's ratio is reported on the same subset beside its value on all 41. 
 - **2026-10-15, conformers without a curve.** Pepsi-SAXS can return a curve of NaN values with a zero exit
   code (seen on one frame of SASDJH6). Such conformers are dropped before averaging, as the score stage drops
   non-finite conformer curves of the archive; the number dropped per protein is in `per_protein.csv`.
+- **2026-10-15, an analysis added when one protein had been analysed: the Guinier offset of a chain.** The archive's
+  Guinier fit (q·Rg up to 1.3) applied to the Debye function of a Gaussian chain returns 0.92 of the true radius
+  (`guinier_over_true_rg_gaussian_chain` in `summary.json`; a unit test checks it on simulated random coils). The
+  measured radii come from that fit and the primary measure divides a bead radius by them, so a correct chain
+  model can sit above 1 by up to that factor. The primary measure and E10 stay as written; the curve-against-curve
+  sensitivity analysis of §3 (b), in which both radii come from the same fit, is reported beside it.
+- **2026-10-16, proteins run at reduced length in the SAXS and analysis steps.** The SAXS and analysis scripts
+  first took the frame count and the frames to discard from the input table (1,010 and 10) for every protein;
+  before any result was read they were changed to take both from the compute plan (505 and 5 for the three
+  proteins the plan shortened).
 
 ## References
 

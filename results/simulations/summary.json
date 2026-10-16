@@ -1,0 +1,254 @@
+{
+ "n": 40,
+ "e10_band": [
+  0.9,
+  1.1
+ ],
+ "n_boot": 2000,
+ "seed": 20261015,
+ "guinier_over_true_rg_gaussian_chain": 0.9152650630063299,
+ "n_flag_training": 6,
+ "n_flag_validation_only": 5,
+ "n_denaturant": 4,
+ "n_converged": 34,
+ "primary": {
+  "all": {
+   "n": 40,
+   "calvados_median": 1.0437952924507246,
+   "calvados_ci95": [
+    1.0073467741890672,
+    1.0956242904280158
+   ],
+   "bioemu_median": 1.2111423160293677,
+   "bioemu_ci95": [
+    1.1303251252211255,
+    1.3031442110227163
+   ],
+   "calvados_share_within_0.9_1.1": 0.55,
+   "bioemu_share_within_0.9_1.1": 0.15,
+   "closer_to_1": {
+    "k": 33,
+    "n": 40,
+    "share": 0.825,
+    "ci95": [
+     0.6805000953869541,
+     0.9125458630150444
+    ],
+    "sign_test_p_two_sided": 4.2277022657799534e-05
+   },
+   "wilcoxon_log_ratio_difference_p": 0.0033575435081729665,
+   "wilcoxon_abs_log_ratio_p": 0.0003790976079471875,
+   "E10_met": true,
+   "E10_interval_inside_band": true,
+   "E11_met": true
+  },
+  "without_training_overlap": {
+   "n": 34,
+   "calvados_median": 1.0510699766919083,
+   "calvados_ci95": [
+    0.9992495760483378,
+    1.1068943926455688
+   ],
+   "bioemu_median": 1.207557403834824,
+   "bioemu_ci95": [
+    1.121022086515349,
+    1.3396492712997157
+   ],
+   "calvados_share_within_0.9_1.1": 0.5294117647058824,
+   "bioemu_share_within_0.9_1.1": 0.14705882352941177,
+   "closer_to_1": {
+    "k": 28,
+    "n": 34,
+    "share": 0.8235294117647058,
+    "ci95": [
+     0.66486262458356,
+     0.9165103100332392
+    ],
+    "sign_test_p_two_sided": 0.00019512558355927467
+   },
+   "wilcoxon_log_ratio_difference_p": 0.013829763396643102,
+   "wilcoxon_abs_log_ratio_p": 0.00072716164868325,
+   "E10_met": true,
+   "E10_interval_inside_band": false,
+   "E11_met": true
+  },
+  "without_any_overlap": {
+   "n": 29,
+   "calvados_median": 1.0263664297694381,
+   "calvados_ci95": [
+    0.9906354013457661,
+    1.107661545282128
+   ],
+   "bioemu_median": 1.1851003104790192,
+   "bioemu_ci95": [
+    1.02406871046859,
+    1.2489853099885544
+   ],
+   "calvados_share_within_0.9_1.1": 0.5517241379310345,
+   "bioemu_share_within_0.9_1.1": 0.1724137931034483,
+   "closer_to_1": {
+    "k": 23,
+    "n": 29,
+    "share": 0.7931034482758621,
+    "ci95": [
+     0.6160990944322833,
+     0.9015392985954367
+    ],
+    "sign_test_p_two_sided": 0.002315700054168701
+   },
+   "wilcoxon_log_ratio_difference_p": 0.09195835143327713,
+   "wilcoxon_abs_log_ratio_p": 0.007456466555595398,
+   "E10_met": true,
+   "E10_interval_inside_band": false,
+   "E11_met": true
+  },
+  "without_denaturant": {
+   "n": 36,
+   "calvados_median": 1.0642275051598413,
+   "calvados_ci95": [
+    1.0263664297694381,
+    1.1036970854328751
+   ],
+   "bioemu_median": 1.2329617551196044,
+   "bioemu_ci95": [
+    1.1784958209005834,
+    1.3570556239103269
+   ],
+   "calvados_share_within_0.9_1.1": 0.5277777777777778,
+   "bioemu_share_within_0.9_1.1": 0.16666666666666666,
+   "closer_to_1": {
+    "k": 30,
+    "n": 36,
+    "share": 0.8333333333333334,
+    "ci95": [
+     0.6810920555117621,
+     0.9212955245089851
+    ],
+    "sign_test_p_two_sided": 6.960169412195683e-05
+   },
+   "wilcoxon_log_ratio_difference_p": 0.004597575025400147,
+   "wilcoxon_abs_log_ratio_p": 0.0011994246451649815,
+   "E10_met": true,
+   "E10_interval_inside_band": false,
+   "E11_met": true
+  },
+  "converged_only": {
+   "n": 34,
+   "calvados_median": 1.0379058279095426,
+   "calvados_ci95": [
+    0.9932522290261233,
+    1.0878873876370876
+   ],
+   "bioemu_median": 1.207557403834824,
+   "bioemu_ci95": [
+    1.121022086515349,
+    1.2931700079774278
+   ],
+   "calvados_share_within_0.9_1.1": 0.5882352941176471,
+   "bioemu_share_within_0.9_1.1": 0.11764705882352941,
+   "closer_to_1": {
+    "k": 29,
+    "n": 34,
+    "share": 0.8529411764705882,
+    "ci95": [
+     0.6987194336217214,
+     0.9355055859602414
+    ],
+    "sign_test_p_two_sided": 3.8558151572942734e-05
+   },
+   "wilcoxon_log_ratio_difference_p": 0.009070051251910627,
+   "wilcoxon_abs_log_ratio_p": 4.660175181925297e-05,
+   "E10_met": true,
+   "E10_interval_inside_band": true,
+   "E11_met": true
+  }
+ },
+ "sensitivity_coordinates": {
+  "n": 40,
+  "calvados_median": 1.0437952924507246,
+  "calvados_ci95": [
+   1.0073467741890672,
+   1.0956242904280158
+  ],
+  "bioemu_median": 1.3578776955446883,
+  "bioemu_ci95": [
+   1.226594361857332,
+   1.4707050080226545
+  ],
+  "calvados_share_within_0.9_1.1": 0.55,
+  "bioemu_share_within_0.9_1.1": 0.1,
+  "closer_to_1": {
+   "k": 33,
+   "n": 40,
+   "share": 0.825,
+   "ci95": [
+    0.6805000953869541,
+    0.9125458630150444
+   ],
+   "sign_test_p_two_sided": 4.2277022657799534e-05
+  },
+  "wilcoxon_log_ratio_difference_p": 0.00024816789118631277,
+  "wilcoxon_abs_log_ratio_p": 4.098819044884294e-05,
+  "E10_met": true,
+  "E10_interval_inside_band": true,
+  "E11_met": true
+ },
+ "sensitivity_curves": {
+  "n": 40,
+  "calvados_median": 0.987749310527004,
+  "calvados_ci95": [
+   0.9795422204665047,
+   1.044946909930763
+  ],
+  "bioemu_median": 1.2111423160293677,
+  "bioemu_ci95": [
+   1.1302088372373034,
+   1.3031442110227163
+  ],
+  "calvados_share_within_0.9_1.1": 0.6,
+  "bioemu_share_within_0.9_1.1": 0.15,
+  "closer_to_1": {
+   "k": 32,
+   "n": 40,
+   "share": 0.8,
+   "ci95": [
+    0.6524269352437855,
+    0.8950001032811363
+   ],
+   "sign_test_p_two_sided": 0.0001821658297558315
+  },
+  "wilcoxon_log_ratio_difference_p": 0.00023327588314714376,
+  "wilcoxon_abs_log_ratio_p": 0.0001597403588675661,
+  "E10_met": true,
+  "E10_interval_inside_band": true,
+  "E11_met": true
+ },
+ "chi2": {
+  "n": 40,
+  "calvados_median": 2.7178616052455444,
+  "bioemu_median": 8.953357492641164,
+  "calvados_ci95": [
+   1.7789398823680584,
+   5.520491069983097
+  ],
+  "bioemu_ci95": [
+   5.318653764598563,
+   13.581522445004731
+  ],
+  "calvados_share_le_2": 0.425,
+  "bioemu_share_le_2": 0.125,
+  "calvados_lower": {
+   "k": 30,
+   "n": 40,
+   "share": 0.75,
+   "ci95": [
+    0.5980603845146479,
+    0.8581288142561201
+   ],
+   "sign_test_p_two_sided": 0.0022214337732293643
+  },
+  "wilcoxon_log_p": 0.00028057557574356906,
+  "nrmsd_calvados_median": 0.025438574387263584,
+  "nrmsd_bioemu_median": 0.03124337676341675
+ }
+}

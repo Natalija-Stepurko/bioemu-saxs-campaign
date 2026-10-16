@@ -81,6 +81,19 @@ def score_curves(label: str) -> dict | None:
     }
 
 
+def wall_clock_span() -> float:
+    """Hours from the start of the first chunk to the end of the last (file times, chunk durations)."""
+    starts, ends = [], []
+    for prog_f in RUNS.glob("*/progress.json"):
+        prog = json.loads(prog_f.read_text())
+        for c in prog["chunks"]:
+            f = prog_f.parent / f"chunk_{c['chunk']:03d}.dcd"
+            if f.exists():
+                ends.append(f.stat().st_mtime)
+                starts.append(f.stat().st_mtime - c["seconds"])
+    return round((max(ends) - min(starts)) / 3600, 2) if ends else 0.0
+
+
 def paired(a: np.ndarray, b: np.ndarray, seed: int) -> dict:
     """a: CALVADOS ratios, b: BioEmu-1 ratios on the same proteins."""
     n = len(a)
@@ -124,23 +137,30 @@ def figure(t: pd.DataFrame, S: dict, path: Path) -> None:
     ax.axhspan(*E10_BAND, color="#EEF1F2", lw=0, zorder=0)
     ax.axhline(1.0, color=report.MUTED, lw=0.8, ls="--", zorder=1)
     flag = t["flag_training"].to_numpy() | t["flag_validation"].to_numpy()
-    for _, r in t.iterrows():
-        ax.plot([0, 1], [r["bioemu_rg_ratio"], r["calvados_rg_ratio"]], color="#B9C0C6", lw=0.8, zorder=2)
+    jit = np.random.default_rng(SEED).uniform(-0.07, 0.07, len(t))  # the same offset on both sides of a pair
+    for i, (_, r) in enumerate(t.iterrows()):
+        ax.plot(
+            [jit[i], 1 + jit[i]],
+            [r["bioemu_rg_ratio"], r["calvados_rg_ratio"]],
+            color="#B9C0C6",
+            lw=0.8,
+            zorder=2,
+        )
     for x, col, key in (
         (0, report.ROLE_COL["bioemu"], "bioemu_rg_ratio"),
         (1, CALVADOS_COL, "calvados_rg_ratio"),
     ):
         v = t[key].to_numpy()
-        ax.scatter(np.full((~flag).sum(), x), v[~flag], s=34, color=col, alpha=0.75, lw=0, zorder=3)
-        ax.scatter(np.full(flag.sum(), x), v[flag], s=34, facecolor="white", edgecolor=col, lw=1.4, zorder=3)
+        ax.scatter(x + jit[~flag], v[~flag], s=34, color=col, alpha=0.75, lw=0, zorder=3)
+        ax.scatter(x + jit[flag], v[flag], s=34, facecolor="white", edgecolor=col, lw=1.4, zorder=3)
     P = S["primary"]["all"]
     for x, med, ci in (
         (0, P["bioemu_median"], P["bioemu_ci95"]),
         (1, P["calvados_median"], P["calvados_ci95"]),
     ):
-        ax.plot([x + 0.16] * 2, ci, color=report.INK, lw=1.6, zorder=4)
-        ax.plot([x + 0.10, x + 0.22], [med] * 2, color=report.INK, lw=2.2, zorder=4)
-        ax.text(x + 0.26, med, f"{med:.2f}", va="center", fontsize=9.5, color=report.INK)
+        ax.plot([x + 0.2] * 2, ci, color=report.INK, lw=1.6, zorder=4)
+        ax.plot([x + 0.14, x + 0.26], [med] * 2, color=report.INK, lw=2.2, zorder=4)
+        ax.text(x + 0.3, med, f"{med:.2f}", va="center", fontsize=9.5, color=report.INK)
     ax.set_yscale("log")
     ax.set_xlim(-0.35, 1.55)
     ax.set_xticks([0, 1], ["BioEmu-1\n(ensemble curve)", "CALVADOS 3\n(simulated beads)"])
@@ -179,9 +199,12 @@ def main() -> None:
     bio = res[(res["model"] == "bioemu")].set_index("label")
     coord = pd.read_csv(RES / "coord_rg.csv").set_index("label")
     mw = pd.read_csv(DL / "residues_CALVADOS3.csv").set_index("one")["MW"].to_dict()
+    plan = {p["label"]: p for p in json.loads((OUT / "plan.json").read_text())["proteins"]}
     rows, conv_rows, runs = [], [], []
     for _, r in inp.iterrows():
         lab = r["label"]
+        r = r.copy()
+        r["n_frames"], r["n_discard"] = plan[lab]["frames_planned"], plan[lab]["discard_planned"]
         prog_f = RUNS / lab / "progress.json"
         prog = json.loads(prog_f.read_text()) if prog_f.exists() else {"frames": 0}
         runs.append(
@@ -190,12 +213,13 @@ def main() -> None:
                 "length": int(r["length"]),
                 "frames": prog["frames"],
                 "target_frames": int(r["n_frames"]),
+                "included": bool(plan[lab]["included"]),
                 "wall_hours": round(prog.get("wall_seconds", 0) / 3600, 3),
                 "steps_per_second": prog.get("steps_per_second"),
                 "ns": round(prog["frames"] * int(r["n_save"]) * 1e-5, 2),
             }
         )
-        if prog["frames"] < int(r["n_frames"]):
+        if not plan[lab]["included"] or prog["frames"] < int(r["n_frames"]):
             continue
         rg, meta = protein_rg(lab, r, mw)
         cv = convergence(rg)
@@ -243,9 +267,17 @@ def main() -> None:
     R = pd.DataFrame(runs)
     meta = {
         "n_proteins": int(len(R)),
-        "n_complete": int((R["frames"] >= R["target_frames"]).sum()),
+        "n_complete": int((R["included"] & (R["frames"] >= R["target_frames"])).sum()),
+        # every simulation step run, the pilot of the protein the plan left out included
         "total_wall_hours_single_thread": round(float(R["wall_hours"].sum()), 2),
+        "wall_hours_analysed_proteins": round(float(R.loc[R["included"], "wall_hours"].sum()), 2),
+        "wall_hours_left_out_pilot": round(float(R.loc[~R["included"], "wall_hours"].sum()), 2),
+        "median_wall_hours_per_analysed_protein": round(
+            float(R.loc[R["included"], "wall_hours"].median()), 3
+        ),
+        "max_wall_hours_per_protein": round(float(R["wall_hours"].max()), 2),
         "total_ns": round(float(R["ns"].sum()), 1),
+        "wall_clock_span_hours": wall_clock_span(),
         "per_protein": R.to_dict(orient="records"),
     }
     (OUT / "run_metadata.json").write_text(json.dumps(meta, indent=1) + "\n")

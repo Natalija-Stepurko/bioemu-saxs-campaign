@@ -40,13 +40,35 @@ def frame_indices(n_total: int, n_discard: int, n_pick: int = N_SAXS_FRAMES) -> 
     return np.unique(np.linspace(n_discard, n_total - 1, n_pick).round().astype(int))
 
 
+def frames_planned(label: str, default: int) -> int:
+    """Frames the compute plan (04_plan.py) gives this protein."""
+    f = OUT / "plan.json"
+    if not f.exists():
+        return default
+    return next(
+        (int(p["frames_planned"]) for p in json.loads(f.read_text())["proteins"] if p["label"] == label),
+        default,
+    )
+
+
+def discard_planned(label: str, default: int) -> int:
+    f = OUT / "plan.json"
+    if not f.exists():
+        return default
+    return next(
+        (int(p["discard_planned"]) for p in json.loads(f.read_text())["proteins"] if p["label"] == label),
+        default,
+    )
+
+
 def one(label: str) -> str:
     r = pd.read_csv(OUT / "inputs.csv").set_index("label").loc[label]
     out = SAXS / label
     if (out / "curves.csv").exists():
         return f"{label}: done"
-    prog = json.loads((RUNS / label / "progress.json").read_text())
-    if prog["frames"] < int(r["n_frames"]):
+    pf = RUNS / label / "progress.json"
+    prog = json.loads(pf.read_text()) if pf.exists() else {"frames": 0}
+    if prog["frames"] < frames_planned(label, int(r["n_frames"])):
         return f"{label}: run incomplete ({prog['frames']} frames)"
     out.mkdir(parents=True, exist_ok=True)
     exp = pd.read_csv(
@@ -55,7 +77,7 @@ def one(label: str) -> str:
     exp_f = out / "exp.dat"
     exp.to_csv(exp_f, sep="\t", index=False)  # as the PeptoneBench wrapper writes it
     t = load_traj(label)
-    idx = frame_indices(t.n_frames, int(r["n_discard"]))
+    idx = frame_indices(t.n_frames, discard_planned(label, int(r["n_discard"])))
     curves, logs = [], []
     for i in idx:
         dat = out / f"frame_{i:04d}.dat"
