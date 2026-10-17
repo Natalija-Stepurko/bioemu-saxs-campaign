@@ -1,0 +1,101 @@
+{
+ "01_inventory": {
+  "commit": "9c1dca44250cd0a394b1409f9da9bb3ba76950d7",
+  "cpus": [
+   5,
+   6,
+   7
+  ],
+  "n_proteins": 51,
+  "n_proteins_failing_checks": 0,
+  "progress_json_sha256": "0cc66068e0e056ce949c4681c770f9a2789cfbe3468370de38861f310c16837e",
+  "resample_list_sha256": "2e73e4290d5599d486ab11e6e33fca100950b2d910c63649082b06e4f7ae4d39",
+  "run_at": "2026-10-16T15:00:25",
+  "samples_dir": "/scratch/scfm-work/resample/bioemu_resample",
+  "wall_seconds": 2.4
+ },
+ "02_convert": {
+  "bioemu": "1.4.1",
+  "bioemu_convert_chemgraph_sha256": "756d115efeacf2b87514d7b21d30adaf046000afcddf6bf8dbdce5f254054386",
+  "commit": "caec86bbf67e7cabd8abcd30eece37a9834b740d",
+  "cpus": [
+   5,
+   6,
+   7
+  ],
+  "filter_atoms": [
+   "N",
+   "CA",
+   "C",
+   "O",
+   "CB"
+  ],
+  "filter_defaults": {
+   "clash_distance": 1.0,
+   "max_ca_seq_distance": 4.5,
+   "max_cn_seq_distance": 2.0
+  },
+  "mdtraj": "1.11.1.post2",
+  "n_proteins_failing_checks": 0,
+  "run_at": "2026-10-16T15:15:13",
+  "torch": "2.14.1+cpu",
+  "wall_seconds": 163.0,
+  "xtc_rmsd_tolerance_A": 0.017320508075688773
+ },
+ "03_rg": {
+  "commit": "9c1dca44250cd0a394b1409f9da9bb3ba76950d7",
+  "cpus": [
+   5,
+   6,
+   7
+  ],
+  "mdtraj": "1.11.1.post2",
+  "run_at": "2026-10-16T15:01:08",
+  "wall_seconds": 1.5
+ },
+ "04_saxs": {
+  "commit": "9c1dca44250cd0a394b1409f9da9bb3ba76950d7",
+  "cpus": [
+   5,
+   6,
+   7
+  ],
+  "pepsi": "/scratch/scfm-work/sims/tools/pepsi/Pepsi-SAXS",
+  "pepsi_fallback": [
+   "--nCoeff",
+   "50"
+  ],
+  "pepsi_flags": [
+   "--maximum_scattering_vector",
+   "10"
+  ],
+  "pepsi_sha256": "65fb5640325213a458279d1b73707cb80d25516635b0519b95c2dee26b97a98f",
+  "pepsi_version": "/scratch/scfm-work/sims/tools/pepsi/Pepsi-SAXS  version: 3.0, May 2020",
+  "pulchra": "/scratch/scfm-work/sims/tools/pulchra_306/pulchra",
+  "pulchra_sha256": "2b124fc7a1ca4eec83e4b049385ae253f4484b45f5d1e86311e4590d548a7faf",
+  "run_at": "2026-10-16T15:09:43",
+  "seconds_per_task_sum": 1511.5,
+  "tasks": 102,
+  "wall_seconds_this_run": 508.6,
+  "workers": 3
+ },
+ "05_chi2": {
+  "commit": "9c1dca44250cd0a394b1409f9da9bb3ba76950d7",
+  "cpus": [
+   5,
+   6,
+   7
+  ],
+  "path_C_vs_scores_csv_max_relative_difference": 2.220446049250313e-16,
+  "run_at": "2026-10-16T15:10:11",
+  "wall_seconds": 3.7
+ },
+ "06_analyse": {
+  "commit": "580b1497b488ed7b7792064f741f412fe2b713b7",
+  "min_filtered": 10,
+  "n_boot": 2000,
+  "run_at": "2026-10-16T15:54:25",
+  "seed": 20261016,
+  "wall_seconds": 2.9
+ }
+}

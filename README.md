@@ -50,6 +50,16 @@ BioEmu-1 on the same proteins, closer to 1 for 33 of 40 proteins; both pre-decla
 also without the 11 proteins that are at least 90% identical to a protein CALVADOS was trained or validated on.
 The design is [`docs/SIMULATION_DESIGN.md`](docs/SIMULATION_DESIGN.md).
 
+A re-sample of 51 proteins with the current checkpoint, bioemu-v1.2 (100 samples each), compared like for like with
+the archive's ensembles (Cα radius of gyration; computed curves through the same PULCHRA and Pepsi-SAXS path), keeps
+the size error for disordered proteins: median Cα-Rg ratio to the measured Guinier radius 1.16 (95% interval
+0.95–1.51) against 1.35 for the archive on the same 41 proteins, below 1 for 10 of the 16 chains of up to 100
+residues and 1.57 at the median for the longer ones. Its raw χ² is higher (median 25.5 against 6.1 over the 51
+proteins), and BioEmu's own physical checks reject a median of 90% of its samples for disordered proteins, mostly for
+clashes, and every sample for six chains of 178–475 residues. Of the two expectations fixed beforehand, E12 (size
+ratio still above 1.1) is met on the point estimate and E13 (v1.2 fits better) is not. The design is
+[`docs/RESAMPLE_DESIGN.md`](docs/RESAMPLE_DESIGN.md); the code is in `analysis/resample/`.
+
 ![error map](results/figures/fig_error_map.png)
 
 ## What was done
@@ -59,9 +69,9 @@ SASBDB) and the BioEmu-1 ensembles with their Pepsi-SAXS back-calculated curves 
 PeptoneBench authors (Zenodo record 17306061, CC-BY 4.0; archives `PeptoneDBs.tar.gz` and
 `Predictions.tar.gz`, md5 verified against the record, sha256 recorded in `data/checksums.json`). The
 ensembles were generated with BioEmu at code commit ac7455d; the archive does not record the checkpoint
-version, and re-sampling with the current v1.2 checkpoint is the first follow-up
-(`notebooks/bioemu_resample.ipynb` prepares it). This study does not re-sample the model; it re-analyses
-that output. Each raw fit scales the ensemble average to the data with one factor and one constant
+version. I re-sampled 51 of the proteins with the current checkpoint, bioemu-v1.2, on a free Colab GPU
+(`notebooks/bioemu_resample.ipynb`) and compared the two (above). Apart from that re-sample, this study
+re-analyses the archive's output. Each raw fit scales the ensemble average to the data with one factor and one constant
 background. A Guinier fit gives the experimental radius of gyration and flags aggregation. Maximum-entropy
 reweighting along a path of prior strengths gives, per entry, the effective sample fraction that must be
 spent to reach a given fit. Entries whose measured molecular weight exceeds 1.6 times the sequence mass

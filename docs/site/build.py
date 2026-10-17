@@ -621,10 +621,10 @@ def coverage_section(n_bioemu: int) -> str:
 <h3 id="space">Where the SAXS archive sits against the training data and CATH</h3>
 {lead}
 {findings}
-{fig("fig_coverage_space", "Figure 7 · fold coverage of the SAXS set",
+{fig("fig_coverage_space", "Figure 8 · fold coverage of the SAXS set",
      f"A: CATH {ver} superfamilies ranked by their number of S35 clusters, in bins; the bar is the share present in the SAXS set (a CATH-Gene3D domain inside a construct), with Wilson 95% intervals and counts. B: CATH class composition of the {comp['n_units']} unique protein–superfamily units in the set against the CATH S35 clusters, with bootstrap intervals over proteins; the few-secondary-structure class (about 1% of both) is not drawn.",
      "In A a set that sampled fold space evenly by cluster would show bars of similar height. In B a ratio above 1 marks a class more frequent in the SAXS set than among solved domains.")}
-{fig("fig_coverage_sources", "Figure 8 · organism and domain architecture",
+{fig("fig_coverage_sources", "Figure 9 · organism and domain architecture",
      "A: source organism of the SAXS profiles (with Wilson 95% intervals), of PDB 30% clusters of chains of at least 30 residues, and of Swiss-Prot entries. B: CATH-Gene3D domains per protein in the SAXS construct, in the full-length UniProt protein it was cut from, and in Swiss-Prot proteins.",
      None)}
 {interp}
@@ -636,7 +636,7 @@ def coverage_section(n_bioemu: int) -> str:
 <h3 id="solved">Does a solved structure matter?</h3>
 {split_prose}
 {split_table}
-{fig("fig_structure_split", "Figure 11 · raw χ² by availability of an experimental structure, within each class",
+{fig("fig_structure_split", "Figure 12 · raw χ² by availability of an experimental structure, within each class",
      "One point per profile, raw reduced χ² of the BioEmu-1 ensemble (log scale), by disorder class and by PDB coverage of the construct: at least half (filled), partial (light) and none (open). Bars: group median and its 95% bootstrap interval (groups of five or more). The p value above each class compares at least half covered against the rest.",
      "Within a class, a solved structure would help if the filled group sat lower than the other two.")}
 """
@@ -706,7 +706,7 @@ def training_section(n_bioemu: int) -> dict:
         f'The Rossmann fold is {pct(ross["AFDB"])} of AFDB units and {pct(ross["CATH MD"])} of simulated ones, above CATH ({pct(ross["CATH S35"])}); the TIM barrel is {p1(tim["AFDB"])} of AFDB units and absent from the simulations ({p1(tim["CATH S35"])} of CATH).</li>'
         f'<li><strong>Most of the archive\'s superfamilies occur in training, few in the simulations.</strong> Of the {sc["saxs_superfamilies"]} CATH superfamilies in the SAXS constructs, {si["AFDB"]["k"]} occur in the AFDB clusters, '
         f'{si["MD (CATH MD and MegaSim)"]["k"]} in the simulated domains and {si["any training component"]["k"]} in some part of the training data; {n_none} occur in none.</li></ul>')
-    comp_fig = fig("fig_training_composition", "Figure 6 · BioEmu-1's training data, the SAXS set and the CATH reference",
+    comp_fig = fig("fig_training_composition", "Figure 7 · BioEmu-1's training data, the SAXS set and the CATH reference",
                    f"A: CATH class of protein–superfamily units: SAXS constructs (CATH-Gene3D), AFDB pre-training clusters (CATH-Gene3D of the input chain, {comp['AFDB']['n_units']:,} units), simulated CATH domains ({comp['CATH MD']['n_units']:,}) and CATH S35 clusters. "
                    "B: chain length. C: predicted disorder (metapredict), share of chains mostly disordered and share with a disordered run of at least 30 residues. D: source organism; the reference is the PDB 30% clusters. MEGAscale domains are in the tables below.",
                    "A bar of the SAXS set far from the AFDB and simulated bars marks a region the archive measures and the training data barely contain.")
@@ -790,7 +790,7 @@ def training_section(n_bioemu: int) -> dict:
         f'<li><strong>Disordered proteins are the furthest.</strong> {dis_lt30} of the {n_dis} disordered constructs have no training sequence at 30% identity.</li>'
         f'<li><strong>Superfamilies:</strong> the construct carries a CATH superfamily that occurs in the training data for {sg["pooled"]["present"]["n"]} profiles, one that does not for {sg["pooled"]["absent"]["n"]}, and none for {sg["pooled"]["none"]["n"]}; '
         f'restricted to the simulated superfamilies, {sgm["pooled"]["present"]["n"]} and {sgm["pooled"]["absent"]["n"]}.</li></ul>')
-    overlap_fig = fig("fig_training_overlap", "Figure 9 · how close the measured proteins are to BioEmu-1's training data",
+    overlap_fig = fig("fig_training_overlap", "Figure 10 · how close the measured proteins are to BioEmu-1's training data",
                       f"A: share of the {ov['n']} profiles whose nearest training sequence (local alignment covering at least half of the construct) reaches each identity, for all training data, the AFDB cluster members and the simulated systems; constructs without such an alignment count as below every threshold. B: the profiles by identity bin and disorder class.",
                       "A curve that stays high to the right would mean many measured proteins were nearly in the training data; at 50% identity the share is below one in five.")
     BCc = TC["by_class"]
@@ -803,7 +803,7 @@ def training_section(n_bioemu: int) -> dict:
         f"Superfamily presence does not separate the errors either (pooled Mann–Whitney p {pv(sg['pooled_tests']['chi2_raw_mannwhitney_p'])}; restricted to simulated superfamilies p {pv(sgm['pooled_tests']['chi2_raw_mannwhitney_p'])}, stratified by class p {pv(sgm['stratified_by_class']['chi2_raw']['p_two_sided'])}).</p>"
         f"<p>In this archive, closeness to the training data does not explain BioEmu-1's raw error beyond the disorder class. The over-extended disordered ensembles are also the proteins furthest from the training data, "
         f"and the archive cannot separate the two: only {n_dis_close} disordered constructs have a training neighbour at 30% identity or more.</p>")
-    close_fig = fig("fig_closeness", "Figure 10 · BioEmu-1's error by closeness to the training data, within each class",
+    close_fig = fig("fig_closeness", "Figure 11 · BioEmu-1's error by closeness to the training data, within each class",
                     "One point per profile: raw reduced χ² (top, log scale) and the ratio of ensemble Rg to measured Rg (bottom), by the identity of the nearest training sequence, within each disorder class. Bars: group medians (groups of three or more); dashed lines χ² = 2 and ratio 1.",
                     "If closeness to the training data mattered, the points would step down (top) or towards 1 (bottom) from left to right within a class.")
 
@@ -1037,11 +1037,219 @@ def simulation_section() -> str:
         + f'<p><strong>Runs and conditions.</strong> {conv_n} of {n} runs pass the convergence check (block standard error under 2% of the radius and halves within 5%). Temperatures {T.min():.0f}–{T.max():.0f} °C, ionic strengths {I_.min():.2f}–{I_.max():.2f} M; '
           f'{n_den} profiles were measured with urea, which the model does not represent. The runs took {hours:.0f} single-thread CPU hours in total, the pilot of the chain left out included.</p>')
     check(conv_n <= n and n_den == int(PT["denaturant"].sum()), "convergence and denaturant counts")
-    figure = fig("fig_sim_rg", "Figure 12 · simulated and BioEmu-1 radii against the measured radius, protein by protein",
+    figure = fig("fig_sim_rg", "Figure 13 · simulated and BioEmu-1 radii against the measured radius, protein by protein",
                  f"Each line joins one protein's BioEmu-1 ratio (left) to its CALVADOS 3 ratio (right), {n} disordered proteins, log scale. Open circles: proteins at least 90% identical to a protein CALVADOS was trained or validated on. Bars: medians with 95% bootstrap intervals; the band marks 0.90–1.10.",
                  "A protein on the dashed line has the measured size. Lines that slope towards the band mark proteins where the simulation is the closer.")
     return (f'<h3 id="simulate">What simulation gives for disordered proteins</h3>{lead}{figure}{exp_table}{circ}{meaning}'
             + details("Subsets, like-for-like comparisons, scattering curves and runs", details_body))
+
+
+def resample_section() -> str:
+    """'Does the current checkpoint show the same bias?': the bioemu-v1.2 re-sample against the archive's ensembles,
+    every number from results/resample/, with a check for every sentence that states a direction or an outcome."""
+    D = RESULTS / "resample"
+    RS = json.load(open(D / "summary.json"))
+    PP = pd.read_csv(D / "per_protein.csv")
+    n, by = RS["proteins"]["n"], RS["proteins"]["by_class"]
+    n_dis, n_fold, n_part = by["disordered"], by["folded"], by["partly disordered"]
+    check(n == len(PP) == 51 and n_dis + n_fold + n_part == n and n_part == 1, "51 proteins: disordered, folded, one partly disordered")
+    RVc = pd.read_csv(RESULTS / "resolvability.csv")
+    RVc = RVc[(RVc["model"] == "bioemu") & RVc["clean"] & (RVc["disorder_class"] == "disordered")]
+    check(set(PP.loc[PP["disorder_class"] == "disordered", "label"]) == set(RVc["label"]),
+          "the disordered proteins are every clean disordered profile with a BioEmu-1 ensemble")
+    rec = RS["recovered"]
+    check(rec["per_protein_min"] == rec["per_protein_max"] == 100 and rec["total"] == 100 * n, "100 samples per protein, all recovered")
+    check(rec["archive_conformers_min"] == rec["archive_conformers_max"] == 100, "100 archive conformers per protein")
+    fl = RS["files"]
+    check(fl["reproduction_files_match"] and fl["reproduction_max_abs_coordinate_difference_A"] == 0.0
+          and fl["samples_xtc_frames_equal_filter_passes"] and fl["unphysical_xtc_frames_equal_all_samples"],
+          "the conversion reproduces the notebook's files exactly")
+    ck = RS["checks"]
+    check(ck["path_C_vs_scores_csv_max_relative_difference"] < 1e-9 and ck["archive_rg_vs_coord_rg_csv_max_abs_diff_A"] < 1e-3,
+          "wiring: archive curves reproduce scores.csv, archive radii reproduce coord_rg.csv")
+
+    # ---- expectations
+    e12, e13 = RS["E12"], RS["E13"]
+    check(e12["met"] == (e12["median"] > 1.1) and e12["met"], "E12 met on the point estimate")
+    check(e12["ci95"][0] < 1.1 and e12["ci95"][0] < 1 < e12["ci95"][1], "E12: the interval is wide and includes 1.1 and 1")
+    check(not e13["met"] and e13["median_A"] > e13["median_B"] and e13["ci95"][0] > 0 and e13["wilcoxon_p"] < 0.05,
+          "E13 not met: v1.2's median chi2 above the archive's, interval and test")
+
+    def outcome(ok):
+        return f'<span class="outcome {"yes" if ok else "no"}">{"met" if ok else "not met"}</span>'
+    exp_rows = (f'<tr><td><strong>E12.</strong> v1.2\'s median Cα-Rg ratio over the disordered proteins, all samples, remains above 1.1.</td>'
+                f'<td>The archive\'s excess size is in the conformers, and disordered chains are nearly absent from BioEmu-1\'s public training data; '
+                f'I have no record that a later checkpoint added disordered training data.</td>'
+                f'<td>{outcome(e12["met"])}<br><span class="note">median {f2(e12["median"])}, {ci(e12["ci95"])}; on the point estimate only</span></td></tr>'
+                f'<tr><td><strong>E13.</strong> v1.2\'s median raw χ² over all {n} proteins, all samples, is lower than the archive\'s on the same proteins through the same path.</td>'
+                f'<td>A later checkpoint released by the developers is expected to fit at least as well.</td>'
+                f'<td>{outcome(e13["met"])}<br><span class="note">{f1(e13["median_A"])} against {f1(e13["median_B"])}</span></td></tr>')
+    exp_table = ('<div class="scroll"><table class="exp"><thead><tr><th>expectation, fixed before the re-sample was analysed</th><th>reasoning</th><th>outcome</th></tr></thead>'
+                 f'<tbody>{exp_rows}</tbody></table></div>')
+
+    lead = (f"<p>The archive's ensembles came from a BioEmu checkpoint that the archive does not record. I re-sampled {n} proteins, every disordered "
+            f"profile that passes the quality checks and has a BioEmu-1 ensemble ({n_dis}), with {n_fold} folded proteins and one partly disordered protein "
+            f"as controls, using the current checkpoint, bioemu-v1.2, 100 samples "
+            f"each, on a free Colab GPU, and kept every sample. The two sets of conformers are compared like for like: the radius of gyration of the "
+            f"Cα atoms against the measured Guinier radius, and computed curves from the same back-mapping to all atoms (PULCHRA {cite('rotkiewicz')}) "
+            f"and the same Pepsi-SAXS run {cite('grudinin')} for both, scored as the raw fits above. Two expectations were fixed before the re-sample "
+            f"was analysed.</p>")
+
+    # ---- size
+    sz = RS["size_all"]
+    sd, sf = sz["disordered"], sz["folded"]
+    L = RS["length_split_disordered"]
+    sh, lo = L["short"], L["long"]
+    rv, ra = L["spearman_length_vs_ratio_v12"], L["spearman_length_vs_ratio_archive"]
+    check(sd["n"] == n_dis and sd["a"]["median"] == e12["median"], "size: the E12 numbers")
+    check(sd["a"]["median"] < sd["b"]["median"] and sd["median_ratio_a_over_b"] < 1 and sd["median_ratio_ci95"][1] > 1
+          and sd["wilcoxon_two_sided"]["p"] > 0.05, "v1.2 smaller than the archive at the median, not significantly")
+    check(sh["n"] + lo["n"] == n_dis and L["cut_residues"] == 100, "length groups partition the disordered proteins")
+    check(sh["ratio_v12"]["median"] < 1 and sh["n_v12_below_1"] > sh["n"] / 2 and sh["ratio_v12"]["median"] < sh["ratio_archive"]["median"]
+          and sh["ratio_v12"]["ci95"][1] > 1, "short chains: v1.2 below the measured size for most, interval reaches 1")
+    check(lo["ratio_v12"]["median"] > lo["ratio_archive"]["median"] > 1 and lo["ratio_v12"]["ci95"][0] > 1, "long chains: v1.2 above the archive, interval above 1")
+    check(rv["rho"] > ra["rho"] > 0 and rv["p"] < 0.05, "v1.2's ratio rises with length more steeply than the archive's")
+    check(sf["a"]["median"] < sf["b"]["median"] < 1, "folded: v1.2 smaller than the archive, both below 1")
+    size_p = (f"<p>For the {n_dis} disordered proteins the median ratio of v1.2 is {f2(sd['a']['median'])} (95% interval {ci(sd['a']['ci95'])}), against "
+              f"{f2(sd['b']['median'])} ({ci(sd['b']['ci95'])}) for the archive's ensembles of the same proteins. Protein by protein, v1.2's ensemble is "
+              f"the smaller for {sd['n_a_below_b']} of {sd['n']} (median ratio v1.2 over archive {f2(sd['median_ratio_a_over_b'])}, {ci(sd['median_ratio_ci95'])}; "
+              f"two-sided Wilcoxon p {pv(sd['wilcoxon_two_sided']['p'])}). The wide interval comes from chain length. For the {sh['n']} chains of up to "
+              f"{L['cut_residues']} residues the v1.2 median is {f2(sh['ratio_v12']['median'])} ({ci(sh['ratio_v12']['ci95'])}), {sh['n_v12_below_1']} of them "
+              f"below the measured size, against {f2(sh['ratio_archive']['median'])} for the archive; for the {lo['n']} longer chains "
+              f"({lo['length_min']}–{lo['length_max']} residues) it is {f2(lo['ratio_v12']['median'])} ({ci(lo['ratio_v12']['ci95'])}), against "
+              f"{f2(lo['ratio_archive']['median'])}. The ratio rises with length (Spearman ρ = {rv['rho']:+.2f}, p {pv(rv['p'])}), more steeply than the "
+              f"archive's (ρ = {ra['rho']:+.2f}). Folded proteins sit at {f2(sf['a']['median'])} against {f2(sf['b']['median'])} (n = {sf['n']}).</p>")
+
+    # ---- fit
+    fa = RS["fit_all"]
+    AB, BC_, fd, ff = fa["all proteins"]["A_vs_B"], fa["all proteins"]["B_vs_C"], fa["disordered"]["A_vs_B"], fa["folded"]["A_vs_B"]
+    check(AB["n"] == n and AB["a"]["median"] == e13["median_A"] and AB["n_a_below_b"] < n / 2, "fit: the E13 numbers; v1.2 lower for a minority")
+    check(fd["a"]["median"] > fd["b"]["median"] and fd["wilcoxon_two_sided"]["p"] < 0.05, "disordered: v1.2 chi2 above the archive's")
+    check(ff["a"]["median"] > ff["b"]["median"] and ff["wilcoxon_two_sided"]["p"] > 0.05, "folded: above, not significant")
+    check(fd["median_ratio_a_over_b"] > ff["median_ratio_a_over_b"] > 1, "the gap is larger for disordered than for folded proteins")
+    check(abs(np.log(BC_["median_ratio_a_over_b"])) < 0.1 and AB["median_ratio_a_over_b"] > 1.5,
+          "the same path applied to the archive stays close to its published curves; the v1.2 gap is much larger")
+    fit_p = (f"<p>With all samples, v1.2 fits the profiles worse than the archive's ensembles do through the same path: median raw χ² "
+             f"{f1(AB['a']['median'])} against {f1(AB['b']['median'])} over the {n} proteins (difference of the medians {f1(e13['median_A_minus_median_B'])}, "
+             f"95% interval {ci(e13['ci95'], f1)}; Wilcoxon p {pv(AB['wilcoxon_two_sided']['p'])}), lower for only {AB['n_a_below_b']} of {n}. The gap sits "
+             f"mostly with the disordered proteins ({f1(fd['a']['median'])} against {f1(fd['b']['median'])}); for folded proteins it is "
+             f"{f1(ff['a']['median'])} against {f1(ff['b']['median'])} (p {pv(ff['wilcoxon_two_sided']['p'])}). The archive's conformers through this path "
+             f"stay close to the archive's own published curves (median {f1(BC_['a']['median'])} against {f1(BC_['b']['median'])}), so the path does not "
+             f"create the gap.</p>")
+
+    # ---- filter
+    rj, rja = RS["rejected_v12"], RS["rejected_archive_same_criteria"]
+    rd, rf, rad, raf = rj["disordered"], rj["folded"], rja["disordered"], rja["folded"]
+    crit = rd["mean_fail_share_by_criterion"]
+    crit_a = rad["mean_fail_share_by_criterion"]
+    check(rd["median"] > 0.5 and rd["mean"] > 0.5, "most of v1.2's raw disordered samples fail the filter")
+    check(crit["clash"] == max(crit.values()) and crit["clash"] > 0.5, "mostly clashes")
+    check(max(crit_a["ca_seq"], crit_a["cn_seq"]) > crit_a["clash"], "archive: mostly chain geometry")
+    check(rad["median"] < rd["median"] and raf["median"] < rf["median"] < rd["median"], "rejected shares: archive below v1.2, folded below disordered")
+    full = RS["all_rejected_v12"]
+    check(len(full) == rd["n_all_rejected"] == 6 and all(r["class"] == "disordered" for r in full)
+          and rf["n_all_rejected"] == 0 and all(r["length"] > L["cut_residues"] for r in full), "six fully rejected, all disordered and longer chains")
+    check(lo["rejected_share_v12_median"] > 0.9 and L["spearman_length_vs_rejected_share_v12"]["rho"] > 0
+          and L["spearman_length_vs_rejected_share_v12"]["p"] < 0.05, "long chains: almost every sample rejected; the share rises with length")
+    names = ", ".join(f'<a href="https://www.sasbdb.org/data/{r["label"]}/">{r["label"]}</a> ({r["length"]})' for r in full)
+    filt_p = (f"<p><strong>Most of v1.2's raw samples for disordered proteins fail BioEmu's own physical checks.</strong> BioEmu's sampling code removes, "
+              f"by default, any sample with consecutive Cα atoms more than 4.5 Å apart, a peptide C–N distance above 2.0 Å, or two atoms of residues more "
+              f"than two apart closer than 1 Å (a clash). Applied to every sample, these checks reject a median of {pct(rd['median'])} of v1.2's samples for "
+              f"the disordered proteins (mean {pct(rd['mean'])}), mostly for clashes ({pct(crit['clash'])} of samples on average), and {pct(rad['median'])} of "
+              f"the archive's conformers of the same proteins, mostly for chain geometry; for folded proteins {pct(rf['median'])} and {pct(raf['median'])}. "
+              f"The share rises with chain length (Spearman ρ = {L['spearman_length_vs_rejected_share_v12']['rho']:+.2f}, p {pv(L['spearman_length_vs_rejected_share_v12']['p'])}): above {L['cut_residues']} residues "
+              f"the median is {pct(lo['rejected_share_v12_median'])}, and for {len(full)} disordered proteins every v1.2 sample fails: {names} residues.</p>")
+
+    fs, fas = RS["fit_filtered"]["all proteins"]["A_vs_B"], RS["fit_all_filtered_set"]["all proteins"]["A_vs_B"]
+    ss, sas = RS["size_filtered"]["disordered"], RS["size_all_filtered_set"]["disordered"]
+    nc = RS["n_filtered_comparable"]
+    check(fs["n"] == fas["n"] == nc["total"] and ss["n"] == sas["n"] == nc["by_class"]["disordered"], "filtered and same-set comparisons on one set")
+    check(fs["a"]["median"] > fs["b"]["median"] and fs["wilcoxon_two_sided"]["p"] < 0.05, "filtered: v1.2 chi2 still above the archive's")
+    check(fs["median_ratio_a_over_b"] < fas["median_ratio_a_over_b"]
+          and fs["median_a_minus_median_b"] < fas["median_a_minus_median_b"], "the filtered gap is smaller than the unfiltered gap on the same proteins")
+    dchi = abs(np.log(fs["a"]["median"] / fas["a"]["median"]))
+    dsize = abs(np.log(ss["a"]["median"] / sas["a"]["median"]))
+    check(dchi > 5 * dsize and ss["a"]["median"] < ss["b"]["median"] and sas["a"]["median"] < sas["b"]["median"],
+          "on the filtered set the filter changes v1.2's fit more than its size; v1.2 smaller in both")
+    filt2_p = (f"<p>With the filter on both sides, the comparison keeps the {nc['total']} proteins with at least 10 passing conformers on each side "
+               f"({nc['by_class']['disordered']} of the {n_dis} disordered). On them the χ² gap narrows: {f1(fs['a']['median'])} for v1.2 against "
+               f"{f1(fs['b']['median'])} for the archive (Wilcoxon p {pv(fs['wilcoxon_two_sided']['p'])}), where all samples of the same proteins give "
+               f"{f1(fas['a']['median'])} against {f1(fas['b']['median'])}. Their sizes barely move: the disordered median ratio is {f2(ss['a']['median'])} "
+               f"against {f2(ss['b']['median'])} with the filter and {f2(sas['a']['median'])} against {f2(sas['b']['median'])} without. These proteins "
+               f"are mostly the shorter chains, so the filtered comparison says little about the long chains that carry the excess size.</p>")
+    filt_len = PP[(PP["disorder_class"] == "disordered") & PP["filtered_comparable"]]["length"]
+    check(float(filt_len.median()) < float(PP.loc[PP["disorder_class"] == "disordered", "length"].median())
+          and int((filt_len <= L["cut_residues"]).sum()) > len(filt_len) / 2, "the filtered disordered set is mostly short chains")
+
+    meaning = (f"<p class=\"call\"><strong>What this means.</strong> The size error for disordered proteins is not specific to the archive's checkpoint: "
+               f"with bioemu-v1.2 the median ratio is still above 1.1, though its interval ({ci(e12['ci95'])}) is wide, and the ratio climbs with chain "
+               f"length more steeply than the archive's, so long chains remain too extended (median {f2(lo['ratio_v12']['median'])}, interval above 1). "
+               f"The current checkpoint's raw samples for disordered proteins are mostly unphysical by BioEmu's own checks, and its filter leaves "
+               f"almost none for chains above {L['cut_residues']} residues. This rests on one run of 100 samples per protein.</p>")
+
+    figure = fig("fig_resample_rg", "Figure 4 · size of the archive's ensembles and of the bioemu-v1.2 re-sample, protein by protein",
+                 f"Each point is one of the {n} proteins: the Cα radius of gyration of its ensemble (root mean square over all samples) divided by the "
+                 f"measured Guinier radius, for the archive's ensemble (horizontal) and the v1.2 re-sample (vertical), coloured by class, log axes. "
+                 f"Open circles: the {len(full)} proteins for which BioEmu's filter rejects every v1.2 sample.",
+                 "Points below the diagonal are proteins whose v1.2 ensemble is smaller than the archive's; the dashed lines mark the measured size. "
+                 "A Cα radius leaves out side chains and the hydration layer, so folded proteins sit below 1 on both axes.")
+
+    # ---- detail tables
+    def srow(name, r):
+        if "a" not in r:
+            return (f'<tr><td>{name}</td><td class="num">1</td><td class="num">{f2(r["ratio_v12"])}</td><td class="num">{f2(r["ratio_archive"])}</td>'
+                    '<td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>')
+        return (f'<tr><td>{name}</td><td class="num">{r["n"]}</td><td class="num">{f2(r["a"]["median"])} ({ci(r["a"]["ci95"])})</td>'
+                f'<td class="num">{f2(r["b"]["median"])} ({ci(r["b"]["ci95"])})</td>'
+                f'<td class="num">{f2(r["median_ratio_a_over_b"])} ({ci(r["median_ratio_ci95"])})</td>'
+                f'<td class="num">{r["n_a_below_b"]} of {r["n"]}</td><td class="num">{pv(r["wilcoxon_two_sided"]["p"])}</td></tr>')
+    sets = (("all samples", "size_all"), ("all samples, proteins of the filtered comparison", "size_all_filtered_set"),
+            ("filter on both sides", "size_filtered"))
+    size_rows = ""
+    for title, key in sets:
+        size_rows += f'<tr class="grp"><td colspan="7">{title}</td></tr>'
+        size_rows += "".join(srow(c, v) for c, v in RS[key].items())
+    size_table = ('<div class="scroll"><table class="wide"><thead><tr><th>class</th><th>n</th><th>v1.2 median ratio (95%)</th><th>archive median ratio (95%)</th>'
+                  '<th>v1.2 over archive, median (95%)</th><th>v1.2 smaller</th><th>Wilcoxon p</th></tr></thead><tbody>' + size_rows + '</tbody></table></div>')
+
+    def frow(name, r, c):
+        return (f'<tr><td>{name}</td><td class="num">{r["n"]}</td><td class="num">{f1(r["a"]["median"])} ({ci(r["a"]["ci95"], f1)})</td>'
+                f'<td class="num">{f1(r["b"]["median"])} ({ci(r["b"]["ci95"], f1)})</td><td class="num">{f1(c["b"]["median"])}</td>'
+                f'<td class="num">{f2(r["median_ratio_a_over_b"])} ({ci(r["median_ratio_ci95"])})</td>'
+                f'<td class="num">{r["n_a_below_b"]} of {r["n"]}</td><td class="num">{pv(r["wilcoxon_two_sided"]["p"])}</td></tr>')
+    fit_rows = ""
+    for title, key in (("all samples", "fit_all"), ("all samples, proteins of the filtered comparison", "fit_all_filtered_set"),
+                       ("filter on both sides", "fit_filtered")):
+        fit_rows += f'<tr class="grp"><td colspan="8">{title}</td></tr>'
+        fit_rows += "".join(frow(c, v["A_vs_B"], v["A_vs_C"]) for c, v in RS[key].items())
+    fit_table = ('<div class="scroll"><table class="wide"><thead><tr><th>proteins</th><th>n</th><th>v1.2 median χ² (95%)</th><th>archive, same path (95%)</th>'
+                 '<th>archive, published curves</th><th>v1.2 over archive, median (95%)</th><th>v1.2 lower</th><th>Wilcoxon p</th></tr></thead><tbody>'
+                 + fit_rows + '</tbody></table></div>')
+
+    def rrow(cls, side, r):
+        m = r["mean_fail_share_by_criterion"]
+        return (f'<tr><td>{cls}</td><td>{side}</td><td class="num">{r["n_proteins"]}</td><td class="num">{pct(r["median"])}</td><td class="num">{pct(r["mean"])}</td>'
+                f'<td class="num">{pct(m["ca_seq"])}</td><td class="num">{pct(m["cn_seq"])}</td><td class="num">{pct(m["clash"])}</td>'
+                f'<td class="num">{r["n_all_rejected"]}</td></tr>')
+    rej_table = ('<div class="scroll"><table class="wide"><thead><tr><th>class</th><th>conformers</th><th>proteins</th><th>median share rejected</th><th>mean</th>'
+                 '<th>failing Cα–Cα</th><th>failing C–N</th><th>clashing</th><th>every sample rejected</th></tr></thead><tbody>'
+                 + "".join(rrow(c, s, src[c]) for c in CLASSES for s, src in (("v1.2", rj), ("archive", rja)))
+                 + '</tbody></table></div><p class="note">The three failure columns are mean shares of samples over the proteins of the class; a sample can fail more than one check.</p>')
+    full_table = ('<div class="scroll"><table><thead><tr><th>SASBDB</th><th>length</th><th>class</th><th>failing Cα–Cα</th><th>failing C–N</th>'
+                  '<th>clashing</th><th>archive conformers rejected</th></tr></thead><tbody>'
+                  + "".join(f'<tr><td><a href="https://www.sasbdb.org/data/{r["label"]}/">{r["label"]}</a></td><td class="num">{r["length"]}</td><td>{r["class"]}</td>'
+                            f'<td class="num">{pct(r["fail_ca_seq_share"])}</td><td class="num">{pct(r["fail_cn_seq_share"])}</td><td class="num">{pct(r["fail_clash_share"])}</td>'
+                            f'<td class="num">{pct(r["archive_rejected_share"])}</td></tr>' for r in full)
+                  + '</tbody></table></div>')
+    size_note = ('<p class="note">Ratio: root-mean-square Cα radius of gyration of the ensemble over the Guinier radius of the measured profile. Intervals: percentile '
+                 'bootstrap over proteins (2,000 resamples). The partly disordered protein is listed on its own. Filtered comparison: proteins with at least 10 passing '
+                 'conformers on both sides.</p>')
+    fit_note = ('<p class="note">Reduced χ² of the uniform average of the conformer curves, with one scale factor and one constant background. Same path: the archive\'s '
+                'conformers rebuilt from their Cα trace and passed to Pepsi-SAXS exactly as the v1.2 samples were; published curves: the archive\'s own. The v1.2 samples '
+                'were recovered from the notebook\'s raw output with BioEmu\'s own conversion; repeating the notebook\'s filtered conversion reproduces its files exactly.</p>')
+    details_body = size_table + size_note + fit_table + fit_note + rej_table + full_table
+    return (f'<h3 id="checkpoint">Does the current checkpoint show the same bias?</h3>{lead}{exp_table}{size_p}{figure}{fit_p}{filt_p}{filt2_p}{meaning}'
+            + details("Sizes and fits by class, with and without the filter; rejected shares by check; the six fully rejected proteins", details_body))
 
 
 def build():
@@ -1353,6 +1561,8 @@ def build():
     cov = coverage_section(n_bioemu)
     trn = training_section(n_bioemu)
     sim = simulation_section()
+    rsm = resample_section()
+    RS_N = json.load(open(RESULTS / "resample" / "summary.json"))["proteins"]["n"]
     nav = "".join(f'<li><a href="#{a}">{t}</a></li>' for a, t in [
         ("method", "Method"), ("expectations", "Expectations"), ("fit", "Raw fit"), ("examples", "Examples"),
         ("size", "Size"), ("reweight", "Reweighting"), ("guide", "Guidance"), ("next", "Next"),
@@ -1425,7 +1635,7 @@ def build():
 <h2 id="method">How the benchmark works</h2>
 <p>SAXS reports the overall size and shape of a protein in solution, averaged over every conformation it adopts, so it tests an ensemble as a whole. BioEmu-1 was trained on predicted structures, molecular-dynamics simulations and measured stabilities {cite('lewis')}. BioEmu conformers have served as a pool for SAXS ensemble selection on a few dozen proteins, where the unweighted pool did not reproduce the data {cite('haitin')}, and PeptoneBench ranks generators by their fit after reweighting {cite('invernizzi')}. This study asks where the raw model fails by protein class and what that implies for the next measurements.</p>
 <figure class="result diagram" style="max-width:746px"><figcaption>Method · what is taken as published and what this study computes</figcaption><div class="scroll">{diagram}</div></figure>
-<p>This project re-analyses BioEmu-1 ensembles sampled by the PeptoneBench authors; it does not retrain or re-sample the model. The archive records the BioEmu code version but not the checkpoint.</p>
+<p>This project re-analyses BioEmu-1 ensembles sampled by the PeptoneBench authors; it does not retrain the model. The archive records the BioEmu code version but not the checkpoint, so for {RS_N} proteins I also sampled the current checkpoint, bioemu-v1.2, and compared the two (<a href="#checkpoint">Does the current checkpoint show the same bias?</a>).</p>
 {details("The eight steps of the pipeline", f'<ol class="steps">{steps_html}</ol>')}
 
 <h2 id="expectations">Expectations set before scoring</h2>
@@ -1454,10 +1664,11 @@ def build():
      "Above the dashed line the model's ensemble is larger than the protein in solution. The expectation was over-compaction (below the line); the disordered median lies above it.")}
 <p>E4 expected the usual failure of models trained on folded data, over-compaction of disordered chains. The data show the opposite: the median ratio is {f2(rg_dis)} (95% interval {ci(rg_ci)}, two-sided Wilcoxon p {pv(E['E4']['p_two_sided'])}, n = {E['E4']['n']}), and {pct(1 - E['E4']['share_below_1'])} of disordered entries lie above 1; folded proteins sit at {f2(CLS['folded']['rg_ratio_median'])}. The size discrepancy is also present in coordinate-derived radii: the Cα radius of the sampled conformers is {f2(cr_d['coord_over_exp_median'])} times the measured value ({ci(cr_d['coord_over_exp_ci95'])}). Cα, full-atom and SAXS-derived radii are different observables, however: for folded proteins the Cα ratio is {f2(cr_f['coord_over_exp_median'])} where the curve gives {f2(cr_f['curve_over_exp_median'])}, an offset because the curve includes side chains and a hydration layer that the Cα radius leaves out. The {pct(ext_coord)} is therefore not to be read as an exact physical excess; it shows that the extension is present in the conformers before any curve is computed.</p>
 {details("Robustness of the size finding and absolute radii", robust_table + fig("fig_rg", "Ensemble Rg against measured Rg", "Radius of gyration of the BioEmu-1 ensemble curve against the Guinier radius of the measured profile, one point per profile, log axes.") + '<div class="scroll"><table><thead><tr><th>entry</th><th>entry</th><th>5-mer Jaccard</th><th>containment</th></tr></thead><tbody>' + dup_rows + '</tbody></table></div>')}
+{rsm}
 
 <h2 id="reweight">Can the disagreement be corrected by changing conformer populations?</h2>
 <p>Reweighting keeps every conformer fixed and adjusts only how often each one occurs, until the averaged curve matches the profile. Maximum-entropy reweighting {cite('bottaro')} does this while keeping the weights as close to uniform as the data allow; relaxing that constraint step by step traces a path from the raw ensemble towards a full fit. The effective sample fraction φ, the Kish effective sample size divided by the number of conformers, measures how much of the original ensemble still contributes after reweighting: at φ = 1 every conformer contributes equally; at φ = 0.8 the weights are still spread out; at φ = 0.1 a small subset of conformers dominates the ensemble. The four kinds are read where the path first reaches χ² ≤ 2: <em>raw fit</em> (already there), <em>modestly reweightable</em> (reached with φ ≥ 0.5), <em>strongly reweightable</em> (reached only with φ &lt; 0.5, which requires substantial population changes) and <em>target fit not reached</em> (by the tested reweighting procedure).</p>
-{fig("fig_kinds", "Figure 4 · the four kinds, and one reweighting path",
+{fig("fig_kinds", "Figure 5 · the four kinds, and one reweighting path",
      f"Left: the {n_bioemu} profiles by kind. Right: χ² against φ along the path of {rep}, the strongly reweightable entry with the median φ of its kind; the open circle marks where χ² first falls to 2.",
      None)}
 <p>Of the {n_bioemu} profiles, {fits} fit without reweighting. Reweighting brings {rew} more to χ² ≤ 2, and the useful distinction is between the two reweightable kinds. For the {mod} modestly reweightable profiles the ensemble fits the measurement without a drastic change of populations. For the {strong} strongly reweightable profiles a satisfactory fit needs the weight concentrated on a smaller set of conformers (φ &lt; 0.5). For the remaining {notfit} the tested procedure does not reach the target.</p>
@@ -1467,7 +1678,7 @@ def build():
 
 <h2 id="guide">Can the error map guide experiments on proteins that have not been measured?</h2>
 <p>An error map needs the measurement. Choosing a new experiment needs the error predicted before the measurement exists. I fitted predictors of the raw error (log₁₀ χ²) from quantities known before a profile exists: chain length, disorder score and class, sequence composition, the Rg expected from length by scaling laws {cite('kohn')}, and the model's own ensemble Rg and conformer spread. Evaluation is 5-fold cross-validation grouped by sequence cluster, repeated five times. I then asked which entries each acquisition policy would pick from held-out folds and scored the picks by the high-discrepancy target yield: the share that are strongly reweightable or whose target fit is not reached. The yield is a proxy for where the model is wrong, not a measure of training value.</p>
-{fig("fig_predict", "Figure 5 · predicting the error, and what each policy picks",
+{fig("fig_predict", "Figure 6 · predicting the error, and what each policy picks",
      f"A: observed against predicted log₁₀ raw χ² on held-out folds ({'ridge regression' if P['best_regressor'] == 'ridge' else 'boosted trees'}), coloured by class. B: high-discrepancy target yield among the top {k10} picks; error bars are the sd over five repeats, and for random the sd of a single random pick of {k10}. The oracle ranking uses the measured SAXS and is shown as a ceiling; it is not a deployable policy.",
      "In A a predictive model would spread the points along the diagonal; here they form a vertical band. In B a policy is useful when it stands clear of the random bar and its spread.")}
 <p>The best model explains {pct(r2_best)} of held-out variation in the raw error (R² = {f2(r2_best)}; class means alone {f2(P['regression']['class_mean']['r2']['mean'])}), and the tree classifier of the high-discrepancy kinds reaches an AUC of {f2(auc_hgb)}. Random picks of ten give a yield of {f2(y['random']['mean'])}, with a spread of ±{f2(rnd_sd)} for any single pick. Ranking by predicted error gives {f2(y['predicted error']['mean'])} ± {f2(y['predicted error']['sd'])}, {gain_err:+.2f} over random, within about one sd of a single random pick. The acquisition policy fed predictions, the campaign's priority rule with predicted inputs, gives {f2(pp['mean'])} ± {f2(pp['sd'])}. The oracle ranking, which uses the measured SAXS, reaches {f2(y['observed priority (ceiling)']['mean'])}: the rule separates the kinds when it sees the measurement, and the missing piece is a predictor of them. The map therefore supports controlled replication of known failures; it does not support a new-protein campaign driven by predicted error.</p>
@@ -1502,13 +1713,13 @@ def build():
 
 <h2 id="models">How does BioEmu-1 compare with other ensemble generators?</h2>
 <p>The archive carries computed curves from other models for the same entries, scored here identically and without reweighting: the ensemble generators {", ".join(MODEL_NAME[m] for m in gens)}, and the single-structure predictors {" and ".join(MODEL_NAME[m] for m in singles)} as reference baselines. On the shared entries BioEmu-1 has the lowest median raw χ² of the seven, and the ordering is kept under NRMSD. PepTron comes closest: it beats BioEmu-1 on {pct(pep['share_better_than_bioemu'])} of the {pep['n']} shared entries (95% interval {pct(pep['ci95_share_better'][0])}–{pct(pep['ci95_share_better'][1])}). BioEmu-1 is the only tested model with a disordered median Rg ratio above 1.1; PepTron sits at {f2(others_rg['peptron'])}.</p>
-{fig("fig_models", "Figure 13 · seven models on the same profiles",
+{fig("fig_models", "Figure 14 · seven models on the same profiles",
      "Left: median raw reduced χ² of each model's unweighted ensemble by disorder class, on the profiles that pass quality checks; BioEmu-1 and PepTron emphasised, single-structure predictors grouped below. Right: median Rg ratio of each model on the disordered entries; solid line 1, dashed line 1.1.",
      None)}
 {details("Paired comparison table", comp_html + f'<p class="note">Five further folders in the archive are not used: Boltz-1x and ESMFlow are superseded by models already included, idpGAN and IDP-o are disorder-only generators represented here by idpSAM, and PepTron-base is the un-finetuned PepTron. AF-CALVADOS {cite("bulow")} was evaluated on this benchmark but its predictions were not in the archive.</p>')}
 
 <h2 id="limits">Limits</h2>
-<p>The ensembles are those in the PeptoneBench archive, which records the BioEmu code version but not the checkpoint; re-sampling with the current v1.2 checkpoint is the first follow-up. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so part of the raw error is condition mismatch. The forward model is treated as exact; its hydration-shell parameters bias Rg by a few per cent, which is why modestly reweightable cases are read with care. Disorder classes come from a sequence-based predictor. The model comparison is restricted to the six comparators on the shared entries. CATH and the PDB serve as the reference for experimentally known structure space. {trn["limits"]} PDB coverage of a construct comes from SIFTS residue ranges, which count residues listed in the structure record and can include residues not modelled in the coordinates. The prediction and selection tests are retrospective and use {n_bioemu} entries; a predictor that fails at this size could succeed with more data or with richer features of the model's own ensemble. Profiles with a low-angle upturn above {int(100 * A['thresholds']['aggregation_upturn'])}%, an intensity more than three standard errors below zero, a reported error of zero or less, no valid Guinier region, or a measured mass above 1.6 times the sequence mass are kept out of every statistic ({A['n_flag_aggregation']}, {A['n_flag_negative']}, {A['n_flag_bad_errors']}, {A['n_guinier_invalid']} and {A['n_flag_oligomer']} profiles; {n_entries - n_clean} in all, as some carry more than one flag).</p>
+<p>The ensembles are those in the PeptoneBench archive, which records the BioEmu code version but not the checkpoint. The bioemu-v1.2 re-sample covers {RS_N} proteins with one run of 100 samples each, so its seed-to-seed variation is not measured, and the distance between the two checkpoints, and any difference in sampler settings, is unknown. SASBDB profiles differ in buffer, temperature and construct, none of which the model sees, so part of the raw error is condition mismatch. The forward model is treated as exact; its hydration-shell parameters bias Rg by a few per cent, which is why modestly reweightable cases are read with care. Disorder classes come from a sequence-based predictor. The model comparison is restricted to the six comparators on the shared entries. CATH and the PDB serve as the reference for experimentally known structure space. {trn["limits"]} PDB coverage of a construct comes from SIFTS residue ranges, which count residues listed in the structure record and can include residues not modelled in the coordinates. The prediction and selection tests are retrospective and use {n_bioemu} entries; a predictor that fails at this size could succeed with more data or with richer features of the model's own ensemble. Profiles with a low-angle upturn above {int(100 * A['thresholds']['aggregation_upturn'])}%, an intensity more than three standard errors below zero, a reported error of zero or less, no valid Guinier region, or a measured mass above 1.6 times the sequence mass are kept out of every statistic ({A['n_flag_aggregation']}, {A['n_flag_negative']}, {A['n_flag_bad_errors']}, {A['n_guinier_invalid']} and {A['n_flag_oligomer']} profiles; {n_entries - n_clean} in all, as some carry more than one flag).</p>
 
 <h2 id="repro">Reproducibility</h2>
 <p>The pipeline runs in named stages (download, score, coordinate radii, analysis, selection test, prediction, envelopes, report) from a locked environment, with unit tests on synthetic data. Derived results are tracked in the repository, and the page build reads every number from them and stops if a sentence that states a direction or a comparison no longer matches. Key code: <a href="{REPO}/blob/main/src/bsc/coordrg.py">coordinate radii</a>, <a href="{REPO}/blob/main/src/bsc/select_eval.py">acquisition policies</a>, <a href="{REPO}/blob/main/src/bsc/predict.py">error prediction</a>. The ensembles and computed curves are those published by the PeptoneBench authors {cite('invernizzi')} (Zenodo 17306061, CC-BY 4.0).</p>
