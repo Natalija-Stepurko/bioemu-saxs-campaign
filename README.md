@@ -43,6 +43,13 @@ once the disorder class is accounted for either (class-stratified van Elteren p 
 recommendation section of the page, which lists the protein data to collect with their evidence: disordered
 proteins, folded proteins with long disordered regions, and full-length multidomain proteins above 500 residues.
 
+A coarse-grained simulation of the disordered proteins (CALVADOS 3, OpenMM, each at its recorded temperature, pH
+and buffer ionic strength; 40 of the 41 clean disordered profiles, the longest chain left out for computing time)
+gives a median ratio of simulated to measured radius of gyration of 1.04 (95% interval 1.01–1.10) against 1.21 for
+BioEmu-1 on the same proteins, closer to 1 for 33 of 40 proteins; both pre-declared expectations (E10, E11) are met,
+also without the 11 proteins that are at least 90% identical to a protein CALVADOS was trained or validated on.
+The design is [`docs/SIMULATION_DESIGN.md`](docs/SIMULATION_DESIGN.md).
+
 ![error map](results/figures/fig_error_map.png)
 
 ## What was done
@@ -102,14 +109,40 @@ SAXS set and searches every construct against it with MMseqs2 (scripts 11–17);
 database versions in [`analysis/coverage/README.md`](analysis/coverage/README.md). It needs network access,
 about 1 GB of downloads, its own requirements (`analysis/coverage/requirements.txt`, not part of the main
 environment) and the MMseqs2 binary. Its small outputs (the per-entry mapping, the summary of all comparisons,
-a CATH superfamily rank table, the per-construct nearest training sequences, the training-data summary and the
-database versions) are tracked in `results/coverage/`, so `bsc coverage` and the page rebuild without it.
+a CATH superfamily rank table, the per-construct nearest training sequences, the training-data summary, the
+SASBDB measurement metadata and the database versions) are tracked in `results/coverage/`, so `bsc coverage` and the page rebuild without it.
 
 ```bash
 uv venv /path/to/venv-cov && uv pip install --python /path/to/venv-cov -r analysis/coverage/requirements.txt
 COVERAGE_PY=/path/to/venv-cov/bin/python COVERAGE_WORK=/path/with/2GB/free MMSEQS=/path/to/mmseqs \
   BSC_ROOT=<where bsc fetch put data/> analysis/coverage/run_all.sh
 uv run bsc coverage
+```
+
+### Checks on the Arm 1 list
+
+`analysis/arm1/arm1_checks.py` asks whether the large raw χ² of the twelve Arm 1 systems reflects the precision
+of their deposited data (relative error of each curve against raw χ² and NRMSD, raw χ² by SASBDB curve and source
+type, the twelve against the eligible pool) and whether the twelve are related (organism, sequence group,
+superfamily). It reads the SASBDB metadata table written by `analysis/coverage/18_sasbdb_metadata.py` and writes
+`results/arm1/`; see [`analysis/arm1/README.md`](analysis/arm1/README.md).
+
+```bash
+BSC_ROOT=<where bsc fetch put data/> uv run python analysis/arm1/arm1_checks.py
+```
+
+### The simulations
+
+`analysis/simulations/` runs CALVADOS 3 single-chain simulations of the archive's clean disordered proteins, computes
+SAXS curves from them (PULCHRA back-mapping, Pepsi-SAXS) and compares the simulated radius of gyration with the
+measured one and with BioEmu-1's, under a design written before the runs
+([`docs/SIMULATION_DESIGN.md`](docs/SIMULATION_DESIGN.md)). It needs its own environment
+(`analysis/simulations/requirements.txt`) and about 120 single-thread CPU hours; the small outputs are tracked in
+`results/simulations/`, the trajectories are not. See [`analysis/simulations/README.md`](analysis/simulations/README.md).
+
+```bash
+SIM_PY=/path/to/venv-sim/bin/python SIM_WORK=/path/with/10GB/free BSC_ROOT=<where bsc fetch put data/> \
+  WORKERS=6 analysis/simulations/run_all.sh
 ```
 
 ### The DENSS environment

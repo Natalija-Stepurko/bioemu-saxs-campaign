@@ -6,7 +6,8 @@ and its own requirements) and results/resolvability.csv. Writes results/coverage
 results/coverage/rank_coverage.json and the coverage figures, and, from the training-data outputs
 (training_nearest.csv, training_summary.json), results/coverage/training_closeness.json (BioEmu-1's raw
 error against the closeness of each construct to the training data), results/coverage/category_evidence.json
-(the error on candidate protein categories for data collection) and three training-data figures.
+(the error on candidate protein categories for data collection, and the share of all archive entries that pass
+the quality checks by disorder class, from results/entries.csv) and three training-data figures.
 
 Structure groups, from SIFTS residue ranges of atomic-model PDB chains mapped onto the construct region
 of the UniProt entry (analysis/coverage/07_build_protein_table.py):
@@ -345,6 +346,31 @@ def category_evidence(d: pd.DataFrame, mp: pd.DataFrame, nn: pd.DataFrame, rk: p
                                    "rg_ratio_mannwhitney_p": _mw(m.loc[k, "rg_ratio"], m.loc[~k, "rg_ratio"])}
         seed += 10
     out["max_construct_length"] = int(m["length"].max())
+    return out
+
+
+def quality_checks_by_class(ent: pd.DataFrame) -> dict:
+    """Share of all archive entries that pass the quality checks (analyse.clean_mask), by disorder class, with
+    Wilson intervals, the count stopped by each check, and a two-sided Fisher exact test of disordered against
+    folded. An entry can raise more than one flag, so per-check counts can sum to more than the failures."""
+    ok = analyse.clean_mask(ent)
+    checks = {"aggregation upturn": ent["flag_aggregation"].astype(bool),
+              "negative intensities": ent["flag_negative_I"].astype(bool),
+              "unusable errors": ent["flag_bad_errors"].astype(bool),
+              "mass above a monomer": ent["flag_oligomer"].astype(bool),
+              "no valid Guinier region": ~ent["guinier_valid"].astype(bool)}
+    out = {"n": int(len(ent)), "rule": "no data-quality flag raised and a valid Guinier region",
+           "by_class": {}}
+    for c in analyse.CLASS_ORDER:
+        k = (ent["disorder_class"] == c).to_numpy()
+        n, kp = int(k.sum()), int(ok[k].sum())
+        out["by_class"][c] = {"n": n, "pass": kp, "share": kp / n, "ci95": wilson(kp, n),
+                              "failed_by_check": {nm: int(v[k].sum()) for nm, v in checks.items()}}
+    d_, f_ = out["by_class"]["disordered"], out["by_class"]["folded"]
+    table = [[d_["pass"], d_["n"] - d_["pass"]], [f_["pass"], f_["n"] - f_["pass"]]]
+    out["fisher_disordered_vs_folded"] = {"table_pass_fail": table,
+                                          "odds_ratio": float(stats.fisher_exact(table)[0]),
+                                          "p_two_sided": float(stats.fisher_exact(table)[1])}
     return out
 
 
@@ -697,6 +723,7 @@ def main() -> None:
     TC = training_closeness(d, nn)
     json.dump(TC, open(COV / "training_closeness.json", "w"), indent=1)
     CE = category_evidence(d, mp, nn, rk)
+    CE["quality_checks_by_class"] = quality_checks_by_class(pd.read_csv(C.RESULTS / "entries.csv"))
     json.dump(CE, open(COV / "category_evidence.json", "w"), indent=1)
     fig_training_composition(T)
     fig_training_overlap(nn)

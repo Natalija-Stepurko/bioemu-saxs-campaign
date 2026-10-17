@@ -644,6 +644,14 @@ ARM1_MAX_LENGTH = 350      # residues; constructs above this are harder to expre
 ARM1_LISTED = 12           # systems listed; the order is by observed raw chi2, a sort key, not a value of measuring
 
 
+def arm1_eligible(cand: pd.DataFrame) -> pd.DataFrame:
+    """Arm 1 eligibility over the clean candidates (monomers by measured mass): reweighting reaches chi2 <= 2,
+    at most ARM1_MAX_LENGTH residues, folded or partly disordered."""
+    return cand[cand["resolvability"].isin([analyse.KIND_STRONG, analyse.KIND_MODEST])
+                & (cand["length"] <= ARM1_MAX_LENGTH)
+                & cand["disorder_class"].isin(["folded", "partly disordered"])]
+
+
 def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFrame) -> dict:
     """The two arms of the campaign, from results only.
 
@@ -652,9 +660,7 @@ def campaign_arms(A: dict, cand: pd.DataFrame, d: pd.DataFrame, ent: pd.DataFram
     the disordered scaling-law Rg by more than 10% (a pre-acquisition quantity), spanning length and
     composition, with matched controls whose ratio is within 10% of 1."""
     from bsc import features
-    elig = cand[cand["resolvability"].isin([analyse.KIND_STRONG, analyse.KIND_MODEST])
-                & (cand["length"] <= ARM1_MAX_LENGTH)
-                & cand["disorder_class"].isin(["folded", "partly disordered"])]
+    elig = arm1_eligible(cand)
     arm1 = elig.sort_values("chi2_raw", ascending=False).head(ARM1_LISTED)
     m = d[(d["model"] == C.MODEL) & d["clean"]].copy()
     m["kind"] = m["resolvability"]

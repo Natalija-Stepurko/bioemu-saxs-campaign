@@ -12,12 +12,15 @@ Sets
   CATH S35    CATH v4.4 S35 clusters (composition, length and disorder of the S35 representative sequences)
   PDB 30%     RCSB 30% clusters of chains of at least 30 residues (organism only, as in script 08)
 Disorder and organism are read from scripts 14 (training sets, SAXS constructs, CATH S35) and 07 (SAXS).
+The MEGAscale domains called mostly disordered are split by origin (natural, de novo designed; Fisher exact
+test) and their lengths compared with the rest (Mann-Whitney), in `megascale_mostly_disordered`.
 Single proportions carry Wilson 95% intervals.
 """
 import json
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 from common import DL, ORG_CATS, TAB, org_category
 
 CLS = {1: "Mainly alpha", 2: "Mainly beta", 3: "Alpha beta", 4: "Few secondary structures"}
@@ -152,6 +155,22 @@ dis["SAXS_by_class"] = {c: {d_: prop(int((g_.dis_cat == d_).sum()), len(g_)) for
                         for c, g_ in saxs.groupby("disorder_class")}
 dis["predictor"] = "metapredict v3, residue score >= 0.5; mostly: >= 50% of residues; long region: >= 30 consecutive, under 50%"
 OUT["disorder"] = dis
+# MEGAscale domains called mostly disordered: natural against de novo designed, and their lengths. The domains were
+# selected for folding-stability measurements, so the call is examined by origin and by length
+mg = sets["MEGAscale"].assign(designed=sets["MEGAscale"].org_group.eq("Designed"),
+                              called=sets["MEGAscale"].dis_cat.eq("mostly disordered"))
+tab_ = [[int((mg.designed & mg.called).sum()), int((mg.designed & ~mg.called).sum())],
+        [int((~mg.designed & mg.called).sum()), int((~mg.designed & ~mg.called).sum())]]
+OUT["megascale_mostly_disordered"] = {
+    "natural": prop(int((~mg.designed & mg.called).sum()), int((~mg.designed).sum())),
+    "designed": prop(int((mg.designed & mg.called).sum()), int(mg.designed.sum())),
+    "fisher_designed_vs_natural_p": float(stats.fisher_exact(tab_)[1]),
+    "length_called": q(mg.length[mg.called]) | {"min": int(mg.length[mg.called].min())},
+    "length_not_called": q(mg.length[~mg.called]) | {"min": int(mg.length[~mg.called].min())},
+    "length_mannwhitney_p": float(stats.mannwhitneyu(mg.length[mg.called], mg.length[~mg.called]).pvalue),
+    "length_natural": q(mg.length[~mg.designed]), "length_designed": q(mg.length[mg.designed]),
+    "called": [{"system": u, "length": int(n_), "dis_frac": round(float(f_), 3), "designed": bool(d_)}
+               for u, n_, f_, d_ in mg.loc[mg.called, ["unit", "length", "dis_frac", "designed"]].itertuples(index=False)]}
 pdb = pd.read_csv(TAB / "rcsb_nr30_representatives.csv.gz")
 pdb = pdb[pdb.length >= 30]
 pdb["org_group"] = [org_category(t, n, (lin if isinstance(lin, str) else "").split("|"))

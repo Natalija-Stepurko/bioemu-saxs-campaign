@@ -113,3 +113,19 @@ def test_category_evidence_splits_every_profile_in_or_out():
     assert cat["superfamily beyond the top 200"]["in"]["n"] == 200
     assert cat["no experimental structure"]["in"]["n"] == 100
     assert cat["construct over 500 residues"]["in"]["n"] == 0
+
+
+def test_quality_checks_by_class_counts_every_entry_once_per_flag():
+    ent = pd.DataFrame({"disorder_class": ["folded"] * 4 + ["partly disordered"] * 2 + ["disordered"] * 3,
+                        "flag_aggregation": [False, True, False, False, False, False, False, False, False],
+                        "flag_negative_I": [False, True, False, False, False, False, False, False, False],
+                        "flag_bad_errors": [False] * 9,
+                        "flag_oligomer": [False, False, False, False, False, True, True, True, False],
+                        "guinier_valid": [True, True, False, True, True, True, True, True, True]})
+    q = coverage.quality_checks_by_class(ent)
+    f, d = q["by_class"]["folded"], q["by_class"]["disordered"]
+    assert (f["n"], f["pass"], d["n"], d["pass"]) == (4, 2, 3, 1)
+    assert f["failed_by_check"]["aggregation upturn"] == 1
+    assert f["failed_by_check"]["no valid Guinier region"] == 1
+    assert d["failed_by_check"]["mass above a monomer"] == 2
+    assert q["fisher_disordered_vs_folded"]["table_pass_fail"] == [[1, 2], [2, 2]]

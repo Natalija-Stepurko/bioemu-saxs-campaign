@@ -1,0 +1,39 @@
+{
+ "n": 12,
+ "n_species_recorded": 5,
+ "n_without_organism": 1,
+ "species": {
+  "Homo sapiens": 6,
+  "Escherichia coli": 2,
+  "Danio rerio": 1,
+  "Human orthopneumovirus": 1,
+  "Hathewaya histolytica": 1
+ },
+ "organism_groups": {
+  "Human": 6,
+  "E. coli": 2,
+  "Other": 2,
+  "Viruses": 1,
+  "Other bacteria": 1
+ },
+ "n_uniprot": 11,
+ "n_sequence_groups": 12,
+ "n_dup_clusters": 12,
+ "max_pairwise_5mer_containment": {
+  "pair": [
+   "SASDJ84",
+   "SASDFK8"
+  ],
+  "value": 0.06422018348623854
+ },
+ "near_duplicate_threshold_jaccard": 0.5,
+ "group_threshold_containment": 0.3,
+ "superfamilies_shared_by_two_or_more": {
+  "2.60.40.10": [
+   "SASDAG8",
+   "SASDJ84",
+   "SASDC35",
+   "SASDE79"
+  ]
+ }
+}

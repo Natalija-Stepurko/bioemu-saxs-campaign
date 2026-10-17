@@ -18,3 +18,6 @@ results/denss/
 
 # Coverage analysis: downloads and intermediate tables (analysis/coverage/README.md)
 analysis/coverage/work/
+
+# Simulation analysis: downloads, tools, trajectories and computed curves (analysis/simulations/README.md)
+analysis/simulations/work/

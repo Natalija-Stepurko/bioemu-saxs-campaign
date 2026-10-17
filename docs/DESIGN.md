@@ -223,6 +223,28 @@ beside the old ones in `results/`.
   no numeric priority is used. The coverage material moved from its own page section to the opening of "What
   should be measured next?". No pre-registered quantity changes.
 
+- **Feasibility of the first category, the MEGAscale disorder call and checks on the Arm 1 list (2026-10-15).**
+  Added after the results were seen. Stage `coverage` reports the share of all 439 entries that pass the
+  quality checks by disorder class (Wilson intervals, two-sided Fisher exact test of disordered against folded,
+  and the check that stops each entry); the page's feasibility note on disordered proteins reads it. Script 16
+  of `analysis/coverage/` splits the MEGAscale domains that metapredict calls mostly disordered by origin
+  (natural, de novo designed) and compares their length with the rest; the composition table's note reports it
+  without assigning a cause. `analysis/arm1/` puts two checks on the Arm 1 list into code: the experimental
+  relative error of every curve against raw χ² and NRMSD, raw χ² by SASBDB curve and source type, the twelve
+  listed systems against the eligible pool; and the organisms, sequence groups and superfamilies of the twelve.
+  The SASBDB metadata it uses are a table written by script 18 of `analysis/coverage/`. No pre-registered
+  quantity changes, and the Arm 1 list is unchanged.
+
+- **Simulation of the disordered proteins (2026-10-15/16).** Added after the results were seen, under its own
+  design written before any run (`docs/SIMULATION_DESIGN.md`, expectations E10 and E11, a circularity check
+  against the CALVADOS training and validation sets, a pre-declared compute rule; deviations dated there).
+  `analysis/simulations/` ran CALVADOS 3 on 40 of the 41 clean disordered profiles with a BioEmu-1 ensemble (the
+  475-residue chain left out by the compute rule, three chains of 404–439 residues at half length). Result: median
+  ratio of simulated bead Rg to measured Guinier Rg 1.04 (1.01–1.10) against BioEmu-1's 1.21 on the same proteins;
+  closer to 1 for 33 of 40; E10 and E11 met, also without the 6 proteins in CALVADOS training sets and without
+  all 11 flagged. With both radii from Guinier fits of computed curves the CALVADOS 3 median is 0.99. The page adds
+  the subsection "What simulation gives for disordered proteins". No pre-registered quantity of this design changes.
+
 ## 8. Conventions
 
 - Every number on the results page is read from `results/` at build time.

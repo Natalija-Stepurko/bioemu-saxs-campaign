@@ -35,9 +35,17 @@ def load() -> tuple[pd.DataFrame, pd.DataFrame]:
     df = sc.merge(ent.drop(columns=["sequence"]), on="label", how="left")
     df["log_chi2_raw"] = np.log10(df["chi2_raw"])
     df["rg_ratio"] = df["rg_model"] / df["rg_exp"]
-    flagged = df["flag_aggregation"] | df["flag_negative_I"] | df["flag_bad_errors"] | df["flag_oligomer"]
-    df["clean"] = ~flagged & df["guinier_valid"]
+    df["clean"] = clean_mask(df)
     return ent, df
+
+
+QC_FLAGS = ["flag_aggregation", "flag_negative_I", "flag_bad_errors", "flag_oligomer"]
+
+
+def clean_mask(df: pd.DataFrame) -> pd.Series:
+    """An entry passes the quality checks when no data-quality flag is raised and the Guinier fit is valid."""
+    flagged = df[QC_FLAGS].astype(bool).any(axis=1)
+    return ~flagged & df["guinier_valid"].astype(bool)
 
 
 def kind(row: pd.Series, phi_threshold: float = PHI_THRESHOLD) -> str:
@@ -340,7 +348,7 @@ def main() -> None:
     m = d[(d["model"] == C.MODEL)]
     mc = m[m["clean"]]
     summary = {
-        "n_entries": int(len(ent)), "n_clean": int(ent.shape[0] - (~m["clean"]).sum()),
+        "n_entries": int(len(ent)), "n_clean": int(clean_mask(ent).sum()),
         "n_flag_aggregation": int(ent["flag_aggregation"].sum()),
         "n_flag_negative": int(ent["flag_negative_I"].sum()),
         "n_flag_bad_errors": int(ent["flag_bad_errors"].sum()),

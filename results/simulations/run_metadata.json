@@ -1,0 +1,423 @@
+{
+ "n_proteins": 41,
+ "n_complete": 40,
+ "total_wall_hours_single_thread": 118.32,
+ "wall_hours_analysed_proteins": 117.44,
+ "wall_hours_left_out_pilot": 0.88,
+ "median_wall_hours_per_analysed_protein": 1.255,
+ "max_wall_hours_per_protein": 16.68,
+ "total_ns": 4225.3,
+ "wall_clock_span_hours": 21.45,
+ "per_protein": [
+  {
+   "label": "SASDB84",
+   "length": 153,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.689,
+   "steps_per_second": 1328.8,
+   "ns": 80.8
+  },
+  {
+   "label": "SASDBY5",
+   "length": 217,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 3.901,
+   "steps_per_second": 1078.7,
+   "ns": 151.5
+  },
+  {
+   "label": "SASDBZ6",
+   "length": 404,
+   "frames": 505,
+   "target_frames": 505,
+   "included": true,
+   "wall_hours": 15.545,
+   "steps_per_second": 442.2,
+   "ns": 247.45
+  },
+  {
+   "label": "SASDC53",
+   "length": 98,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.072,
+   "steps_per_second": 1832.3,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDC62",
+   "length": 49,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.657,
+   "steps_per_second": 2991.1,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDDF6",
+   "length": 169,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.811,
+   "steps_per_second": 1394.3,
+   "ns": 90.9
+  },
+  {
+   "label": "SASDEB3",
+   "length": 153,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.848,
+   "steps_per_second": 1214.6,
+   "ns": 80.8
+  },
+  {
+   "label": "SASDEC3",
+   "length": 178,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 2.493,
+   "steps_per_second": 1125.5,
+   "ns": 101.0
+  },
+  {
+   "label": "SASDED2",
+   "length": 267,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 8.16,
+   "steps_per_second": 756.4,
+   "ns": 222.2
+  },
+  {
+   "label": "SASDEE2",
+   "length": 187,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 2.987,
+   "steps_per_second": 1033.1,
+   "ns": 111.1
+  },
+  {
+   "label": "SASDEK2",
+   "length": 38,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.578,
+   "steps_per_second": 3399.9,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDET2",
+   "length": 99,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.025,
+   "steps_per_second": 1916.1,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDEX2",
+   "length": 82,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.939,
+   "steps_per_second": 2092.5,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDEX4",
+   "length": 104,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.124,
+   "steps_per_second": 1747.1,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDF27",
+   "length": 98,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.03,
+   "steps_per_second": 1906.9,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDF34",
+   "length": 271,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 8.447,
+   "steps_per_second": 763.9,
+   "ns": 232.3
+  },
+  {
+   "label": "SASDJG6",
+   "length": 40,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.56,
+   "steps_per_second": 3506.9,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDJH6",
+   "length": 51,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.694,
+   "steps_per_second": 2828.5,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDJJ6",
+   "length": 191,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 2.912,
+   "steps_per_second": 1059.6,
+   "ns": 111.1
+  },
+  {
+   "label": "SASDJK6",
+   "length": 209,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 4.12,
+   "steps_per_second": 953.3,
+   "ns": 141.4
+  },
+  {
+   "label": "SASDJT3",
+   "length": 439,
+   "frames": 505,
+   "target_frames": 505,
+   "included": true,
+   "wall_hours": 16.682,
+   "steps_per_second": 487.7,
+   "ns": 292.9
+  },
+  {
+   "label": "SASDJT7",
+   "length": 180,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 2.348,
+   "steps_per_second": 1194.9,
+   "ns": 101.0
+  },
+  {
+   "label": "SASDK68",
+   "length": 150,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.372,
+   "steps_per_second": 1430.9,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDKH8",
+   "length": 173,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 2.193,
+   "steps_per_second": 1151.6,
+   "ns": 90.9
+  },
+  {
+   "label": "SASDLF9",
+   "length": 133,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.358,
+   "steps_per_second": 1446.4,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDLJ9",
+   "length": 62,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.748,
+   "steps_per_second": 2626.6,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDLK9",
+   "length": 475,
+   "frames": 20,
+   "target_frames": 505,
+   "included": false,
+   "wall_hours": 0.878,
+   "steps_per_second": 430.4,
+   "ns": 13.6
+  },
+  {
+   "label": "SASDLS4",
+   "length": 255,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 5.947,
+   "steps_per_second": 943.5,
+   "ns": 202.0
+  },
+  {
+   "label": "SASDLT4",
+   "length": 410,
+   "frames": 505,
+   "target_frames": 505,
+   "included": true,
+   "wall_hours": 13.246,
+   "steps_per_second": 540.1,
+   "ns": 257.55
+  },
+  {
+   "label": "SASDQ26",
+   "length": 64,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.748,
+   "steps_per_second": 2624.1,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDQK7",
+   "length": 140,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.371,
+   "steps_per_second": 1432.6,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDQN8",
+   "length": 133,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.201,
+   "steps_per_second": 1634.6,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDRA6",
+   "length": 102,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.223,
+   "steps_per_second": 1605.4,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDRF8",
+   "length": 89,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.996,
+   "steps_per_second": 1971.2,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDSZ9",
+   "length": 80,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.885,
+   "steps_per_second": 2219.1,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDTA2",
+   "length": 80,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.955,
+   "steps_per_second": 2056.0,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDU37",
+   "length": 114,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.071,
+   "steps_per_second": 1833.7,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDUL9",
+   "length": 76,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.839,
+   "steps_per_second": 2341.1,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDUR3",
+   "length": 51,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.653,
+   "steps_per_second": 3006.7,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDV46",
+   "length": 130,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 1.286,
+   "steps_per_second": 1527.0,
+   "ns": 70.7
+  },
+  {
+   "label": "SASDVL5",
+   "length": 62,
+   "frames": 1010,
+   "target_frames": 1010,
+   "included": true,
+   "wall_hours": 0.727,
+   "steps_per_second": 2701.3,
+   "ns": 70.7
+  }
+ ]
+}
