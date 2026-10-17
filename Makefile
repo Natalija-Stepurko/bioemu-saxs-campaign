@@ -6,7 +6,7 @@ UV ?= uv run
 ARCHIVE ?=
 export BSC_N_JOBS ?= 6
 
-.PHONY: all fetch score coordrg analyse select_eval predict envelopes coverage report page test lint
+.PHONY: all fetch score coordrg analyse select_eval predict envelopes coverage report page test lint licenses
 
 all: score coordrg analyse select_eval predict envelopes coverage report page
 
@@ -44,4 +44,8 @@ test:
 	$(UV) pytest -q
 
 lint:
-	$(UV) ruff check src tests docs
+	$(UV) ruff check src tests docs scripts
+
+# licence register: THIRD_PARTY_LICENSES.md and docs/licenses/ from curated.json and the environments
+licenses:
+	python3 scripts/licenses.py

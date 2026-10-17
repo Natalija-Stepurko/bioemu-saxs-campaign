@@ -1,0 +1,238 @@
+environment,package,version,direct,licence,basis,review,homepage,license_expression,license_field,classifiers
+main,bioemu-saxs-campaign,0.1.0,,MIT,License,,,,MIT License,
+main,certifi,2026.7.22,,MPL-2.0,License,copyleft,https://github.com/certifi/python-certifi,,MPL-2.0,OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
+main,charset-normalizer,3.5.2,,MIT,License,,https://charset-normalizer.readthedocs.io/,,MIT,
+main,cloudpickle,3.1.2,,BSD-3-Clause,License,,https://github.com/cloudpipe/cloudpickle,,BSD-3-Clause,OSI Approved :: BSD License
+main,contourpy,1.3.3,,BSD-3-Clause,License,,https://github.com/contourpy/contourpy,,BSD 3-Clause License,OSI Approved :: BSD License
+main,cycler,0.12.1,,BSD (variant not stated),classifier,,https://matplotlib.org/cycler/,,"Copyright (c) 2015, matplotlib project",OSI Approved :: BSD License
+main,fonttools,4.66.1,,MIT,License,,http://github.com/fonttools/fonttools,,MIT,
+main,idna,3.20,,BSD-3-Clause,License-Expression,,https://github.com/kjd/idna,BSD-3-Clause,,
+main,iniconfig,2.3.1,,MIT,License-Expression,,https://github.com/pytest-dev/iniconfig,MIT,,
+main,joblib,1.6.0,yes,BSD-3-Clause,License-Expression,,https://joblib.readthedocs.io,BSD-3-Clause,,
+main,kiwisolver,1.5.1,,BSD (variant not stated),classifier,,https://github.com/nucleic/kiwi,,=========================,OSI Approved :: BSD License
+main,matplotlib,3.11.2,yes,"LicenseRef-Matplotlib (PSF-based, permissive)",curated,,https://matplotlib.org,,License agreement for matplotlib versions 1.3.0 and later,OSI Approved :: Python Software Foundation License
+main,mdtraj,1.11.1.post2,yes,LGPL-2.1-or-later,License,copyleft,http://mdtraj.org,,LGPLv2.1+,OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
+main,mrcfile,1.5.4,yes,BSD-3-Clause,curated,,https://github.com/ccpem/mrcfile,,BSD,OSI Approved :: BSD License
+main,narwhals,2.26.0,,MIT,License-Expression,,https://github.com/narwhals-dev/narwhals,MIT,,
+main,numpy,2.4.6,yes,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,License-Expression,,https://numpy.org,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,,
+main,packaging,26.3,,Apache-2.0 OR BSD-2-Clause,License-Expression,,https://github.com/pypa/packaging,Apache-2.0 OR BSD-2-Clause,,
+main,pandas,3.0.6,yes,BSD-3-Clause,License,,https://pandas.pydata.org,,BSD 3-Clause License,OSI Approved :: BSD License
+main,pillow,12.3.0,,MIT-CMU,License-Expression,,https://python-pillow.github.io,MIT-CMU,,
+main,pluggy,1.6.0,,MIT,License,,,,MIT,OSI Approved :: MIT License
+main,pyarrow,25.0.1,yes,Apache-2.0,License-Expression,,https://arrow.apache.org/,Apache-2.0,,
+main,Pygments,2.21.0,,BSD-2-Clause,License-Expression,,https://pygments.org,BSD-2-Clause,,
+main,pyparsing,3.3.2,,MIT,License-Expression,,https://github.com/pyparsing/pyparsing/,MIT,,
+main,pytest,9.1.1,yes,MIT,License-Expression,,https://docs.pytest.org/en/latest/,MIT,,
+main,python-dateutil,2.9.0.post0,,BSD (variant not stated) / Apache (version not stated),classifier,,https://github.com/dateutil/dateutil,,Dual License,OSI Approved :: BSD License; OSI Approved :: Apache Software License
+main,requests,2.34.2,yes,Apache-2.0,License,,https://github.com/psf/requests,,Apache-2.0,OSI Approved :: Apache Software License
+main,ruff,0.16.10,yes,MIT,License-Expression,,https://github.com/astral-sh/ruff,MIT,,
+main,scikit-learn,1.9.1,yes,BSD-3-Clause,License-Expression,,https://scikit-learn.org,BSD-3-Clause,,
+main,scipy,1.17.1,yes,BSD-3-Clause,curated,,https://scipy.org/,,"Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.",OSI Approved :: BSD License
+main,six,1.17.0,,MIT,License,,https://github.com/benjaminp/six,,MIT,OSI Approved :: MIT License
+main,threadpoolctl,3.7.0,,BSD-3-Clause,License-Expression,,https://github.com/joblib/threadpoolctl,BSD-3-Clause,,
+main,urllib3,2.8.0,,MIT,License-Expression,,https://urllib3.readthedocs.io,MIT,,
+coverage,biopython,1.88,yes,LicenseRef-Biopython-License-Agreement,License-Expression,,https://biopython.org/,LicenseRef-Biopython-License-Agreement,,
+coverage,certifi,2026.7.22,,MPL-2.0,License,copyleft,https://github.com/certifi/python-certifi,,MPL-2.0,OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
+coverage,charset-normalizer,3.5.2,,MIT,License,,https://charset-normalizer.readthedocs.io/,,MIT,
+coverage,contourpy,1.3.3,,BSD-3-Clause,License,,https://github.com/contourpy/contourpy,,BSD 3-Clause License,OSI Approved :: BSD License
+coverage,cycler,0.12.1,,BSD (variant not stated),classifier,,https://matplotlib.org/cycler/,,"Copyright (c) 2015, matplotlib project",OSI Approved :: BSD License
+coverage,filelock,4.1.1,,MIT,License-Expression,,https://github.com/tox-dev/py-filelock,MIT,,OSI Approved :: MIT License
+coverage,fonttools,4.66.1,,MIT,License,,http://github.com/fonttools/fonttools,,MIT,
+coverage,fsspec,2026.9.0,,BSD-3-Clause,License-Expression,,https://github.com/fsspec/filesystem_spec,BSD-3-Clause,,
+coverage,getSequence,3.0.1,,MIT,License,,,,MIT,
+coverage,idna,3.20,,BSD-3-Clause,License-Expression,,https://github.com/kjd/idna,BSD-3-Clause,,
+coverage,Jinja2,3.1.6,,BSD-3-Clause,curated,,https://github.com/pallets/jinja/,,,OSI Approved :: BSD License
+coverage,kiwisolver,1.5.1,,BSD (variant not stated),classifier,,https://github.com/nucleic/kiwi,,=========================,OSI Approved :: BSD License
+coverage,MarkupSafe,3.0.4,,BSD-3-Clause,License-Expression,,https://github.com/pallets/markupsafe/,BSD-3-Clause,,
+coverage,matplotlib,3.11.2,yes,"LicenseRef-Matplotlib (PSF-based, permissive)",curated,,https://matplotlib.org,,License agreement for matplotlib versions 1.3.0 and later,OSI Approved :: Python Software Foundation License
+coverage,metapredict,3.1.1,yes,MIT,License-Expression,,https://metapredict.net,MIT,,
+coverage,mpmath,1.3.0,,BSD (variant not stated),classifier,,https://github.com/fredrik-johansson/mpmath,,BSD,OSI Approved :: BSD License
+coverage,networkx,3.6.1,,BSD-3-Clause,License-Expression,,https://networkx.org/,BSD-3-Clause,,
+coverage,numpy,2.4.6,yes,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,License-Expression,,https://numpy.org,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,,
+coverage,packaging,26.3,,Apache-2.0 OR BSD-2-Clause,License-Expression,,https://github.com/pypa/packaging,Apache-2.0 OR BSD-2-Clause,,
+coverage,pandas,3.0.6,yes,BSD-3-Clause,License,,https://pandas.pydata.org,,BSD 3-Clause License,OSI Approved :: BSD License
+coverage,pillow,12.3.0,,MIT-CMU,License-Expression,,https://python-pillow.github.io,MIT-CMU,,
+coverage,protfasta,0.1.26,,MIT,License-Expression,,https://github.com/holehouse-lab/protfasta,MIT,,
+coverage,pyparsing,3.3.3,,MIT,License-Expression,,https://github.com/pyparsing/pyparsing/,MIT,,
+coverage,python-dateutil,2.9.0.post0,,BSD (variant not stated) / Apache (version not stated),classifier,,https://github.com/dateutil/dateutil,,Dual License,OSI Approved :: BSD License; OSI Approved :: Apache Software License
+coverage,remotezip,0.12.6,,MIT,License,,https://github.com/gtsystem/python-remotezip,,MIT,
+coverage,requests,2.34.2,yes,Apache-2.0,License,,https://github.com/psf/requests,,Apache-2.0,OSI Approved :: Apache Software License
+coverage,scipy,1.17.1,yes,BSD-3-Clause,curated,,https://scipy.org/,,"Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.",OSI Approved :: BSD License
+coverage,setuptools,84.0.0,,MIT,License-Expression,,https://github.com/pypa/setuptools,MIT,,
+coverage,six,1.17.0,,MIT,License,,https://github.com/benjaminp/six,,MIT,OSI Approved :: MIT License
+coverage,sympy,1.14.0,,BSD (variant not stated),classifier,,https://github.com/sympy/sympy,,BSD,OSI Approved :: BSD License
+coverage,torch,2.14.1+cpu,yes,Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT,License-Expression,,https://pytorch.org,Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT,,
+coverage,tqdm,4.70.1,,MPL-2.0 AND MIT,License,copyleft,https://tqdm.github.io,,MPL-2.0 AND MIT,
+coverage,typing_extensions,4.16.0,,PSF-2.0,License-Expression,,https://github.com/python/typing_extensions,PSF-2.0,,
+coverage,urllib3,2.8.0,,MIT,License-Expression,,https://urllib3.readthedocs.io,MIT,,
+simulation,annotated-types,0.8.0,,MIT,License-Expression,,https://github.com/annotated-types/annotated-types,MIT,,OSI Approved :: MIT License
+simulation,biopython,1.88,yes,LicenseRef-Biopython-License-Agreement,License-Expression,,https://biopython.org/,LicenseRef-Biopython-License-Agreement,,
+simulation,calvados,0.9.0,yes,GPL-3.0-only,License-Expression,copyleft,https://github.com/KULL-Centre/CALVADOS,GPL-3.0-only,,
+simulation,certifi,2026.7.22,,MPL-2.0,License,copyleft,https://github.com/certifi/python-certifi,,MPL-2.0,OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
+simulation,charset-normalizer,3.5.2,,MIT,License,,https://charset-normalizer.readthedocs.io/,,MIT,
+simulation,cloudpickle,3.1.2,,BSD-3-Clause,License,,https://github.com/cloudpipe/cloudpickle,,BSD-3-Clause,OSI Approved :: BSD License
+simulation,contourpy,1.4.0,,BSD-3-Clause,License-Expression,,https://github.com/contourpy/contourpy,BSD-3-Clause,,
+simulation,cycler,0.12.1,,BSD (variant not stated),classifier,,https://matplotlib.org/cycler/,,"Copyright (c) 2015, matplotlib project",OSI Approved :: BSD License
+simulation,filelock,4.2.0,,MIT,License-Expression,,https://github.com/tox-dev/py-filelock,MIT,,OSI Approved :: MIT License
+simulation,fonttools,4.67.0,,MIT,License,,http://github.com/fonttools/fonttools,,MIT,
+simulation,formulaic,1.2.2,,MIT,License-Expression,,https://github.com/matthewwardrop/formulaic,MIT,,OSI Approved :: MIT License
+simulation,GridDataFormats,1.2.0,,LGPL-3.0-or-later,License-Expression,copyleft,https://github.com/MDAnalysis/GridDataFormats,LGPL-3.0-or-later,,
+simulation,idna,3.20,,BSD-3-Clause,License-Expression,,https://github.com/kjd/idna,BSD-3-Clause,,
+simulation,iniconfig,2.3.1,,MIT,License-Expression,,https://github.com/pytest-dev/iniconfig,MIT,,
+simulation,interface_meta,2.0.1,,MIT,License,,https://github.com/matthewwardrop/interface_meta,,MIT,
+simulation,Jinja2,3.1.6,yes,BSD-3-Clause,curated,,https://github.com/pallets/jinja/,,,OSI Approved :: BSD License
+simulation,joblib,1.6.0,,BSD-3-Clause,License-Expression,,https://joblib.readthedocs.io,BSD-3-Clause,,
+simulation,kiwisolver,1.5.1,,BSD (variant not stated),classifier,,https://github.com/nucleic/kiwi,,=========================,OSI Approved :: BSD License
+simulation,llvmlite,0.50.0,,BSD-2-Clause AND Apache-2.0 WITH LLVM-exception,License-Expression,,https://github.com/numba/llvmlite,BSD-2-Clause AND Apache-2.0 WITH LLVM-exception,,
+simulation,MarkupSafe,3.0.4,,BSD-3-Clause,License-Expression,,https://github.com/pallets/markupsafe/,BSD-3-Clause,,
+simulation,matplotlib,3.11.2,yes,"LicenseRef-Matplotlib (PSF-based, permissive)",curated,,https://matplotlib.org,,License agreement for matplotlib versions 1.3.0 and later,OSI Approved :: Python Software Foundation License
+simulation,mda-xdrlib,0.2.0,,PSF-style (classifier),classifier,,https://github.com/MDAnalysis/mda-xdrlib,,MDA-XDRLIB LICENSING,OSI Approved :: Python Software Foundation License
+simulation,MDAnalysis,2.10.0,yes,LGPL-3.0-or-later,classifier,copyleft,https://www.mdanalysis.org,,==========================================================================,OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
+simulation,mdtraj,1.11.2,yes,LGPL-2.1-or-later,License-Expression,copyleft,https://mdtraj.org,LGPL-2.1-or-later,,
+simulation,mmtf-python,1.1.3,,Apache-2.0,curated,,https://github.com/rcsb/mmtf-python.git,,Apache 2.0,OSI Approved :: MIT License
+simulation,mrcfile,1.5.4,,BSD-3-Clause,curated,,https://github.com/ccpem/mrcfile,,BSD,OSI Approved :: BSD License
+simulation,msgpack,1.2.3,,Apache-2.0,License-Expression,,https://msgpack.org/,Apache-2.0,,
+simulation,narwhals,2.27.1,,MIT,License-Expression,,https://github.com/narwhals-dev/narwhals,MIT,,
+simulation,numba,0.68.0,yes,BSD-2-Clause,curated,,https://numba.pydata.org,,BSD,OSI Approved :: BSD License
+simulation,numpy,2.5.4,yes,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,License-Expression,,https://numpy.org,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,,
+simulation,OpenMM,8.4.0.post2,yes,"MIT (API, Reference and CPU platforms) AND LGPL (CUDA and OpenCL platforms)",curated,copyleft,https://openmm.org,,Python Software Foundation License (BSD-like),
+simulation,packaging,26.3,,Apache-2.0 OR BSD-2-Clause,License-Expression,,https://github.com/pypa/packaging,Apache-2.0 OR BSD-2-Clause,,
+simulation,pandas,3.0.6,yes,BSD-3-Clause,License,,https://pandas.pydata.org,,BSD 3-Clause License,OSI Approved :: BSD License
+simulation,patsy,1.0.3,,BSD-2-Clause,License,,https://github.com/pydata/patsy,,2-clause BSD,OSI Approved :: BSD License
+simulation,pillow,12.3.0,,MIT-CMU,License-Expression,,https://python-pillow.github.io,MIT-CMU,,
+simulation,pluggy,1.7.0,,MIT,License,,https://github.com/pytest-dev/pluggy,,MIT,OSI Approved :: MIT License
+simulation,pydantic,2.14.1,yes,MIT,License-Expression,,https://github.com/pydantic/pydantic,MIT,,
+simulation,pydantic_core,2.50.1,,MIT,License-Expression,,https://github.com/pydantic,MIT,,
+simulation,Pygments,2.21.0,,BSD-2-Clause,License-Expression,,https://pygments.org,BSD-2-Clause,,
+simulation,pyparsing,3.3.2,,MIT,License-Expression,,https://github.com/pyparsing/pyparsing/,MIT,,
+simulation,pytest,9.1.1,,MIT,License-Expression,,https://docs.pytest.org/en/latest/,MIT,,
+simulation,python-dateutil,2.9.0.post0,,BSD (variant not stated) / Apache (version not stated),classifier,,https://github.com/dateutil/dateutil,,Dual License,OSI Approved :: BSD License; OSI Approved :: Apache Software License
+simulation,PyYAML,6.0.3,yes,MIT,License,,https://github.com/yaml/pyyaml,,MIT,OSI Approved :: MIT License
+simulation,requests,2.34.2,yes,Apache-2.0,License,,https://github.com/psf/requests,,Apache-2.0,OSI Approved :: Apache Software License
+simulation,scipy,1.18.1,yes,BSD-3-Clause,curated,,https://scipy.org/,,"Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.",OSI Approved :: BSD License
+simulation,six,1.17.0,,MIT,License,,https://github.com/benjaminp/six,,MIT,OSI Approved :: MIT License
+simulation,statsmodels,0.15.0,yes,BSD-3-Clause,License-Expression,,https://www.statsmodels.org,BSD-3-Clause,,
+simulation,threadpoolctl,3.7.0,,BSD-3-Clause,License-Expression,,https://github.com/joblib/threadpoolctl,BSD-3-Clause,,
+simulation,tqdm,4.70.1,yes,MPL-2.0 AND MIT,License,copyleft,https://tqdm.github.io,,MPL-2.0 AND MIT,
+simulation,typing_extensions,4.16.0,,PSF-2.0,License-Expression,,https://github.com/python/typing_extensions,PSF-2.0,,
+simulation,typing-inspection,0.4.4,,MIT,License-Expression,,https://github.com/pydantic/typing-inspection,MIT,,
+simulation,urllib3,2.8.0,,MIT,License-Expression,,https://urllib3.readthedocs.io,MIT,,
+simulation,wrapt,2.5.1,,BSD-2-Clause,License-Expression,,https://github.com/GrahamDumpleton/wrapt,BSD-2-Clause,,
+denss,contourpy,1.3.3,,BSD-3-Clause,License,,https://github.com/contourpy/contourpy,,BSD 3-Clause License,OSI Approved :: BSD License
+denss,cycler,0.12.1,,BSD (variant not stated),classifier,,https://matplotlib.org/cycler/,,"Copyright (c) 2015, matplotlib project",OSI Approved :: BSD License
+denss,denss,1.8.7,yes,GPL-3.0,License,copyleft,,,GPLv3,
+denss,fonttools,4.66.1,,MIT,License,,http://github.com/fonttools/fonttools,,MIT,
+denss,kiwisolver,1.5.1,,BSD (variant not stated),classifier,,https://github.com/nucleic/kiwi,,=========================,OSI Approved :: BSD License
+denss,matplotlib,3.11.2,,"LicenseRef-Matplotlib (PSF-based, permissive)",curated,,https://matplotlib.org,,License agreement for matplotlib versions 1.3.0 and later,OSI Approved :: Python Software Foundation License
+denss,numpy,1.26.4,yes,BSD-3-Clause,curated,,https://numpy.org,,"Copyright (c) 2005-2023, NumPy Developers.",OSI Approved :: BSD License
+denss,packaging,26.3,,Apache-2.0 OR BSD-2-Clause,License-Expression,,https://github.com/pypa/packaging,Apache-2.0 OR BSD-2-Clause,,
+denss,pillow,12.3.0,,MIT-CMU,License-Expression,,https://python-pillow.github.io,MIT-CMU,,
+denss,pyparsing,3.3.3,,MIT,License-Expression,,https://github.com/pyparsing/pyparsing/,MIT,,
+denss,python-dateutil,2.9.0.post0,,BSD (variant not stated) / Apache (version not stated),classifier,,https://github.com/dateutil/dateutil,,Dual License,OSI Approved :: BSD License; OSI Approved :: Apache Software License
+denss,scipy,1.13.1,,BSD-3-Clause,curated,,https://scipy.org/,,"Copyright (c) 2001-2002 Enthought, Inc. 2003-2024, SciPy Developers.",OSI Approved :: BSD License
+denss,six,1.17.0,,MIT,License,,https://github.com/benjaminp/six,,MIT,OSI Approved :: MIT License
+bioemu,absl-py,2.5.1,,Apache-2.0,License-Expression,,https://github.com/abseil/abseil-py,Apache-2.0,,OSI Approved :: Apache Software License
+bioemu,aiohappyeyeballs,2.7.1,,PSF-2.0,License,,https://github.com/aio-libs/aiohappyeyeballs,,PSF-2.0,OSI Approved :: Python Software Foundation License
+bioemu,aiohttp,3.14.4,,Apache-2.0 AND MIT,License-Expression,,https://github.com/aio-libs/aiohttp,Apache-2.0 AND MIT,,
+bioemu,aiosignal,1.4.0,,Apache-2.0,License,,https://github.com/aio-libs/aiosignal,,Apache 2.0,OSI Approved :: Apache Software License
+bioemu,annotated-doc,0.0.5,,MIT,License-Expression,,https://github.com/fastapi/annotated-doc,MIT,,
+bioemu,antlr4-python3-runtime,4.9.3,,BSD,License (as written),,http://www.antlr.org,,BSD,
+bioemu,anyio,4.15.1,,MIT,License-Expression,,https://github.com/agronholm/anyio,MIT,,
+bioemu,astunparse,1.6.3,,BSD (variant not stated),classifier,,https://github.com/simonpercivall/astunparse,,BSD,OSI Approved :: BSD License
+bioemu,attrs,26.1.0,,MIT,License-Expression,,https://github.com/python-attrs/attrs,MIT,,
+bioemu,bio,1.8.4,,MIT,License-Expression,,https://github.com/ialbert/bio/,MIT,,
+bioemu,bioemu,1.4.1,yes,MIT,curated,,https://github.com/microsoft/bioemu,,,
+bioemu,biopython,1.88,,LicenseRef-Biopython-License-Agreement,License-Expression,,https://biopython.org/,LicenseRef-Biopython-License-Agreement,,
+bioemu,biothings_client,0.5.1,,BSD-3-Clause,License,,https://github.com/biothings/biothings_client.py,,BSD-3-Clause,OSI Approved :: BSD License
+bioemu,certifi,2026.7.22,,MPL-2.0,License,copyleft,https://github.com/certifi/python-certifi,,MPL-2.0,OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
+bioemu,charset-normalizer,3.5.2,,MIT,License,,https://charset-normalizer.readthedocs.io/,,MIT,
+bioemu,click,8.5.0,,BSD-3-Clause,License-Expression,,https://github.com/pallets/click/,BSD-3-Clause,,
+bioemu,contourpy,1.3.3,,BSD-3-Clause,License,,https://github.com/contourpy/contourpy,,BSD 3-Clause License,OSI Approved :: BSD License
+bioemu,cycler,0.12.1,,BSD (variant not stated),classifier,,https://matplotlib.org/cycler/,,"Copyright (c) 2015, matplotlib project",OSI Approved :: BSD License
+bioemu,dm-haiku,0.0.17,,Apache-2.0,License,,https://github.com/deepmind/dm-haiku,,Apache 2.0,OSI Approved :: Apache Software License
+bioemu,dm-tree,0.1.10,,Apache-2.0,License,,https://github.com/deepmind/tree,,Apache 2.0,OSI Approved :: Apache Software License
+bioemu,einops,0.8.2,,MIT,License,,https://github.com/arogozhnikov/einops,,MIT,OSI Approved :: MIT License
+bioemu,filelock,4.1.0,,MIT,License-Expression,,https://github.com/tox-dev/py-filelock,MIT,,OSI Approved :: MIT License
+bioemu,fire,0.7.1,,Apache-2.0,License,,https://github.com/google/python-fire,,Apache-2.0,
+bioemu,flatbuffers,25.12.19,,Apache-2.0,License,,https://github.com/google/flatbuffers,,Apache 2.0,OSI Approved :: Apache Software License
+bioemu,fonttools,4.66.1,,MIT,License,,http://github.com/fonttools/fonttools,,MIT,
+bioemu,frozenlist,1.8.0,,Apache-2.0,License,,https://github.com/aio-libs/frozenlist,,Apache-2.0,
+bioemu,fsspec,2026.9.0,,BSD-3-Clause,License-Expression,,https://github.com/fsspec/filesystem_spec,BSD-3-Clause,,
+bioemu,gast,0.7.0,,BSD-3-Clause,License,,https://github.com/serge-sans-paille/gast/,,BSD 3-Clause,OSI Approved :: BSD License
+bioemu,google-pasta,0.2.0,,Apache-2.0,License,,https://github.com/google/pasta,,Apache 2.0,OSI Approved :: Apache Software License
+bioemu,gprofiler-official,1.0.0,,BSD (variant not stated),classifier,,https://biit.cs.ut.ee/gprofiler/,,UNKNOWN,OSI Approved :: BSD License
+bioemu,grpcio,1.84.0,,Apache-2.0,License-Expression,,https://grpc.io,Apache-2.0,,
+bioemu,h11,0.16.0,,MIT,License,,https://github.com/python-hyper/h11,,MIT,OSI Approved :: MIT License
+bioemu,h5py,3.14.0,,BSD-3-Clause,License-Expression,,https://www.h5py.org/,BSD-3-Clause,,
+bioemu,hf-xet,1.7.0,,Apache-2.0,License-Expression,,https://github.com/huggingface/xet-core,Apache-2.0,,OSI Approved :: Apache Software License
+bioemu,httpcore,1.0.9,,BSD-3-Clause,License-Expression,,https://www.encode.io/httpcore/,BSD-3-Clause,,OSI Approved :: BSD License
+bioemu,httpcore2,2.13.1,,BSD-3-Clause,License-Expression,,https://github.com/pydantic/httpx2,BSD-3-Clause,,OSI Approved :: BSD License
+bioemu,httpx,0.28.1,,BSD-3-Clause,License,,https://github.com/encode/httpx,,BSD-3-Clause,OSI Approved :: BSD License
+bioemu,httpx2,2.13.1,,BSD-3-Clause,License-Expression,,https://github.com/pydantic/httpx2,BSD-3-Clause,,OSI Approved :: BSD License
+bioemu,huggingface_hub,2.2.0,,Apache-2.0,License,,https://github.com/huggingface/huggingface_hub,,Apache-2.0,OSI Approved :: Apache Software License
+bioemu,hydra-core,1.3.7,,MIT,License,,https://github.com/facebookresearch/hydra,,MIT,OSI Approved :: MIT License
+bioemu,idna,3.20,,BSD-3-Clause,License-Expression,,https://github.com/kjd/idna,BSD-3-Clause,,
+bioemu,ihm,2.12,,MIT,License,,https://github.com/ihmwg/python-ihm,,MIT,
+bioemu,jax,0.10.2,,Apache-2.0,License,,https://github.com/jax-ml/jax,,Apache-2.0,
+bioemu,jaxlib,0.10.2,,Apache-2.0,License,,https://github.com/jax-ml/jax,,Apache-2.0,
+bioemu,Jinja2,3.1.6,,BSD-3-Clause,curated,,https://github.com/pallets/jinja/,,,OSI Approved :: BSD License
+bioemu,jmp,0.0.4,,Apache-2.0,License,,https://github.com/deepmind/jmp,,Apache 2.0,OSI Approved :: Apache Software License
+bioemu,keras,3.15.1,,Apache-2.0,License,,https://keras.io/,,Apache License 2.0,
+bioemu,kiwisolver,1.5.1,,BSD (variant not stated),classifier,,https://github.com/nucleic/kiwi,,=========================,OSI Approved :: BSD License
+bioemu,libclang,18.1.1,,Apache-2.0,License,,https://github.com/sighingnow/libclang,,Apache License 2.0,OSI Approved :: Apache Software License
+bioemu,markdown-it-py,4.2.0,,MIT,classifier,,https://github.com/executablebooks/markdown-it-py,,,OSI Approved :: MIT License
+bioemu,MarkupSafe,3.0.4,,BSD-3-Clause,License-Expression,,https://github.com/pallets/markupsafe/,BSD-3-Clause,,
+bioemu,matplotlib,3.11.2,,"LicenseRef-Matplotlib (PSF-based, permissive)",curated,,https://matplotlib.org,,License agreement for matplotlib versions 1.3.0 and later,OSI Approved :: Python Software Foundation License
+bioemu,mdtraj,1.11.1.post2,,LGPL-2.1-or-later,License,copyleft,http://mdtraj.org,,LGPLv2.1+,OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)
+bioemu,mdurl,0.1.2,,MIT,classifier,,https://github.com/executablebooks/mdurl,,,OSI Approved :: MIT License
+bioemu,ml_collections,1.1.0,,Apache (version not stated),classifier,,https://github.com/google/ml_collections,,,OSI Approved :: Apache Software License
+bioemu,ml_dtypes,0.6.0,,Apache-2.0,License-Expression,,https://github.com/jax-ml/ml_dtypes,Apache-2.0,,
+bioemu,modelcif,1.8,,MIT,License,,https://github.com/ihmwg/python-modelcif,,MIT,
+bioemu,mpmath,1.3.0,,BSD (variant not stated),classifier,,https://github.com/fredrik-johansson/mpmath,,BSD,OSI Approved :: BSD License
+bioemu,msgpack,1.2.3,,Apache-2.0,License-Expression,,https://msgpack.org/,Apache-2.0,,
+bioemu,multidict,6.9.1,,Apache-2.0,License,,https://github.com/aio-libs/multidict,,Apache License 2.0,
+bioemu,mygene,3.2.2,,BSD (variant not stated),classifier,,https://github.com/biothings/mygene.py,,BSD,OSI Approved :: BSD License
+bioemu,namex,0.1.0,,Apache-2.0,curated,,,,,
+bioemu,networkx,3.6.1,,BSD-3-Clause,License-Expression,,https://networkx.org/,BSD-3-Clause,,
+bioemu,numpy,2.4.6,,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,License-Expression,,https://numpy.org,BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0,,
+bioemu,omegaconf,2.3.1,,BSD (variant not stated),classifier,,https://github.com/omry/omegaconf,,,OSI Approved :: BSD License
+bioemu,opt_einsum,3.4.0,,MIT,License-Expression,,,MIT,,OSI Approved :: MIT License
+bioemu,optree,0.20.0,,Apache-2.0,License-Expression,,https://github.com/metaopt/optree,Apache-2.0,,
+bioemu,packaging,26.3,,Apache-2.0 OR BSD-2-Clause,License-Expression,,https://github.com/pypa/packaging,Apache-2.0 OR BSD-2-Clause,,
+bioemu,pandas,3.0.6,yes,BSD-3-Clause,License,,https://pandas.pydata.org,,BSD 3-Clause License,OSI Approved :: BSD License
+bioemu,pillow,12.3.0,,MIT-CMU,License-Expression,,https://python-pillow.github.io,MIT-CMU,,
+bioemu,platformdirs,4.12.4,,MIT,License-Expression,,https://github.com/tox-dev/platformdirs,MIT,,OSI Approved :: MIT License
+bioemu,pooch,1.9.0,,BSD-3-Clause,License-Expression,,https://github.com/fatiando/pooch,BSD-3-Clause,,
+bioemu,propcache,0.5.4,,Apache-2.0,License,,https://github.com/aio-libs/propcache,,Apache-2.0,
+bioemu,protobuf,7.36.2,,BSD-3-Clause,License,,https://developers.google.com/protocol-buffers/,,3-Clause BSD License,
+bioemu,psutil,7.2.2,,BSD-3-Clause,License,,https://github.com/giampaolo/psutil,,BSD-3-Clause,
+bioemu,Pygments,2.21.0,,BSD-2-Clause,License-Expression,,https://pygments.org,BSD-2-Clause,,
+bioemu,pyparsing,3.3.3,,MIT,License-Expression,,https://github.com/pyparsing/pyparsing/,MIT,,
+bioemu,python-dateutil,2.9.0.post0,,BSD (variant not stated) / Apache (version not stated),classifier,,https://github.com/dateutil/dateutil,,Dual License,OSI Approved :: BSD License; OSI Approved :: Apache Software License
+bioemu,PyYAML,6.0.3,,MIT,License,,https://github.com/yaml/pyyaml,,MIT,OSI Approved :: MIT License
+bioemu,requests,2.34.2,,Apache-2.0,License,,https://github.com/psf/requests,,Apache-2.0,OSI Approved :: Apache Software License
+bioemu,rich,15.0.0,,MIT,License,,https://github.com/Textualize/rich,,MIT,OSI Approved :: MIT License
+bioemu,scipy,1.17.1,,BSD-3-Clause,curated,,https://scipy.org/,,"Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.",OSI Approved :: BSD License
+bioemu,setuptools,84.0.0,,MIT,License-Expression,,https://github.com/pypa/setuptools,MIT,,
+bioemu,shellingham,1.5.4,,ISC,License,,https://github.com/sarugaku/shellingham,,ISC License,OSI Approved :: ISC License (ISCL)
+bioemu,six,1.17.0,,MIT,License,,https://github.com/benjaminp/six,,MIT,OSI Approved :: MIT License
+bioemu,stackprinter,0.2.13,,MIT,classifier,,https://github.com/cknd/stackprinter,,,OSI Approved :: MIT License
+bioemu,sympy,1.14.0,,BSD (variant not stated),classifier,,https://github.com/sympy/sympy,,BSD,OSI Approved :: BSD License
+bioemu,tabulate,0.10.0,,MIT,License-Expression,,https://github.com/astanin/python-tabulate,MIT,,
+bioemu,tensorflow_cpu,2.21.0,,Apache-2.0,License,,https://www.tensorflow.org/,,Apache 2.0,OSI Approved :: Apache Software License
+bioemu,termcolor,3.3.0,,MIT,License-Expression,,https://github.com/termcolor/termcolor,MIT,,
+bioemu,torch,2.14.1+cpu,,Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT,License-Expression,,https://pytorch.org,Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT,,
+bioemu,torch-geometric,2.8.0.post1,,MIT,License-Expression,,https://pyg.org,MIT,,
+bioemu,tqdm,4.70.1,,MPL-2.0 AND MIT,License,copyleft,https://tqdm.github.io,,MPL-2.0 AND MIT,
+bioemu,truststore,0.10.4,,MIT,License-Expression,,https://github.com/sethmlarson/truststore,MIT,,
+bioemu,typer,0.27.3,,MIT,License-Expression,,https://github.com/fastapi/typer,MIT,,
+bioemu,typing_extensions,4.16.0,,PSF-2.0,License-Expression,,https://github.com/python/typing_extensions,PSF-2.0,,
+bioemu,urllib3,2.8.0,,MIT,License-Expression,,https://urllib3.readthedocs.io,MIT,,
+bioemu,wheel,0.48.0,,MIT,License-Expression,,https://github.com/pypa/wheel,MIT,,
+bioemu,wrapt,2.5.0,,BSD-2-Clause,License-Expression,,https://github.com/GrahamDumpleton/wrapt,BSD-2-Clause,,
+bioemu,xxhash,4.0.1,,BSD-2-Clause,License,,https://github.com/ifduyue/python-xxhash,,BSD-2-Clause,
+bioemu,yarl,1.25.1,,Apache-2.0,License,,https://github.com/aio-libs/yarl,,Apache-2.0,
+screenshots,greenlet,3.5.6,,MIT AND PSF-2.0,License-Expression,,https://greenlet.readthedocs.io,MIT AND PSF-2.0,,
+screenshots,playwright,1.63.0,yes,Apache-2.0,License-Expression,,https://github.com/Microsoft/playwright-python,Apache-2.0,,
+screenshots,pyee,13.0.1,,MIT,License,,https://github.com/jfhbrook/pyee,,MIT,OSI Approved :: MIT License
+screenshots,typing_extensions,4.16.0,,PSF-2.0,License-Expression,,https://github.com/python/typing_extensions,PSF-2.0,,
